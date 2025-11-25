@@ -74,7 +74,7 @@
             <div class="bg-primary-600 py-6 px-8 text-center">
                 <div class="flex items-center justify-center space-x-3">
                     <img src="{{ asset('image/sima1.png') }}" alt="SIMASTOK" class="h-20 w-20" />
-                    <h1 class="text-2xl font-bold text-black">SIMASTOK</h1>
+                    
                 </div>
             </div>
             <!-- Form -->

@@ -75,32 +75,6 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
-        .badge {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-        }
-
-        .badge-success {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-warning {
-            background-color: #fef9c3;
-            color: #854d0e;
-        }
-
-        .badge-danger {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }   
-
-        .badge-info {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-
         .pagination {
             display: flex;
             justify-content: center;
@@ -143,24 +117,6 @@
             cursor: not-allowed;
         }
 
-        .pagination li:first-child a,
-        .pagination li:first-child span,
-        .pagination li:last-child a,
-        .pagination li:last-child span {
-            padding: 0 12px;
-        }
-
-        .pagination .page-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pagination .page-link svg {
-            width: 1em;
-            height: 1em;
-        }
-
         /* Untuk konsistensi tampilan form controls */
         select,
         input[type="date"],
@@ -178,74 +134,18 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             outline: none;
         }
-
-        /* Untuk input date khusus */
-        input[type="date"] {
-            appearance: none;
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-        }
-
-        @keyframes toast-in {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes toast-out {
-            0% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            100% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-        }
-
-        .toast-enter {
-            animation: toast-in 0.3s ease-out forwards;
-        }
-
-        .toast-exit {
-            animation: toast-out 0.3s ease-in forwards;
-        }
-
-        /* Progress bar animation */
-        @keyframes progress {
-            0% {
-                width: 100%;
-            }
-
-            100% {
-                width: 0%;
-            }
-        }
-
-        .toast-progress {
-            animation: progress 5s linear forwards;
-        }
     </style>
     @stack('styles')
 </head>
 
 <body class="h-full" x-data="{ mobileMenuOpen: false, profileMenuOpen: false }">
     <div class="min-h-screen flex flex-col md:flex-row">
-        <!-- Sidebar -->
         <div class="hidden md:flex md:flex-shrink-0">
             <div class="flex flex-col w-64 bg-white border-r border-gray-200">
                 <div class="flex items-center justify-center h-16 px-4 bg-primary-700">
                     <div class="flex items-center">
-                        <img src="{{ asset('image/sima1.png') }}" alt="SIMASTOK" class="h-10 w-10 mr-2" />
-                        <span class="text-xl font-bold text-black text-gray-800">SIMASTOK</span>
+                        <img src="{{ asset('image/sima1.png') }}" alt="SIMASTOK" class="h-12 w-12 mr-2" />
+                        
                     </div>
                 </div>
                 <div class="flex flex-col flex-grow overflow-y-auto">
@@ -370,7 +270,6 @@
             </div>
         </div>
 
-        <!-- Mobile sidebar overlay -->
         <div x-show="mobileMenuOpen" x-transition:enter="transition-opacity ease-linear duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
@@ -378,7 +277,6 @@
             @click="mobileMenuOpen = false">
         </div>
 
-        <!-- Mobile sidebar -->
         <div x-show="mobileMenuOpen" x-transition:enter="transition ease-in-out duration-300 transform"
             x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
             x-transition:leave="transition ease-in-out duration-300 transform"
@@ -509,9 +407,7 @@
             </div>
         </div>
 
-        <!-- Main content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top navigation -->
             <div class="bg-white border-b border-gray-200">
                 <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
                     <div class="flex items-center">
@@ -554,156 +450,60 @@
                 </div>
             </div>
 
-            <!-- Page content -->
             <div class="flex-1 overflow-y-auto">
                 <main class="p-4 sm:px-6 lg:px-8">
-                    <!-- Page header -->
                     <div class="mb-6">
                         @yield('header')
                     </div>
 
-                    <!-- Page content -->
                     @yield('content')
                 </main>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-
-    <div id="toast-container"
-        class="fixed inset-0 flex flex-col items-end justify-start px-4 py-6 pointer-events-none sm:p-6 space-y-2 z-50">
-    </div>
+    <script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
     <script>
-        // Fungsi untuk menampilkan toast
-        function showToast(type, message) {
-            const container = document.getElementById('toast-container');
-            const toastId = 'toast-' + Date.now();
-
-            // Warna berdasarkan type
-            const colors = {
-                success: {
-                    bg: 'bg-green-100',
-                    text: 'text-green-800',
-                    border: 'border-green-200',
-                    icon: 'text-green-500'
-                },
-                error: {
-                    bg: 'bg-red-100',
-                    text: 'text-red-800',
-                    border: 'border-red-200',
-                    icon: 'text-red-500'
-                },
-                warning: {
-                    bg: 'bg-yellow-100',
-                    text: 'text-yellow-800',
-                    border: 'border-yellow-200',
-                    icon: 'text-yellow-500'
-                },
-                info: {
-                    bg: 'bg-blue-100',
-                    text: 'text-blue-800',
-                    border: 'border-blue-200',
-                    icon: 'text-blue-500'
-                }
-            };
-
-            const color = colors[type] || colors.info;
-
-            // Buat elemen toast
-            const toast = document.createElement('div');
-            toast.id = toastId;
-            toast.className =
-                `max-w-sm w-full ${color.bg} ${color.border} shadow-lg rounded-lg pointer-events-auto overflow-hidden border toast-enter`;
-
-            toast.innerHTML = `
-                <div class="p-4">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0 ${color.icon}">
-                            ${getIcon(type)}
-                        </div>
-                        <div class="ml-3 w-0 flex-1 pt-0.5">
-                            <p class="text-sm font-medium ${color.text}">${message}</p>
-                        </div>
-                        <div class="ml-4 flex-shrink-0 flex">
-                            <button onclick="removeToast('${toastId}')" class="rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none">
-                                <span class="sr-only">Close</span>
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-200 h-1 w-full">
-                    <div class="h-1 toast-progress ${getProgressColor(type)}"></div>
-                </div>
-            `;
-
-            container.appendChild(toast);
-
-            // Otomatis hilang setelah 5 detik
-            setTimeout(() => {
-                removeToast(toastId);
-            }, 5000);
-        }
-
-        // Fungsi untuk menghapus toast
-        function removeToast(id) {
-            const toast = document.getElementById(id);
-            if (toast) {
-                toast.classList.remove('toast-enter');
-                toast.classList.add('toast-exit');
-
-                // Hapus elemen setelah animasi selesai
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
             }
-        }
-
-        // Helper function untuk icon
-        function getIcon(type) {
-            const icons = {
-                success: `<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>`,
-                error: `<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>`,
-                warning: `<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>`,
-                info: `<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>`
-            };
-            return icons[type] || icons.info;
-        }
-
-        // Helper function untuk progress bar color
-        function getProgressColor(type) {
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                warning: 'bg-yellow-500',
-                info: 'bg-blue-500'
-            };
-            return colors[type] || colors.info;
-        }
-
-        // Contoh penggunaan dengan session Laravel
-        document.addEventListener('DOMContentLoaded', function() {
-            // Ini contoh saja, sesuaikan dengan kebutuhan Laravel Anda
-            @if (session('success'))
-                showToast('success', '{{ session('success') }}');
-            @endif
-
-            @if (session('error'))
-                showToast('error', '{{ session('error') }}');
-            @endif
         });
+
+        @if (session('success'))
+            Toast.fire({
+                icon: 'success',
+                title: '{{ session('success') }}'
+            });
+        @endif
+
+        @if (session('error'))
+            Toast.fire({
+                icon: 'error',
+                title: '{{ session('error') }}'
+            });
+        @endif
+        
+        @if (session('warning'))
+            Toast.fire({
+                icon: 'warning',
+                title: '{{ session('warning') }}'
+            });
+        @endif
     </script>
+    <footer class="bg-white shadow mt-8">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-500 text-sm">
+                &copy; {{ date('Y') }} Sistem Informasi Manajemen Stok by ANAK BAIK.
+            </p>
+        </div>
+    </footer>
 
     @stack('scripts')
 </body>
