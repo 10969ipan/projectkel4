@@ -22,7 +22,7 @@
                             400: '#38bdf8',
                             500: '#0ea5e9',
                             600: '#0284c7',
-                            700: '#049deaff',
+                            700: '#48a9f9ff',
                             800: '#075985',
                             900: '#0c4a6e',
                         },
@@ -244,7 +244,7 @@
                 <div class="flex items-center justify-center h-16 px-4 bg-primary-700">
                     <div class="flex items-center">
                         <img src="{{ asset('image/sima.png') }}" alt="SIMASTOK" class="h-10 w-10 mr-2" />
-                        <span class="text-xl font-bold text-blue-800">SIMASTOK</span>
+                        <span class="text-xl font-bold text-white text-gray-800">SIMASTOK</span>
                     </div>
                 </div>
                 <div class="flex flex-col flex-grow overflow-y-auto">

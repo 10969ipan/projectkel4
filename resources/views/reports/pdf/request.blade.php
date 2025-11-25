@@ -115,9 +115,9 @@
 
 <body>
     <div class="company-info">
-        <div class="company-name">PT. EXAMPLE COMPANY</div>
-        <div>Jl. Contoh No. 123, Jakarta</div>
-        <div>Telp: (021) 12345678</div>
+        <div class="company-name">PT. SIMASTOK</div>
+        <div>Jl. Banten No.1 Karang Pawitan, Karawang</div>
+        <div>Telp: 0812-2002-2851</div>
     </div>
 
     <div class="header">
