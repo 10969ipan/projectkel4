@@ -455,13 +455,13 @@
                     <div class="mb-6">
                         @yield('header')
                     </div>
-
+                    
                     @yield('content')
                 </main>
             </div>
         </div>
     </div>
-
+    
     <script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
     <script>
         const Toast = Swal.mixin({
@@ -497,13 +497,7 @@
             });
         @endif
     </script>
-    <footer class="bg-white shadow mt-8">
-        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-gray-500 text-sm">
-                &copy; {{ date('Y') }} Sistem Informasi Manajemen Stok by ANAK BAIK.
-            </p>
-        </div>
-    </footer>
+    
 
     @stack('scripts')
 </body>
