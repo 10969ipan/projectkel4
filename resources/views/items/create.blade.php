@@ -24,7 +24,7 @@
                     <div>
                         <label for="code" class="block text-sm font-medium text-gray-700 mb-1">Kode Barang (SKU)</label>
                         <input type="text" name="code" id="code" required value="{{ old('code') }}"
-                            placeholder="Misal: KMJ-001"
+                            placeholder="Misal: CLN-JEANS-001"
                             class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
                         @error('code')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -44,6 +44,7 @@
                                 </option>
                             @endforeach
                         </select>
+                        <p class="mt-1 text-xs text-gray-500" id="categoryHelper">Pilih kategori untuk penyesuaian ukuran otomatis.</p>
                         @error('category_id')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -53,7 +54,7 @@
                     <div class="md:col-span-2">
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
                         <input type="text" name="name" id="name" required value="{{ old('name') }}"
-                            placeholder="Contoh: Kemeja Flannel Kotak"
+                            placeholder="Contoh: Celana Chino Slimfit"
                             class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
                         @error('name')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -143,26 +144,34 @@
     {{-- SCRIPT PENGELOLA VARIAN --}}
     <script>
         let variantCount = 0;
-        let currentType = 'text'; // 'text', 'clothing', 'shoes'
+        let currentType = 'text'; // 'text', 'tops' (baju), 'bottoms' (celana), 'shoes' (sepatu)
 
         function checkCategory() {
             const categorySelect = document.getElementById('category_id');
             const selectedOption = categorySelect.options[categorySelect.selectedIndex];
             const categoryName = selectedOption ? selectedOption.getAttribute('data-name') : '';
+            const helper = document.getElementById('categoryHelper');
             
+            // Reset logic
             let newType = 'text';
-            if (['baju', 'kemeja', 'jaket', 'kaos', 'hoodie', 'jersey', 'celana'].some(el => categoryName.includes(el))) {
-                newType = 'clothing';
-            } else if (['sepatu', 'sandal', 'sneakers', 'boots'].some(el => categoryName.includes(el))) {
+            let message = 'Input ukuran manual.';
+
+            // Deteksi Keyword
+            if (['baju', 'kemeja', 'jaket', 'kaos', 'hoodie', 'jersey', 'rompi', 'blazer'].some(el => categoryName.includes(el))) {
+                newType = 'tops';
+                message = 'Mode Atasan: Ukuran S, M, L, XL...';
+            } 
+            else if (['celana', 'rok', 'jeans', 'chino', 'shorts', 'trousers'].some(el => categoryName.includes(el))) {
+                newType = 'bottoms';
+                message = 'Mode Bawahan: Ukuran 27, 28, 29... 38';
+            } 
+            else if (['sepatu', 'sandal', 'sneakers', 'boots', 'flat'].some(el => categoryName.includes(el))) {
                 newType = 'shoes';
+                message = 'Mode Sepatu: Ukuran 36 - 46';
             }
 
-            // Jika tipe berubah, kita perlu mereset inputan atau membiarkannya tapi user harus mengganti manual
-            // Untuk kenyamanan, kita simpan tipe global untuk row baru
             currentType = newType;
-            
-            // Opsional: Update row yang sudah ada (tapi hati-hati menghapus data user)
-            // Disini kita hanya set untuk row baru agar data lama tidak hilang tiba-tiba
+            helper.innerText = message;
         }
 
         function addVariantRow(sizeValue = '', stockValue = 0) {
@@ -171,23 +180,39 @@
             
             let sizeInputHtml = '';
 
-            if (currentType === 'clothing') {
-                const sizes = ['S', 'M', 'L', 'XL', 'XXL', '3XL'];
+            // GENERATE DROPDOWN SESUAI TIPE
+            if (currentType === 'tops') {
+                // BAJU/JAKET: S - 4XL
+                const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
                 let options = `<option value="">Pilih Ukuran</option>`;
                 sizes.forEach(s => {
                     const selected = sizeValue === s ? 'selected' : '';
                     options += `<option value="${s}" ${selected}>${s}</option>`;
                 });
                 sizeInputHtml = `<select name="sizes[]" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" required>${options}</select>`;
-            } else if (currentType === 'shoes') {
+            } 
+            else if (currentType === 'bottoms') {
+                // CELANA: 27 - 40
+                let options = `<option value="">Pilih Ukuran</option>`;
+                // Loop ukuran celana umum 27-38, bisa ditambah jika perlu
+                for(let i=27; i<=40; i++) {
+                    const selected = String(sizeValue) === String(i) ? 'selected' : '';
+                    options += `<option value="${i}" ${selected}>${i}</option>`;
+                }
+                sizeInputHtml = `<select name="sizes[]" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" required>${options}</select>`;
+            } 
+            else if (currentType === 'shoes') {
+                // SEPATU: 36 - 46
                 let options = `<option value="">Pilih Ukuran</option>`;
                 for(let i=36; i<=46; i++) {
                     const selected = String(sizeValue) === String(i) ? 'selected' : '';
                     options += `<option value="${i}" ${selected}>${i}</option>`;
                 }
                 sizeInputHtml = `<select name="sizes[]" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" required>${options}</select>`;
-            } else {
-                sizeInputHtml = `<input type="text" name="sizes[]" value="${sizeValue}" placeholder="Contoh: All Size" class="focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border" required>`;
+            } 
+            else {
+                // MANUAL TEXT
+                sizeInputHtml = `<input type="text" name="sizes[]" value="${sizeValue}" placeholder="Contoh: All Size, 500gr" class="focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border" required>`;
             }
 
             const row = document.createElement('tr');
@@ -225,14 +250,15 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            checkCategory();
-            // Tambahkan satu row kosong default jika tidak ada old data
+            checkCategory(); // Initial check
+            
+            // Recover old data if validation fails
             @if(old('sizes'))
                 @foreach(old('sizes') as $i => $size)
                     addVariantRow('{{ $size }}', '{{ old('stocks')[$i] }}');
                 @endforeach
             @else
-                addVariantRow(); 
+                addVariantRow(); // Add 1 empty row by default
             @endif
         });
     </script>

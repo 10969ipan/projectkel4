@@ -20,15 +20,19 @@
             <form action="{{ route('item-requests.store') }}" method="POST">
                 @csrf
                 <div class="space-y-6">
+                    {{-- Pilih Barang --}}
                     <div>
                         <label for="item_id" class="block text-sm font-medium text-gray-700 mb-1">Barang</label>
                         <select name="item_id" id="item_id" required
                             class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             <option value="">Pilih Barang</option>
                             @foreach ($items as $item)
-                                <option value="{{ $item->id }}" data-stock="{{ $item->stock }}"
+                                <option value="{{ $item->id }}" 
+                                    data-total-stock="{{ $item->stock }}"
+                                    data-has-sizes="{{ $item->sizes->count() > 0 }}"
+                                    data-sizes='@json($item->sizes)'
                                     {{ old('item_id') == $item->id ? 'selected' : '' }}>
-                                    {{ $item->name }} (Stok: {{ $item->stock }} {{ $item->unit->symbol }})
+                                    {{ $item->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -37,6 +41,20 @@
                         @enderror
                     </div>
 
+                    {{-- Pilih Ukuran (Dinamis) --}}
+                    <div id="size-container" class="hidden">
+                        <label for="size" class="block text-sm font-medium text-gray-700 mb-1">Ukuran</label>
+                        <select name="size" id="size" 
+                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="">Pilih Ukuran</option>
+                            {{-- Option diisi via JS --}}
+                        </select>
+                        @error('size')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Jumlah --}}
                     <div>
                         <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
                         <input type="number" name="quantity" id="quantity" required value="{{ old('quantity', 1) }}"
@@ -45,8 +63,11 @@
                         @error('quantity')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
-                        <p id="stock-message" class="mt-2 text-sm text-gray-500">Stok tersedia: <span
-                                id="available-stock">0</span></p>
+                        
+                        {{-- Info Stok --}}
+                        <p class="mt-2 text-sm text-gray-500">
+                            Stok tersedia: <span id="available-stock" class="font-bold text-gray-800">0</span>
+                        </p>
                     </div>
 
                     <div>
@@ -72,45 +93,82 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const itemSelect = document.getElementById('item_id');
+            const sizeSelect = document.getElementById('size');
+            const sizeContainer = document.getElementById('size-container');
             const quantityInput = document.getElementById('quantity');
-            const stockMessage = document.getElementById('available-stock');
+            const stockDisplay = document.getElementById('available-stock');
             const submitBtn = document.getElementById('submit-btn');
 
-            // Update stock message when page loads
-            updateStockMessage();
+            let currentMaxStock = 0;
 
-            // When item changes, update stock message
-            itemSelect.addEventListener('change', updateStockMessage);
+            // Reset saat halaman dimuat
+            handleItemChange();
+
+            // Event Listeners
+            itemSelect.addEventListener('change', handleItemChange);
+            sizeSelect.addEventListener('change', handleSizeChange);
             quantityInput.addEventListener('input', validateQuantity);
 
-            function updateStockMessage() {
+            function handleItemChange() {
                 const selectedOption = itemSelect.options[itemSelect.selectedIndex];
-                if (selectedOption && selectedOption.value !== '') {
-                    const stock = selectedOption.getAttribute('data-stock');
-                    stockMessage.textContent = stock;
-                    validateQuantity();
-                } else {
-                    stockMessage.textContent = '0';
+                
+                // Reset Size Dropdown
+                sizeSelect.innerHTML = '<option value="">Pilih Ukuran</option>';
+                sizeContainer.classList.add('hidden');
+                sizeSelect.removeAttribute('required');
+                currentMaxStock = 0;
+                stockDisplay.innerText = '0';
+
+                if (selectedOption && selectedOption.value) {
+                    const hasSizes = selectedOption.getAttribute('data-has-sizes') == '1';
+                    
+                    if (hasSizes) {
+                        // Jika barang punya varian ukuran
+                        sizeContainer.classList.remove('hidden');
+                        sizeSelect.setAttribute('required', 'required');
+                        
+                        const sizes = JSON.parse(selectedOption.getAttribute('data-sizes'));
+                        sizes.forEach(variant => {
+                            const opt = document.createElement('option');
+                            opt.value = variant.size;
+                            opt.text = `${variant.size} (Stok: ${variant.stock})`;
+                            opt.setAttribute('data-stock', variant.stock);
+                            sizeSelect.appendChild(opt);
+                        });
+                        
+                        stockDisplay.innerText = '- (Pilih Ukuran)';
+                    } else {
+                        // Jika barang simple (tanpa varian)
+                        currentMaxStock = parseInt(selectedOption.getAttribute('data-total-stock'));
+                        stockDisplay.innerText = currentMaxStock;
+                    }
                 }
+                validateQuantity();
+            }
+
+            function handleSizeChange() {
+                const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    currentMaxStock = parseInt(selectedOption.getAttribute('data-stock'));
+                    stockDisplay.innerText = currentMaxStock;
+                } else {
+                    currentMaxStock = 0;
+                    stockDisplay.innerText = '-';
+                }
+                validateQuantity();
             }
 
             function validateQuantity() {
-                const selectedOption = itemSelect.options[itemSelect.selectedIndex];
-                if (!selectedOption || selectedOption.value === '') return;
-
-                const stock = parseInt(selectedOption.getAttribute('data-stock'));
-                const quantity = parseInt(quantityInput.value) || 0;
-
-                if (quantity > stock) {
-                    quantityInput.classList.add('border-red-500');
+                const qty = parseInt(quantityInput.value) || 0;
+                
+                if (qty > currentMaxStock || currentMaxStock === 0) {
+                    quantityInput.classList.add('border-red-500', 'text-red-600');
                     submitBtn.disabled = true;
-                    submitBtn.classList.remove('bg-primary-600', 'hover:bg-primary-700');
-                    submitBtn.classList.add('bg-primary-400', 'cursor-not-allowed');
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 } else {
-                    quantityInput.classList.remove('border-red-500');
+                    quantityInput.classList.remove('border-red-500', 'text-red-600');
                     submitBtn.disabled = false;
-                    submitBtn.classList.add('bg-primary-600', 'hover:bg-primary-700');
-                    submitBtn.classList.remove('bg-primary-400', 'cursor-not-allowed');
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
             }
         });

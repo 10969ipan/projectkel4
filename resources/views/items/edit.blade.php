@@ -41,6 +41,7 @@
                                     {{ $category->name }}</option>
                             @endforeach
                         </select>
+                        <p class="mt-1 text-xs text-gray-500" id="categoryHelper">Pilih kategori untuk penyesuaian ukuran otomatis.</p>
                         @error('category_id')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -141,14 +142,26 @@
             const categorySelect = document.getElementById('category_id');
             const selectedOption = categorySelect.options[categorySelect.selectedIndex];
             const categoryName = selectedOption ? selectedOption.getAttribute('data-name') : '';
+            const helper = document.getElementById('categoryHelper');
             
-            if (['baju', 'kemeja', 'jaket', 'kaos', 'hoodie', 'jersey', 'celana'].some(el => categoryName.includes(el))) {
-                currentType = 'clothing';
-            } else if (['sepatu', 'sandal', 'sneakers', 'boots'].some(el => categoryName.includes(el))) {
-                currentType = 'shoes';
-            } else {
-                currentType = 'text';
+            let newType = 'text';
+            let message = 'Input ukuran manual.';
+
+            if (['baju', 'kemeja', 'jaket', 'kaos', 'hoodie', 'jersey', 'rompi', 'blazer'].some(el => categoryName.includes(el))) {
+                newType = 'tops';
+                message = 'Mode Atasan: Ukuran S, M, L...';
+            } 
+            else if (['celana', 'rok', 'jeans', 'chino', 'shorts', 'trousers'].some(el => categoryName.includes(el))) {
+                newType = 'bottoms';
+                message = 'Mode Bawahan: Ukuran 27-40';
+            } 
+            else if (['sepatu', 'sandal', 'sneakers', 'boots', 'flat'].some(el => categoryName.includes(el))) {
+                newType = 'shoes';
+                message = 'Mode Sepatu: Ukuran 36-46';
             }
+
+            currentType = newType;
+            helper.innerText = message;
         }
 
         function addVariantRow(sizeValue = '', stockValue = 0) {
@@ -156,26 +169,33 @@
             const index = variantCount++;
             let sizeInputHtml = '';
 
-            // Generate dropdown/input berdasarkan tipe saat ini (atau force text jika edit data lama yg tidak sesuai)
-            // Di sini kita pakai logika sederhana: jika sizeValue cocok dengan S/M/L kita kasih dropdown clothing, dst.
-            // Atau kita ikuti kategori yang dipilih.
-            
-            if (currentType === 'clothing') {
-                const sizes = ['S', 'M', 'L', 'XL', 'XXL', '3XL'];
+            // GENERATE DROPDOWN
+            if (currentType === 'tops') {
+                const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
                 let options = `<option value="">Pilih</option>`;
                 sizes.forEach(s => {
                     const selected = sizeValue == s ? 'selected' : '';
                     options += `<option value="${s}" ${selected}>${s}</option>`;
                 });
                 sizeInputHtml = `<select name="sizes[]" class="block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>${options}</select>`;
-            } else if (currentType === 'shoes') {
+            } 
+            else if (currentType === 'bottoms') {
+                let options = `<option value="">Pilih</option>`;
+                for(let i=27; i<=40; i++) {
+                    const selected = sizeValue == i ? 'selected' : '';
+                    options += `<option value="${i}" ${selected}>${i}</option>`;
+                }
+                sizeInputHtml = `<select name="sizes[]" class="block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>${options}</select>`;
+            } 
+            else if (currentType === 'shoes') {
                 let options = `<option value="">Pilih</option>`;
                 for(let i=36; i<=46; i++) {
                     const selected = sizeValue == i ? 'selected' : '';
                     options += `<option value="${i}" ${selected}>${i}</option>`;
                 }
                 sizeInputHtml = `<select name="sizes[]" class="block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>${options}</select>`;
-            } else {
+            } 
+            else {
                 sizeInputHtml = `<input type="text" name="sizes[]" value="${sizeValue}" class="block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>`;
             }
 
@@ -208,7 +228,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            checkCategory(); // Set initial type
+            checkCategory(); // Set initial type based on selected category
             
             // Load existing data
             const existingSizes = @json($item->sizes);
@@ -218,8 +238,15 @@
                     addVariantRow(item.size, item.stock);
                 });
             } else {
-                // Fallback jika belum ada detail (misal data lama)
-                addVariantRow('{{ $item->size }}', {{ $item->stock }});
+                // Jika belum ada data varian (misal barang lama)
+                // Coba gunakan data lama, atau buat 1 row kosong
+                const oldSize = '{{ $item->size }}';
+                if(oldSize && oldSize !== '-') {
+                    // Jika ada size di kolom size (legacy)
+                    addVariantRow(oldSize, {{ $item->stock }});
+                } else {
+                    addVariantRow();
+                }
             }
         });
     </script>
