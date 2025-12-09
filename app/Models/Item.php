@@ -11,10 +11,10 @@ class Item extends Model
     protected $fillable = [
         'code',
         'name',
-        'size', // Tambahkan size
+        'size', // Ini akan kita gunakan sebagai ringkasan (misal: "S, M, L")
         'category_id',
         'unit_id',
-        'stock',
+        'stock', // Ini adalah TOTAL stok dari semua varian
         'price',
         'description'
     ];
@@ -27,6 +27,12 @@ class Item extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    // Relasi baru ke ItemSize
+    public function sizes(): HasMany
+    {
+        return $this->hasMany(ItemSize::class);
     }
 
     public function transactions(): HasMany
