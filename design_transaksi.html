@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Transaksi & Stok</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800" x-data="transactionApp()">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fa-solid fa-right-left text-blue-600 text-2xl mr-2"></i>
+                        <span class="font-bold text-xl text-gray-800">InventarisApp - Transaksi</span>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-2">
+                        <span>A</span>
+                    </div>
+                    <span class="font-medium">Admin Gudang</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- FORM TRANSAKSI -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center text-gray-800">
+                        <i class="fa-solid fa-pen-to-square mr-2 text-blue-500"></i>
+                        Form Transaksi
+                    </h2>
+
+                    <!-- Tipe Transaksi Switcher -->
+                    <div class="flex p-1 bg-gray-100 rounded-lg mb-6">
+                        <button
+                            @click="form.type = 'in'"
+                            class="flex-1 py-2 rounded-md text-sm font-medium transition-all duration-200 flex justify-center items-center"
+                            :class="form.type === 'in' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                        >
+                            <i class="fa-solid fa-arrow-down mr-2"></i> Barang Masuk
+                        </button>
+                        <button
+                            @click="form.type = 'out'"
+                            class="flex-1 py-2 rounded-md text-sm font-medium transition-all duration-200 flex justify-center items-center"
+                            :class="form.type === 'out' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                        >
+                            <i class="fa-solid fa-arrow-up mr-2"></i> Barang Keluar
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="submitTransaction">
+                        <div class="space-y-5">
+                            <!-- Tanggal -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Transaksi</label>
+                                <input type="date" x-model="form.date" class="w-full rounded-lg border-gray-300 border p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <!-- Pilih Barang -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Barang</label>
+                                <select x-model="form.item_id" @change="resetSize()" class="w-full rounded-lg border-gray-300 border p-2.5 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                    <option value="">-- Cari Barang --</option>
+                                    <template x-for="item in items" :key="item.id">
+                                        <option :value="item.id" x-text="item.code + ' - ' + item.name"></option>
+                                    </template>
+                                </select>
+                                <template x-if="selectedItem">
+                                    <div class="mt-1 text-xs text-gray-500 flex justify-between">
+                                        <span x-text="'Kategori: ' + selectedItem.category"></span>
+                                        <span x-text="'Total Stok: ' + getTotalStock(selectedItem)"></span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Pilih Ukuran (Kondisional) -->
+                            <div x-show="hasSizes" x-transition>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Ukuran</label>
+                                <select x-model="form.item_size_id" class="w-full rounded-lg border-gray-300 border p-2.5 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                    <option value="">-- Pilih Ukuran --</option>
+                                    <template x-if="selectedItem">
+                                        <template x-for="size in selectedItem.sizes" :key="size.id">
+                                            <option :value="size.id" x-text="size.size + ' (Stok: ' + size.stock + ')'"></option>
+                                        </template>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- Jumlah -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+                                <div class="flex">
+                                    <input type="number" x-model="form.quantity" min="1" class="w-full rounded-l-lg border-gray-300 border p-2.5 focus:ring-blue-500 focus:border-blue-500" placeholder="0">
+                                    <span class="inline-flex items-center px-4 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-600 font-medium text-sm" x-text="selectedItem ? selectedItem.unit : 'Qty'"></span>
+                                </div>
+                                <template x-if="form.type === 'out' && selectedItem">
+                                    <div class="mt-1 text-xs" :class="isStockSufficient ? 'text-green-600' : 'text-red-600'">
+                                        <span x-text="isStockSufficient ? 'Stok mencukupi' : 'Stok tidak mencukupi'"></span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Catatan -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
+                                <textarea x-model="form.note" rows="2" class="w-full rounded-lg border-gray-300 border p-2.5 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Pengadaan Batch 2"></textarea>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit"
+                                class="w-full font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center shadow-sm"
+                                :class="form.type === 'in' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'"
+                            >
+                                <i :class="form.type === 'in' ? 'fa-download' : 'fa-upload'" class="fa-solid mr-2"></i>
+                                <span x-text="form.type === 'in' ? 'Simpan Pemasukan' : 'Simpan Pengeluaran'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RIWAYAT TRANSAKSI -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <h2 class="text-lg font-semibold text-gray-800">Riwayat Transaksi Terakhir</h2>
+                        <div class="flex space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fa-solid fa-arrow-down mr-1"></i> Masuk: <span x-text="transactions.filter(t => t.type === 'in').length" class="ml-1"></span>
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fa-solid fa-arrow-up mr-1"></i> Keluar: <span x-text="transactions.filter(t => t.type === 'out').length" class="ml-1"></span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ukuran</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ket</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <template x-if="transactions.length === 0">
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                                            <i class="fa-regular fa-folder-open text-3xl mb-2"></i>
+                                            <p>Belum ada data transaksi.</p>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <template x-for="trx in sortedTransactions" :key="trx.id">
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(trx.date)"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-8 w-8 bg-blue-50 rounded-md flex items-center justify-center text-blue-600 mr-3">
+                                                    <i class="fa-solid fa-box-open text-xs"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm font-medium text-gray-900" x-text="getItemName(trx.item_id)"></div>
+                                                    <div class="text-xs text-gray-500" x-text="getItemCode(trx.item_id)"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <span x-show="trx.item_size_id" class="px-2 py-0.5 rounded bg-gray-100 text-gray-800 text-xs font-bold border border-gray-200" x-text="getSizeName(trx.item_id, trx.item_size_id)"></span>
+                                            <span x-show="!trx.item_size_id" class="text-gray-400">-</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span
+                                                class="px-2.5 py-1 inline-flex text-sm leading-5 font-bold rounded-full"
+                                                :class="trx.type === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                            >
+                                                <span x-text="trx.type === 'in' ? '+' : '-'" class="mr-1"></span>
+                                                <span x-text="trx.quantity"></span>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <p class="text-sm text-gray-600 truncate max-w-xs" x-text="trx.note || '-'"></p>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function transactionApp() {
+            return {
+                // Initial Mock Data
+                items: [
+                    {
+                        id: 101,
+                        code: 'BRG-001',
+                        name: 'Kertas A4',
+                        category: 'ATK',
+                        unit: 'Rim',
+                        stock: 50, // Total stock (flat if no sizes)
+                        sizes: []
+                    },
+                    {
+                        id: 102,
+                        code: 'BRG-002',
+                        name: 'Seragam Dinas',
+                        category: 'Pakaian',
+                        unit: 'Pcs',
+                        stock: 15, // Total calculated stock
+                        sizes: [
+                            { id: 1, size: 'S', stock: 5 },
+                            { id: 2, size: 'M', stock: 8 },
+                            { id: 3, size: 'L', stock: 2 }
+                        ]
+                    },
+                    {
+                        id: 103,
+                        code: 'BRG-003',
+                        name: 'Sepatu Safety',
+                        category: 'APD',
+                        unit: 'Pasang',
+                        stock: 8,
+                        sizes: [
+                            { id: 4, size: '40', stock: 3 },
+                            { id: 5, size: '41', stock: 5 }
+                        ]
+                    }
+                ],
+
+                transactions: [
+                    { id: 1, date: '2025-10-01', type: 'in', item_id: 101, item_size_id: null, quantity: 50, note: 'Stok Awal' },
+                    { id: 2, date: '2025-10-02', type: 'in', item_id: 102, item_size_id: 1, quantity: 5, note: 'Stok Seragam S' },
+                    { id: 3, date: '2025-10-03', type: 'out', item_id: 101, item_size_id: null, quantity: 5, note: 'Permintaan TU' }
+                ],
+
+                form: {
+                    date: new Date().toISOString().split('T')[0],
+                    type: 'in',
+                    item_id: '',
+                    item_size_id: '',
+                    quantity: '',
+                    note: ''
+                },
+
+                // Computed Properties
+                get sortedTransactions() {
+                    return this.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                },
+
+                get selectedItem() {
+                    return this.items.find(i => i.id == this.form.item_id);
+                },
+
+                get hasSizes() {
+                    return this.selectedItem && this.selectedItem.sizes.length > 0;
+                },
+
+                get isStockSufficient() {
+                    if (this.form.type !== 'out' || !this.form.quantity) return true;
+
+                    const qty = parseInt(this.form.quantity);
+
+                    if (this.hasSizes) {
+                        if (!this.form.item_size_id) return false;
+                        const sizeObj = this.selectedItem.sizes.find(s => s.id == this.form.item_size_id);
+                        return sizeObj && sizeObj.stock >= qty;
+                    } else {
+                        return this.selectedItem && this.selectedItem.stock >= qty;
+                    }
+                },
+
+                // Helpers
+                getTotalStock(item) {
+                    if (item.sizes.length > 0) {
+                        return item.sizes.reduce((acc, curr) => acc + curr.stock, 0);
+                    }
+                    return item.stock;
+                },
+
+                getItemName(id) {
+                    const item = this.items.find(i => i.id == id);
+                    return item ? item.name : 'Unknown';
+                },
+
+                getItemCode(id) {
+                    const item = this.items.find(i => i.id == id);
+                    return item ? item.code : '-';
+                },
+
+                getSizeName(itemId, sizeId) {
+                    const item = this.items.find(i => i.id == itemId);
+                    if (!item) return '-';
+                    const size = item.sizes.find(s => s.id == sizeId);
+                    return size ? size.size : '-';
+                },
+
+                formatDate(dateStr) {
+                    return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                },
+
+                // Actions
+                resetSize() {
+                    this.form.item_size_id = '';
+                },
+
+                submitTransaction() {
+                    // Validation
+                    if (!this.form.item_id || !this.form.quantity || !this.form.date) {
+                        Swal.fire('Error', 'Mohon lengkapi data wajib!', 'error');
+                        return;
+                    }
+
+                    if (this.hasSizes && !this.form.item_size_id) {
+                        Swal.fire('Error', 'Mohon pilih ukuran barang!', 'error');
+                        return;
+                    }
+
+                    if (this.form.type === 'out' && !this.isStockSufficient) {
+                        Swal.fire('Stok Kurang', 'Jumlah pengeluaran melebihi stok tersedia.', 'warning');
+                        return;
+                    }
+
+                    // Process Data (Mock Update)
+                    const qty = parseInt(this.form.quantity);
+                    const item = this.items.find(i => i.id == this.form.item_id);
+
+                    if (this.hasSizes) {
+                        const sizeObj = item.sizes.find(s => s.id == this.form.item_size_id);
+                        if (this.form.type === 'in') {
+                            sizeObj.stock += qty;
+                        } else {
+                            sizeObj.stock -= qty;
+                        }
+                        // Recalculate total stock for display logic if needed (though we use computed)
+                        item.stock = this.getTotalStock(item);
+                    } else {
+                        if (this.form.type === 'in') {
+                            item.stock += qty;
+                        } else {
+                            item.stock -= qty;
+                        }
+                    }
+
+                    // Add to History
+                    this.transactions.unshift({
+                        id: Date.now(),
+                        ...this.form,
+                        quantity: qty,
+                        // Ensure IDs are integers
+                        item_id: parseInt(this.form.item_id),
+                        item_size_id: this.form.item_size_id ? parseInt(this.form.item_size_id) : null
+                    });
+
+                    // Reset Form (keep date and type)
+                    this.form.item_id = '';
+                    this.form.item_size_id = '';
+                    this.form.quantity = '';
+                    this.form.note = '';
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Transaksi berhasil disimpan',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            };
+        }
+    </script>
+</body>
+</html>
