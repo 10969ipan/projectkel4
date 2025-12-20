@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Barang & Transaksi</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800" x-data="inventoryApp()">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fa-solid fa-warehouse text-blue-600 text-2xl mr-2"></i>
+                        <span class="font-bold text-xl text-gray-800">InventarisApp</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="#" @click.prevent="currentTab = 'items'" :class="{'border-blue-500 text-gray-900': currentTab === 'items', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': currentTab !== 'items'}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fa-solid fa-box mr-2"></i> Data Barang
+                        </a>
+                        <a href="#" @click.prevent="currentTab = 'transactions'" :class="{'border-blue-500 text-gray-900': currentTab === 'transactions', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': currentTab !== 'transactions'}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fa-solid fa-right-left mr-2"></i> Transaksi
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-2">
+                        <span>A</span>
+                    </div>
+                    <span class="font-medium">Admin Gudang</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- MODULE: DATA BARANG -->
+        <div x-show="currentTab === 'items'" x-cloak>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">Daftar Barang</h1>
+                <button @click="openItemModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center shadow-sm transition">
+                    <i class="fa-solid fa-plus mr-2"></i> Tambah Barang
+                </button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                            <i class="fa-solid fa-cubes text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Total Item</p>
+                            <h3 class="text-2xl font-bold text-gray-900" x-text="items.length"></h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                            <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Stok Menipis</p>
+                            <h3 class="text-2xl font-bold text-gray-900" x-text="items.filter(i => i.stock < 10).length"></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between">
+                    <input type="text" x-model="searchItem" placeholder="Cari barang (kode, nama)..." class="rounded-lg border-gray-300 border p-2 w-64 text-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Satuan</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <template x-if="filteredItems.length === 0">
+                                <tr>
+                                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">Tidak ada barang ditemukan.</td>
+                                </tr>
+                            </template>
+                            <template x-for="item in filteredItems" :key="item.id">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="item.code"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 font-medium" x-text="item.name"></div>
+                                        <div class="text-xs text-gray-500" x-text="item.description || '-'"></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="getCategoryName(item.category_id)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                              :class="item.stock < 10 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'"
+                                              x-text="item.stock"></span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="getUnitSymbol(item.unit_id)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right" x-text="formatRupiah(item.price)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                        <button @click="editItem(item)" class="text-indigo-600 hover:text-indigo-900 mr-3"><i class="fa-solid fa-pen-to-square"></i></button>
+                                        <button @click="deleteItem(item.id)" class="text-red-600 hover:text-red-900"><i class="fa-solid fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE: TRANSAKSI -->
+        <div x-show="currentTab === 'transactions'" x-cloak>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <!-- Form Transaksi -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-semibold mb-4 text-gray-800">Catat Transaksi</h2>
+
+                        <div class="flex space-x-2 mb-4">
+                            <button @click="transactionForm.type = 'in'" :class="transactionForm.type === 'in' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="flex-1 py-2 rounded-lg text-sm font-medium transition">
+                                <i class="fa-solid fa-arrow-down mr-1"></i> Masuk
+                            </button>
+                            <button @click="transactionForm.type = 'out'" :class="transactionForm.type === 'out' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="flex-1 py-2 rounded-lg text-sm font-medium transition">
+                                <i class="fa-solid fa-arrow-up mr-1"></i> Keluar
+                            </button>
+                        </div>
+
+                        <form @submit.prevent="submitTransaction">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                                    <input type="date" x-model="transactionForm.date" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Barang</label>
+                                    <select x-model="transactionForm.item_id" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">-- Cari Barang --</option>
+                                        <template x-for="item in items" :key="item.id">
+                                            <option :value="item.id" x-text="item.code + ' - ' + item.name + ' (Sisa: ' + item.stock + ')'"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+                                    <div class="flex">
+                                        <input type="number" x-model="transactionForm.quantity" min="1" class="w-full rounded-l-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0">
+                                        <span class="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm" x-text="transactionForm.item_id ? getUnitSymbol(items.find(i => i.id == transactionForm.item_id).unit_id) : '-'"></span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Catatan / Keterangan</label>
+                                    <textarea x-model="transactionForm.note" rows="2" class="w-full rounded-lg border-gray-300 border p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Pembelian Batch 1"></textarea>
+                                </div>
+
+                                <button type="submit"
+                                    :class="transactionForm.type === 'in' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'"
+                                    class="w-full text-white font-medium py-2 px-4 rounded-lg transition duration-150 flex justify-center items-center">
+                                    <i class="fa-solid fa-save mr-2"></i>
+                                    <span x-text="transactionForm.type === 'in' ? 'Simpan Stok Masuk' : 'Simpan Stok Keluar'"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- History Transaksi -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                            <h2 class="text-lg font-semibold text-gray-800">Riwayat Transaksi</h2>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catatan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <template x-if="transactions.length === 0">
+                                        <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Belum ada transaksi</td></tr>
+                                    </template>
+                                    <template x-for="trx in sortedTransactions" :key="trx.id">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(trx.date)"></td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                    :class="trx.type === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                                                    <i :class="trx.type === 'in' ? 'fa-arrow-down' : 'fa-arrow-up'" class="fa-solid mr-1 mt-0.5"></i>
+                                                    <span x-text="trx.type === 'in' ? 'Masuk' : 'Keluar'"></span>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900" x-text="getItemName(trx.item_id)"></div>
+                                                <div class="text-xs text-gray-500" x-text="getItemCode(trx.item_id)"></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold"
+                                                :class="trx.type === 'in' ? 'text-green-600' : 'text-red-600'"
+                                                x-text="(trx.type === 'in' ? '+' : '-') + trx.quantity">
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="trx.note || '-'"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: ADD/EDIT ITEM -->
+        <div x-show="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="isModalOpen"
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="closeModal()"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="isModalOpen"
+                     x-transition:enter="ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fa-solid fa-box text-blue-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title" x-text="isEditMode ? 'Edit Barang' : 'Tambah Barang Baru'"></h3>
+
+                                <div class="mt-4 space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Kode Barang</label>
+                                            <input type="text" x-model="itemForm.code" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 sm:text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Kategori</label>
+                                            <select x-model="itemForm.category_id" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 sm:text-sm">
+                                                <option value="">Pilih...</option>
+                                                <template x-for="cat in categories" :key="cat.id">
+                                                    <option :value="cat.id" x-text="cat.name"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Nama Barang</label>
+                                        <input type="text" x-model="itemForm.name" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 sm:text-sm">
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Satuan</label>
+                                            <select x-model="itemForm.unit_id" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 sm:text-sm">
+                                                <option value="">Pilih...</option>
+                                                <template x-for="unit in units" :key="unit.id">
+                                                    <option :value="unit.id" x-text="unit.name + ' (' + unit.symbol + ')'"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Harga (Rp)</label>
+                                            <input type="number" x-model="itemForm.price" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 sm:text-sm">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                                        <textarea x-model="itemForm.description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 sm:text-sm"></textarea>
+                                    </div>
+
+                                    <div x-show="!isEditMode">
+                                        <label class="block text-sm font-medium text-gray-700">Stok Awal</label>
+                                        <input type="number" x-model="itemForm.stock" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 sm:text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" @click="saveItem()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Simpan
+                        </button>
+                        <button type="button" @click="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function inventoryApp() {
+            return {
+                currentTab: 'items',
+                searchItem: '',
+                isModalOpen: false,
+                isEditMode: false,
+
+                // Mock Data
+                categories: [
+                    { id: 1, name: 'Elektronik' },
+                    { id: 2, name: 'ATK' },
+                    { id: 3, name: 'Pakaian' }
+                ],
+                units: [
+                    { id: 1, name: 'Unit', symbol: 'Unit' },
+                    { id: 2, name: 'Pieces', symbol: 'Pcs' },
+                    { id: 3, name: 'Rim', symbol: 'Rim' }
+                ],
+                items: [
+                    { id: 101, code: 'BRG-001', name: 'Laptop Dell', category_id: 1, unit_id: 1, stock: 15, price: 5000000, description: 'Laptop kantor standar' },
+                    { id: 102, code: 'BRG-002', name: 'Kertas A4', category_id: 2, unit_id: 3, stock: 50, price: 45000, description: 'Kertas HVS 70gsm' },
+                    { id: 103, code: 'BRG-003', name: 'Seragam Lapangan', category_id: 3, unit_id: 2, stock: 5, price: 150000, description: 'Bahan drill' }
+                ],
+                transactions: [
+                    { id: 1, item_id: 101, user_id: 1, type: 'in', quantity: 10, date: '2025-10-01', note: 'Stok awal' },
+                    { id: 2, item_id: 102, user_id: 1, type: 'in', quantity: 60, date: '2025-10-02', note: 'Pembelian ATK' },
+                    { id: 3, item_id: 102, user_id: 1, type: 'out', quantity: 10, date: '2025-10-05', note: 'Permintaan Divisi IT' }
+                ],
+
+                // Forms
+                itemForm: { id: null, code: '', name: '', category_id: '', unit_id: '', stock: 0, price: 0, description: '' },
+                transactionForm: { item_id: '', type: 'in', quantity: '', date: new Date().toISOString().split('T')[0], note: '' },
+
+                // Computed
+                get filteredItems() {
+                    if (!this.searchItem) return this.items;
+                    const lower = this.searchItem.toLowerCase();
+                    return this.items.filter(i =>
+                        i.name.toLowerCase().includes(lower) ||
+                        i.code.toLowerCase().includes(lower)
+                    );
+                },
+
+                get sortedTransactions() {
+                    return this.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                },
+
+                // Helpers
+                getCategoryName(id) {
+                    const c = this.categories.find(x => x.id == id);
+                    return c ? c.name : '-';
+                },
+                getUnitSymbol(id) {
+                    const u = this.units.find(x => x.id == id);
+                    return u ? u.symbol : '';
+                },
+                getItemName(id) {
+                    const i = this.items.find(x => x.id == id);
+                    return i ? i.name : 'Unknown';
+                },
+                getItemCode(id) {
+                    const i = this.items.find(x => x.id == id);
+                    return i ? i.code : '-';
+                },
+                formatRupiah(number) {
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
+                },
+                formatDate(dateStr) {
+                    return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                },
+
+                // Item Actions
+                openItemModal() {
+                    this.isEditMode = false;
+                    this.itemForm = { id: null, code: '', name: '', category_id: '', unit_id: '', stock: 0, price: 0, description: '' };
+                    this.isModalOpen = true;
+                },
+                editItem(item) {
+                    this.isEditMode = true;
+                    this.itemForm = { ...item };
+                    this.isModalOpen = true;
+                },
+                closeModal() {
+                    this.isModalOpen = false;
+                },
+                saveItem() {
+                    if (!this.itemForm.code || !this.itemForm.name || !this.itemForm.category_id || !this.itemForm.unit_id) {
+                        Swal.fire('Error', 'Mohon lengkapi data wajib (Kode, Nama, Kategori, Satuan)', 'error');
+                        return;
+                    }
+
+                    if (this.isEditMode) {
+                        const index = this.items.findIndex(i => i.id === this.itemForm.id);
+                        if (index !== -1) {
+                            // Keep stock as is if editing, unless we want to allow stock edit directly (usually discouraged)
+                            const currentStock = this.items[index].stock;
+                            this.items[index] = { ...this.itemForm, stock: currentStock };
+                            Swal.fire('Berhasil', 'Data barang diperbarui', 'success');
+                        }
+                    } else {
+                        const newItem = {
+                            ...this.itemForm,
+                            id: Date.now(),
+                            stock: parseInt(this.itemForm.stock) || 0
+                        };
+                        this.items.push(newItem);
+                        Swal.fire('Berhasil', 'Barang baru ditambahkan', 'success');
+                    }
+                    this.closeModal();
+                },
+                deleteItem(id) {
+                    Swal.fire({
+                        title: 'Hapus Barang?',
+                        text: "Data yang dihapus tidak bisa dikembalikan!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Ya, Hapus!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.items = this.items.filter(i => i.id !== id);
+                            Swal.fire('Terhapus!', 'Data barang telah dihapus.', 'success');
+                        }
+                    });
+                },
+
+                // Transaction Actions
+                submitTransaction() {
+                    if (!this.transactionForm.item_id || !this.transactionForm.quantity || !this.transactionForm.date) {
+                        Swal.fire('Error', 'Mohon lengkapi data transaksi', 'error');
+                        return;
+                    }
+
+                    const qty = parseInt(this.transactionForm.quantity);
+                    const itemIndex = this.items.findIndex(i => i.id == this.transactionForm.item_id);
+
+                    if (itemIndex === -1) {
+                        Swal.fire('Error', 'Barang tidak ditemukan', 'error');
+                        return;
+                    }
+
+                    const item = this.items[itemIndex];
+
+                    if (this.transactionForm.type === 'out') {
+                        if (item.stock < qty) {
+                            Swal.fire('Stok Kurang', `Stok saat ini hanya ${item.stock}`, 'warning');
+                            return;
+                        }
+                        item.stock -= qty;
+                    } else {
+                        item.stock += qty;
+                    }
+
+                    // Add to history
+                    this.transactions.unshift({
+                        id: Date.now(),
+                        item_id: item.id,
+                        user_id: 1, // Mock user
+                        type: this.transactionForm.type,
+                        quantity: qty,
+                        date: this.transactionForm.date,
+                        note: this.transactionForm.note
+                    });
+
+                    // Reset form partially
+                    this.transactionForm.quantity = '';
+                    this.transactionForm.note = '';
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Transaksi berhasil dicatat & stok diperbarui',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            };
+        }
+    </script>
+</body>
+</html>
