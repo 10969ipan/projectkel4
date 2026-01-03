@@ -20,7 +20,6 @@ Route::get('/login', function () {
     return view('auth.login');
 })->middleware('guest')->name('login');
 
-
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -29,9 +28,10 @@ Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // --- TAMBAHKAN BARIS INI (Route Profile) ---
+    // --- PROFILE ROUTES ---
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
-    // -------------------------------------------
+    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update'); 
+    // ----------------------
 
     // Admin Only Routes
     Route::middleware('admin')->group(function () {
@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('transactions', TransactionController::class)->only(['index', 'create', 'store']);
     });
 
-
+    // Items (Accessible by Staff & Admin)
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');
     Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
 

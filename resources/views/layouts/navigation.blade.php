@@ -73,19 +73,21 @@
                         <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden"
                             role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
                             
-                            {{-- LINK PROFILE DESKTOP --}}
-                            <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">Your Profile</a>
+                            {{-- TAMBAHAN: LINK EDIT PROFIL --}}
+                            <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">
+                                <i class="fas fa-user-edit mr-2"></i> Edit Profil
+                            </a>
+                            {{-- BATAS TAMBAHAN --}}
                             
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
                                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    role="menuitem" tabindex="-1">Sign out</button>
+                                    role="menuitem" tabindex="-1">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Sign out
+                                </button>
                             </form>
                         </div>
-                    </div>
-                </div>
-            @endauth
 
             {{-- MOBILE MENU BUTTON (Tombol Garis Tiga) --}}
             <div class="-mr-2 flex items-center sm:hidden">

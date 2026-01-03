@@ -454,11 +454,19 @@
                                 role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button"
                                 tabindex="-1">
 
+                                {{-- === TAMBAHKAN BAGIAN INI === --}}
+                                <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">
+                                    <i class="fas fa-user-edit mr-2"></i> Edit Profil
+                                </a>
+                                {{-- ============================ --}}
+
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit"
                                         class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                        role="menuitem" tabindex="-1" id="user-menu-item-2">Keluar</button>
+                                        role="menuitem" tabindex="-1" id="user-menu-item-2">
+                                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                                    </button>
                                 </form>
                             </div>
                         </div>

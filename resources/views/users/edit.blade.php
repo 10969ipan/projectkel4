@@ -1,12 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Pengguna')
+{{-- Judul Dinamis: Cek apakah ini halaman profil atau edit user biasa --}}
+@section('title', request()->routeIs('profile') ? 'Edit Profil Saya' : 'Edit Pengguna')
 
 @section('header')
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Edit Pengguna</h1>
+        <h1 class="text-2xl font-bold text-gray-900">
+            {{-- Judul Halaman Dinamis --}}
+            {{ request()->routeIs('profile') ? 'Edit Profil Saya' : 'Edit Pengguna' }}
+        </h1>
         <div>
-            <a href="{{ route('users.index') }}"
+            {{-- Tombol Kembali Dinamis: Ke Dashboard jika profil, ke List User jika admin --}}
+            <a href="{{ request()->routeIs('profile') ? route('dashboard') : route('users.index') }}"
                 class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                 <i class="fas fa-arrow-left mr-2"></i> Kembali
             </a>
@@ -17,10 +22,15 @@
 @section('content')
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-6">
-            {{-- Tambahkan enctype --}}
-            <form action="{{ route('users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
+            {{-- Form Action Dinamis --}}
+            {{-- Jika rute saat ini adalah 'profile', kirim ke 'profile.update' --}}
+            {{-- Jika bukan, kirim ke 'users.update' dengan ID user --}}
+            <form action="{{ request()->routeIs('profile') ? route('profile.update') : route('users.update', $user->id) }}" 
+                  method="POST" 
+                  enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
+                
                 <div class="space-y-6">
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nama</label>

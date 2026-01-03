@@ -17,10 +17,21 @@
 
 @section('content')
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        {{-- Search bisa ditambahkan disini --}}
+        {{-- Bagian Pencarian Otomatis --}}
+        <div class="p-4 border-b border-gray-200 bg-gray-50">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" 
+                       id="liveSearchInput" 
+                       placeholder="cari barang, kode, atau kategori..." 
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+            </div>
+        </div>
         
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200" id="itemTable">
                 <thead class="bg-gray-50"> 
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
@@ -35,9 +46,9 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($items as $item)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50 item-row">
                             {{-- Nama & Kode --}}
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 item-name">
                                 {{ $item->name }}
                                 <div class="text-xs text-gray-500">{{ $item->code }}</div>
                             </td>
@@ -54,7 +65,6 @@
                                         @endforeach
                                     </div>
                                 @elseif($item->size)
-                                    {{-- Fallback jika hanya ada string manual --}}
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
                                         {{ $item->size }}
                                     </span>
@@ -93,7 +103,7 @@
                             @endif
                         </tr>
                     @empty
-                        <tr>
+                        <tr id="noDataRow">
                             <td colspan="{{ auth()->user()->isAdmin() ? 5 : 4 }}" class="px-6 py-4 text-center text-sm text-gray-500">Tidak ada barang ditemukan</td>
                         </tr>
                     @endforelse
@@ -102,7 +112,7 @@
         </div>
         
         @if(method_exists($items, 'links'))
-            <div class="px-6 py-4 border-t border-gray-200">
+            <div class="px-6 py-4 border-t border-gray-200 pagination-container">
                 {{ $items->links() }}
             </div>
         @endif
@@ -111,13 +121,37 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const deleteButtons = document.querySelectorAll('.btn-delete');
+        // --- FITUR LIVE SEARCH (KETIK LANGSUNG MUNCUL) ---
+        const searchInput = document.getElementById('liveSearchInput');
+        const rows = document.querySelectorAll('.item-row');
+        const pagination = document.querySelector('.pagination-container');
 
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            
+            // Sembunyikan pagination saat mencari agar tidak bingung
+            if (filter.length > 0) {
+                if(pagination) pagination.style.display = 'none';
+            } else {
+                if(pagination) pagination.style.display = 'block';
+            }
+
+            rows.forEach(row => {
+                const text = row.querySelector('.item-name').textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // --- FITUR DELETE CONFIRMATION ---
+        const deleteButtons = document.querySelectorAll('.btn-delete');
         deleteButtons.forEach(button => {
             button.addEventListener('click', function (e) {
                 e.preventDefault();
                 const form = this.closest('form');
-
                 Swal.fire({
                     title: 'Apakah Anda yakin?',
                     text: "Data barang ini akan dihapus permanen!",
@@ -131,7 +165,7 @@
                     if (result.isConfirmed) {
                         form.submit();
                     }
-             });
+                });
             });
         });
     });
