@@ -136,67 +136,97 @@
 
     <script>
         let variantCount = 0;
-        let currentType = 'text'; 
+        let currentType = 'text'; // 'text', 'tops', 'bottoms', 'shoes'
+        let storedStocks = {}; // Persistent storage for stock values
 
-        function checkCategory() {
+        /**
+         * Determines the category type, updates the helper text, and regenerates the variant rows.
+         */
+        function checkCategoryAndGenerate() {
             const categorySelect = document.getElementById('category_id');
             const selectedOption = categorySelect.options[categorySelect.selectedIndex];
             const categoryName = selectedOption ? selectedOption.getAttribute('data-name') : '';
             const helper = document.getElementById('categoryHelper');
             
-            let newType = 'text';
-            let message = 'Input ukuran manual.';
+            // 1. Update storedStocks with current values before clearing
+            document.querySelectorAll('#variantContainer tr').forEach(row => {
+                const sizeInput = row.querySelector('[name="sizes[]"]');
+                const stockInput = row.querySelector('[name="stocks[]"]');
+                if (sizeInput && stockInput && sizeInput.value) {
+                    storedStocks[sizeInput.value] = stockInput.value;
+                }
+            });
 
-            if (['baju', 'kemeja', 'jaket', 'kaos', 'hoodie', 'jersey', 'rompi', 'blazer'].some(el => categoryName.includes(el))) {
-                newType = 'tops';
-                message = 'Mode Atasan: Ukuran S, M, L...';
-            } 
-            else if (['celana', 'rok', 'jeans', 'chino', 'shorts', 'trousers'].some(el => categoryName.includes(el))) {
-                newType = 'bottoms';
-                message = 'Mode Bawahan: Ukuran 27-40';
-            } 
-            else if (['sepatu', 'sandal', 'sneakers', 'boots', 'flat'].some(el => categoryName.includes(el))) {
-                newType = 'shoes';
-                message = 'Mode Sepatu: Ukuran 36-46';
+            // 2. Determine Type and Message
+            let newType = 'text';
+            let message = 'Input ukuran manual. Tambahkan baris sesuai kebutuhan.';
+            if (categoryName) {
+                if (['baju', 'kemeja', 'jaket', 'kaos', 'hoodie', 'jersey', 'rompi', 'blazer'].some(el => categoryName.includes(el))) {
+                    newType = 'tops';
+                    message = 'Mode Atasan: Ukuran standar (XS-XXL) akan ditambahkan secara otomatis jika Anda mengganti kategori.';
+                } else if (['celana', 'rok', 'jeans', 'chino', 'shorts', 'trousers'].some(el => categoryName.includes(el))) {
+                    newType = 'bottoms';
+                    message = 'Mode Bawahan: Ukuran standar (27-38) akan ditambahkan secara otomatis jika Anda mengganti kategori.';
+                } else if (['sepatu', 'sandal', 'sneakers', 'boots', 'flat'].some(el => categoryName.includes(el))) {
+                    newType = 'shoes';
+                    message = 'Mode Sepatu: Ukuran standar (36-46) akan ditambahkan secara otomatis jika Anda mengganti kategori.';
+                }
             }
 
-            currentType = newType;
-            helper.innerText = message;
+            // Only update type if it's different to avoid re-rendering on page load
+            if (newType !== currentType) {
+                currentType = newType;
+                
+                // Clear existing rows and reset counter
+                const container = document.getElementById('variantContainer');
+                container.innerHTML = '';
+                variantCount = 0;
+
+                // Generate new rows, restoring from storedStocks
+                const presets = {
+                    tops: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+                    bottoms: Array.from({ length: 12 }, (_, i) => String(27 + i)), // 27 to 38
+                    shoes: Array.from({ length: 11 }, (_, i) => String(36 + i))   // 36 to 46
+                };
+                const sizesToGenerate = presets[currentType];
+                if (sizesToGenerate) {
+                    sizesToGenerate.forEach(size => {
+                        const stock = storedStocks[size] || 0;
+                        addVariantRow(size, stock);
+                    });
+                } else {
+                    addVariantRow('', storedStocks[''] || 0);
+                }
+            }
+             helper.innerText = message;
         }
 
+        /**
+         * Adds a new variant row to the table. The input type depends on the global `currentType`.
+         */
         function addVariantRow(sizeValue = '', stockValue = 0) {
             const container = document.getElementById('variantContainer');
             const index = variantCount++;
             let sizeInputHtml = '';
 
-            // GENERATE DROPDOWN
             if (currentType === 'tops') {
                 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
-                let options = `<option value="">Pilih</option>`;
-                sizes.forEach(s => {
-                    const selected = sizeValue == s ? 'selected' : '';
-                    options += `<option value="${s}" ${selected}>${s}</option>`;
-                });
-                sizeInputHtml = `<select name="sizes[]" class="block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>${options}</select>`;
-            } 
-            else if (currentType === 'bottoms') {
-                let options = `<option value="">Pilih</option>`;
+                let options = sizes.map(s => `<option value="${s}" ${sizeValue === s ? 'selected' : ''}>${s}</option>`).join('');
+                sizeInputHtml = `<select name="sizes[]" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" required><option value="">Pilih Ukuran</option>${options}</select>`;
+            } else if (currentType === 'bottoms') {
+                let options = '';
                 for(let i=27; i<=40; i++) {
-                    const selected = sizeValue == i ? 'selected' : '';
-                    options += `<option value="${i}" ${selected}>${i}</option>`;
+                    options += `<option value="${i}" ${String(sizeValue) === String(i) ? 'selected' : ''}>${i}</option>`;
                 }
-                sizeInputHtml = `<select name="sizes[]" class="block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>${options}</select>`;
-            } 
-            else if (currentType === 'shoes') {
-                let options = `<option value="">Pilih</option>`;
+                sizeInputHtml = `<select name="sizes[]" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" required><option value="">Pilih Ukuran</option>${options}</select>`;
+            } else if (currentType === 'shoes') {
+                let options = '';
                 for(let i=36; i<=46; i++) {
-                    const selected = sizeValue == i ? 'selected' : '';
-                    options += `<option value="${i}" ${selected}>${i}</option>`;
+                    options += `<option value="${i}" ${String(sizeValue) === String(i) ? 'selected' : ''}>${i}</option>`;
                 }
-                sizeInputHtml = `<select name="sizes[]" class="block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>${options}</select>`;
-            } 
-            else {
-                sizeInputHtml = `<input type="text" name="sizes[]" value="${sizeValue}" class="block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>`;
+                sizeInputHtml = `<select name="sizes[]" class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" required><option value="">Pilih Ukuran</option>${options}</select>`;
+            } else {
+                sizeInputHtml = `<input type="text" name="sizes[]" value="${sizeValue}" placeholder="Contoh: All Size, 500gr" class="focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border" required>`;
             }
 
             const row = document.createElement('tr');
@@ -204,7 +234,7 @@
             row.innerHTML = `
                 <td class="px-4 py-2">${sizeInputHtml}</td>
                 <td class="px-4 py-2">
-                    <input type="number" name="stocks[]" value="${stockValue}" min="0" oninput="calculateTotal()" class="stock-input block w-full p-2 border border-gray-300 rounded-md sm:text-sm" required>
+                    <input type="number" name="stocks[]" value="${stockValue}" min="0" oninput="calculateTotal()" class="stock-input focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border" required>
                 </td>
                 <td class="px-4 py-2 text-right">
                     <button type="button" onclick="removeRow(${index})" class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
@@ -214,40 +244,49 @@
             calculateTotal();
         }
 
+        /**
+         * Removes a specific variant row.
+         */
         function removeRow(index) {
-            const row = document.getElementById(`row-${index}`);
-            if (row) row.remove();
+            document.getElementById(`row-${index}`)?.remove();
             calculateTotal();
         }
 
+        /**
+         * Recalculates and displays the total stock from all variant rows.
+         */
         function calculateTotal() {
-            const inputs = document.querySelectorAll('.stock-input');
-            let total = 0;
-            inputs.forEach(input => total += parseInt(input.value) || 0);
+            const total = Array.from(document.querySelectorAll('.stock-input'))
+                               .reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
             document.getElementById('displayTotalStock').innerText = total;
         }
 
+        /**
+         * Initializes the form on page load.
+         */
         document.addEventListener('DOMContentLoaded', function() {
-            checkCategory(); // Set initial type based on selected category
+            // Set initial category type
+            const categorySelect = document.getElementById('category_id');
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            const categoryName = selectedOption ? selectedOption.getAttribute('data-name') : '';
+             if (categoryName) {
+                 if (['baju', 'kemeja', 'jaket', 'kaos'].some(el => categoryName.includes(el))) { currentType = 'tops'; }
+                else if (['celana', 'rok', 'jeans'].some(el => categoryName.includes(el))) { currentType = 'bottoms'; }
+                else if (['sepatu', 'sandal'].some(el => categoryName.includes(el))) { currentType = 'shoes'; }
+            }
             
-            // Load existing data
-            const existingSizes = @json($item->sizes);
-            
-            if (existingSizes.length > 0) {
-                existingSizes.forEach(item => {
-                    addVariantRow(item.size, item.stock);
+            // Load existing item variants from the database
+            const existingSizes = @json($item->sizes->toArray());
+            if (existingSizes && existingSizes.length > 0) {
+                existingSizes.forEach(variant => {
+                    addVariantRow(variant.size, variant.stock);
                 });
             } else {
-                // Jika belum ada data varian (misal barang lama)
-                // Coba gunakan data lama, atau buat 1 row kosong
-                const oldSize = '{{ $item->size }}';
-                if(oldSize && oldSize !== '-') {
-                    // Jika ada size di kolom size (legacy)
-                    addVariantRow(oldSize, {{ $item->stock }});
-                } else {
-                    addVariantRow();
-                }
+                 addVariantRow(); // Add a default empty row if no variants exist
             }
+
+            // Attach the event listener for subsequent changes.
+            categorySelect.addEventListener('change', checkCategoryAndGenerate);
         });
     </script>
 @endsection
