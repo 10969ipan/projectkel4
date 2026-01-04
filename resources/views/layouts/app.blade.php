@@ -145,7 +145,7 @@
                 <div class="flex items-center justify-center h-16 px-4 bg-primary-700">
                     <div class="flex items-center">
                         <img src="{{ asset('image/sima1.png') }}" alt="SIMASTOK" class="h-12 w-12 mr-2" />
-                        
+                        <span class="text-xl font-bold text-white">SIMASTOK</span>
                     </div>
                 </div>
                 <div class="flex flex-col flex-grow overflow-y-auto">
@@ -153,11 +153,12 @@
                         <div class="px-4 mb-4">
                             <div class="flex items-center">
                                 @if(auth()->user()->profile_photo)
-                                    <img class="h-10 w-10 rounded-full object-cover" 
-                                        src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
+                                    <img class="h-10 w-10 rounded-full object-cover"
+                                        src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                         alt="{{ auth()->user()->name }}">
                                 @else
-                                    <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
+                                    <div
+                                        class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
                                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                     </div>
                                 @endif
@@ -248,8 +249,7 @@
 
                                         <a href="{{ route('reports.transactions') }}"
                                             class="group flex items-center px-4 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-gray-900 hover:bg-gray-50 {{ request()->routeIs('reports.transactions*') ? 'text-primary-600 bg-primary-50' : '' }}">
-                                            <i
-                                                class="fas fa-exchange-alt mr-3 text-gray-400 group-hover:text-gray-500"></i>
+                                            <i class="fas fa-exchange-alt mr-3 text-gray-400 group-hover:text-gray-500"></i>
                                             Laporan Transaksi
                                         </a>
                                         <a href="{{ route('reports.requests') }}"
@@ -286,8 +286,8 @@
 
         <div x-show="mobileMenuOpen" x-transition:enter="transition ease-in-out duration-300 transform"
             x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
-            x-transition:leave="transition ease-in-out duration-300 transform"
-            x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
+            x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="-translate-x-full"
             class="fixed inset-y-0 left-0 z-40 flex flex-col w-full max-w-xs bg-white md:hidden">
             <div class="absolute top-0 right-0 -mr-14 p-1">
                 <button @click="mobileMenuOpen = false"
@@ -300,8 +300,8 @@
             </div>
             <div class="flex items-center justify-center h-16 px-4 bg-primary-700">
                 <div class="flex items-center">
-                    <i class="fas fa-warehouse text-white text-2xl mr-2"></i>
-                    <span class="text-xl font-bold text-white">Sistem Inventaris</span>
+                    <img src="{{ asset('image/sima1.png') }}" alt="SIMASTOK" class="h-10 w-10 mr-2" />
+                    <span class="text-xl font-bold text-white">SIMASTOK</span>
                 </div>
             </div>
             <div class="flex-1 h-0 overflow-y-auto">
@@ -433,21 +433,22 @@
                         <div class="relative ml-3">
                             <div>
                                 <button @click="profileMenuOpen = !profileMenuOpen" type="button"
-                                class="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                                id="user-menu-button" aria-expanded="false" aria-haspopup="true">
-                                <span class="sr-only">Open user menu</span>
-                                
-                                {{-- LOGIKA BARU: Tampilkan Foto jika ada --}}
-                                @if(auth()->user()->profile_photo)
-                                    <img class="h-8 w-8 rounded-full object-cover" 
-                                        src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
-                                        alt="{{ auth()->user()->name }}">
-                                @else
-                                    <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
-                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                    </div>
-                                @endif
-                            </button>
+                                    class="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                                    id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                    <span class="sr-only">Open user menu</span>
+
+                                    {{-- LOGIKA BARU: Tampilkan Foto jika ada --}}
+                                    @if(auth()->user()->profile_photo)
+                                        <img class="h-8 w-8 rounded-full object-cover"
+                                            src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                            alt="{{ auth()->user()->name }}">
+                                    @else
+                                        <div
+                                            class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
+                                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                        </div>
+                                    @endif
+                                </button>
                             </div>
                             <div x-show="profileMenuOpen" @click.away="profileMenuOpen = false" x-transition
                                 class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
@@ -455,7 +456,9 @@
                                 tabindex="-1">
 
                                 {{-- === TAMBAHKAN BAGIAN INI === --}}
-                                <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">
+                                <a href="{{ route('profile') }}"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem"
+                                    tabindex="-1">
                                     <i class="fas fa-user-edit mr-2"></i> Edit Profil
                                 </a>
                                 {{-- ============================ --}}
@@ -479,13 +482,13 @@
                     <div class="mb-6">
                         @yield('header')
                     </div>
-                    
+
                     @yield('content')
                 </main>
             </div>
         </div>
     </div>
-    
+
     <script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
     <script>
         const Toast = Swal.mixin({
@@ -513,7 +516,7 @@
                 title: '{{ session('error') }}'
             });
         @endif
-        
+
         @if (session('warning'))
             Toast.fire({
                 icon: 'warning',
@@ -521,7 +524,7 @@
             });
         @endif
     </script>
-    
+
 
     @stack('scripts')
 </body>
