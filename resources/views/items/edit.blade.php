@@ -78,7 +78,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="variantContainer">
-                                {{-- Loaded via JS --}}
+                                {{-- Dimuat melalui JavaScript --}}
                             </tbody>
                         </table>
 
@@ -137,10 +137,10 @@
     <script>
         let variantCount = 0;
         let currentType = 'text'; // 'text', 'tops', 'bottoms', 'shoes'
-        let storedStocks = {}; // Persistent storage for stock values
+        let storedStocks = {}; // Penyimpanan persisten untuk nilai stok
 
         /**
-         * Determines the category type, updates the helper text, and regenerates the variant rows.
+         * Menentukan tipe kategori, memperbarui teks bantuan, dan membuat ulang baris varian.
          */
         function checkCategoryAndGenerate() {
             const categorySelect = document.getElementById('category_id');
@@ -148,7 +148,7 @@
             const categoryName = selectedOption ? selectedOption.getAttribute('data-name') : '';
             const helper = document.getElementById('categoryHelper');
             
-            // 1. Update storedStocks with current values before clearing
+            // 1. Perbarui storedStocks dengan nilai saat ini sebelum menghapus
             document.querySelectorAll('#variantContainer tr').forEach(row => {
                 const sizeInput = row.querySelector('[name="sizes[]"]');
                 const stockInput = row.querySelector('[name="stocks[]"]');
@@ -157,7 +157,7 @@
                 }
             });
 
-            // 2. Determine Type and Message
+            // 2. Tentukan Tipe dan Pesan
             let newType = 'text';
             let message = 'Input ukuran manual. Tambahkan baris sesuai kebutuhan.';
             if (categoryName) {
@@ -173,20 +173,20 @@
                 }
             }
 
-            // Only update type if it's different to avoid re-rendering on page load
+            // Hanya perbarui tipe jika berbeda untuk menghindari render ulang saat halaman dimuat
             if (newType !== currentType) {
                 currentType = newType;
                 
-                // Clear existing rows and reset counter
+                // Hapus baris yang ada dan reset penghitung
                 const container = document.getElementById('variantContainer');
                 container.innerHTML = '';
                 variantCount = 0;
 
-                // Generate new rows, restoring from storedStocks
+                // Buat baris baru, pulihkan dari storedStocks
                 const presets = {
                     tops: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-                    bottoms: Array.from({ length: 12 }, (_, i) => String(27 + i)), // 27 to 38
-                    shoes: Array.from({ length: 11 }, (_, i) => String(36 + i))   // 36 to 46
+                    bottoms: Array.from({ length: 12 }, (_, i) => String(27 + i)), // 27 sampai 38
+                    shoes: Array.from({ length: 11 }, (_, i) => String(36 + i))   // 36 sampai 46
                 };
                 const sizesToGenerate = presets[currentType];
                 if (sizesToGenerate) {
@@ -202,7 +202,7 @@
         }
 
         /**
-         * Adds a new variant row to the table. The input type depends on the global `currentType`.
+         * Menambahkan baris varian baru ke tabel. Tipe input bergantung pada `currentType` global.
          */
         function addVariantRow(sizeValue = '', stockValue = 0) {
             const container = document.getElementById('variantContainer');
@@ -245,7 +245,7 @@
         }
 
         /**
-         * Removes a specific variant row.
+         * Menghapus baris varian tertentu.
          */
         function removeRow(index) {
             document.getElementById(`row-${index}`)?.remove();
@@ -253,7 +253,7 @@
         }
 
         /**
-         * Recalculates and displays the total stock from all variant rows.
+         * Menghitung ulang dan menampilkan total stok dari semua baris varian.
          */
         function calculateTotal() {
             const total = Array.from(document.querySelectorAll('.stock-input'))
@@ -262,10 +262,10 @@
         }
 
         /**
-         * Initializes the form on page load.
+         * Menginisialisasi form saat halaman dimuat.
          */
         document.addEventListener('DOMContentLoaded', function() {
-            // Set initial category type
+            // Atur tipe kategori awal
             const categorySelect = document.getElementById('category_id');
             const selectedOption = categorySelect.options[categorySelect.selectedIndex];
             const categoryName = selectedOption ? selectedOption.getAttribute('data-name') : '';
@@ -275,17 +275,17 @@
                 else if (['sepatu', 'sandal'].some(el => categoryName.includes(el))) { currentType = 'shoes'; }
             }
             
-            // Load existing item variants from the database
+            // Muat varian barang yang ada dari database
             const existingSizes = @json($item->sizes->toArray());
             if (existingSizes && existingSizes.length > 0) {
                 existingSizes.forEach(variant => {
                     addVariantRow(variant.size, variant.stock);
                 });
             } else {
-                 addVariantRow(); // Add a default empty row if no variants exist
+                 addVariantRow(); // Tambahkan baris kosong default jika tidak ada varian
             }
 
-            // Attach the event listener for subsequent changes.
+            // Pasang event listener untuk perubahan selanjutnya.
             categorySelect.addEventListener('change', checkCategoryAndGenerate);
         });
     </script>

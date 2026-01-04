@@ -1,5 +1,3 @@
-
-
 @extends('layouts.app')
 
 @section('title', 'Tambah Transaksi Baru')
@@ -29,8 +27,7 @@
                             class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             <option value="">Pilih Barang</option>
                             @foreach ($items as $item)
-                                <option value="{{ $item->id }}" 
-                                    {{ old('item_id') == $item->id ? 'selected' : '' }} 
+                                <option value="{{ $item->id }}" {{ old('item_id') == $item->id ? 'selected' : '' }}
                                     data-unit-symbol="{{ $item->unit->symbol }}">
                                     {{ $item->name }}
                                 </option>
@@ -55,10 +52,10 @@
                         @enderror
                     </div>
 
-                    {{-- NEW: Varian Ukuran Dropdown --}}
+                    {{-- BARU: Dropdown Varian Ukuran --}}
                     <div id="item-size-section" style="{{ old('item_id') ? '' : 'display: none;' }}">
                         <label for="item_size_id" class="block text-sm font-medium text-gray-700 mb-1">Varian Ukuran</label>
-                        {{-- Dropdown ini akan diisi via JavaScript setelah item_id dipilih --}}
+                        {{-- Dropdown ini akan diisi melalui JavaScript setelah item_id dipilih --}}
                         <select name="item_size_id" id="item_size_id" required
                             class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             <option value="">Pilih Ukuran</option>
@@ -68,12 +65,11 @@
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
-                    
+
                     {{-- Quantity Input (sudah ada, tapi akan divalidasi dengan stock ukuran) --}}
                     <div>
                         <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
-                        <input type="number" name="quantity" id="quantity" required value="{{ old('quantity', 1) }}"
-                            min="1"
+                        <input type="number" name="quantity" id="quantity" required value="{{ old('quantity', 1) }}" min="1"
                             class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
                         @error('quantity')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -84,8 +80,7 @@
 
                     <div>
                         <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                        <input type="date" name="date" id="date" required
-                            value="{{ old('date', date('Y-m-d')) }}"
+                        <input type="date" name="date" id="date" required value="{{ old('date', date('Y-m-d')) }}"
                             class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md px-3 py-2 border">
                         @error('date')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -113,7 +108,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const itemSelect = document.getElementById('item_id');
             const typeSelect = document.getElementById('type');
             const itemSizeSelect = document.getElementById('item_size_id');
@@ -122,8 +117,8 @@
             const sizeSection = document.getElementById('item-size-section');
             const stockErrorMessage = document.getElementById('stock-error-message');
             const submitButton = document.getElementById('submit-button');
-            
-            let itemSizes = []; 
+
+            let itemSizes = [];
             let currentUnitSymbol = '';
 
             // --- PERHATIAN: Perlu implementasi AJAX/Fetch untuk mengambil data ItemSize. ---
@@ -148,27 +143,27 @@
                 if (itemId) {
                     const selectedItemOption = itemSelect.options[itemSelect.selectedIndex];
                     currentUnitSymbol = selectedItemOption ? selectedItemOption.getAttribute('data-unit-symbol') : '';
-                    
+
                     // Ambil data ukuran
                     itemSizes = fetchItemSizes(itemId);
-                    
+
                     if (itemSizes.length > 0) {
                         sizeSection.style.display = 'block';
                         itemSizeSelect.required = true;
-                        
+
                         itemSizes.forEach(sizeData => {
                             const option = document.createElement('option');
                             option.value = sizeData.id;
                             option.innerText = `${sizeData.size} (Stok: ${sizeData.stock} ${currentUnitSymbol})`;
                             option.setAttribute('data-stock', sizeData.stock);
-                            
+
                             // Pemulihan data lama
                             if ('{{ old('item_size_id') }}' == sizeData.id) {
                                 option.selected = true;
                             }
                             itemSizeSelect.appendChild(option);
                         });
-                        
+
                     } else {
                         // Jika tidak ada varian ukuran (produk sederhana)
                         sizeSection.style.display = 'none';
@@ -179,22 +174,22 @@
                     sizeSection.style.display = 'none';
                     itemSizeSelect.required = false;
                 }
-                
+
                 // Panggil validasi setelah dropdown diisi/diperbarui
                 validateStock();
             }
-            
+
             // 2. Perbarui info stok saat ukuran berubah
             function updateStockInfo(stock) {
-                 const type = typeSelect.value;
-                 stockInfo.innerText = `Stok saat ini: ${stock} ${currentUnitSymbol}`;
-                 
-                 // Batasi input kuantitas maks untuk transaksi Keluar
-                 if (type === 'out') {
+                const type = typeSelect.value;
+                stockInfo.innerText = `Stok saat ini: ${stock} ${currentUnitSymbol}`;
+
+                // Batasi input kuantitas maks untuk transaksi Keluar
+                if (type === 'out') {
                     quantityInput.max = stock;
-                 } else {
+                } else {
                     quantityInput.removeAttribute('max');
-                 }
+                }
             }
 
             // 3. Validasi stok secara real-time
@@ -206,7 +201,7 @@
 
                 stockErrorMessage.classList.add('hidden');
                 submitButton.disabled = false;
-                
+
                 if (selectedSizeOption && selectedSizeOption.value !== '') {
                     const currentStock = parseInt(selectedSizeOption.getAttribute('data-stock'));
                     updateStockInfo(currentStock); // Update info stok per ukuran
@@ -222,15 +217,15 @@
                         }
                     }
                 } else if (itemSelect.value && itemSizes.length > 0) {
-                     // Barang dipilih, tapi ukuran belum dipilih (dan ukuran tersedia)
-                     stockErrorMessage.innerText = `Harap pilih Varian Ukuran.`;
-                     stockErrorMessage.classList.remove('hidden');
-                     submitButton.disabled = true;
-                     isValid = false;
+                    // Barang dipilih, tapi ukuran belum dipilih (dan ukuran tersedia)
+                    stockErrorMessage.innerText = `Harap pilih Varian Ukuran.`;
+                    stockErrorMessage.classList.remove('hidden');
+                    submitButton.disabled = true;
+                    isValid = false;
                 } else {
                     stockInfo.innerText = '';
                 }
-                
+
                 return isValid;
             }
 
@@ -240,8 +235,8 @@
             itemSizeSelect.addEventListener('change', validateStock);
             quantityInput.addEventListener('input', validateStock); // Gunakan 'input' untuk umpan balik instan
 
-            // Initial load check
-            populateSizeDropdown(); 
+            // Pemeriksaan awal saat halaman dimuat
+            populateSizeDropdown();
         });
     </script>
 @endsection

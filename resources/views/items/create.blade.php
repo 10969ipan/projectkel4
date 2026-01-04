@@ -83,7 +83,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="variantContainer">
-                                {{-- Baris akan ditambahkan via JS --}}
+                                    {{-- Baris akan ditambahkan melalui JavaScript --}}
                             </tbody>
                         </table>
 
@@ -145,10 +145,10 @@
     <script>
         let variantCount = 0;
         let currentType = 'text'; // 'text', 'tops', 'bottoms', 'shoes'
-        let storedStocks = {}; // Persistent storage for stock values
+        let storedStocks = {}; // Penyimpanan persisten untuk nilai stok
 
         /**
-         * Determines the category type, updates the helper text, and regenerates the variant rows.
+         * Menentukan tipe kategori, memperbarui teks bantuan, dan membuat ulang baris varian.
          */
         function checkCategoryAndGenerate() {
             const categorySelect = document.getElementById('category_id');
@@ -156,7 +156,7 @@
             const categoryName = selectedOption ? selectedOption.getAttribute('data-name') : '';
             const helper = document.getElementById('categoryHelper');
             
-            // 1. Update storedStocks with current values before clearing
+            // 1. Perbarui storedStocks dengan nilai saat ini sebelum menghapus
             document.querySelectorAll('#variantContainer tr').forEach(row => {
                 const sizeInput = row.querySelector('[name="sizes[]"]');
                 const stockInput = row.querySelector('[name="stocks[]"]');
@@ -165,7 +165,7 @@
                 }
             });
 
-            // 2. Determine Type and Message
+            // 2. Tentukan Tipe dan Pesan
             let newType = 'text';
             let message = 'Input ukuran manual. Tambahkan baris sesuai kebutuhan.';
             if (categoryName) {
@@ -183,16 +183,16 @@
             currentType = newType;
             helper.innerText = message;
 
-            // 3. Clear Existing Rows and reset counter
+            // 3. Hapus Baris yang Ada dan reset penghitung
             const container = document.getElementById('variantContainer');
             container.innerHTML = '';
             variantCount = 0;
 
-            // 4. Generate New Rows based on type, restoring from storedStocks
+            // 4. Buat Baris Baru berdasarkan tipe, pulihkan dari storedStocks
             const presets = {
                 tops: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-                bottoms: Array.from({ length: 12 }, (_, i) => String(27 + i)), // 27 to 38
-                shoes: Array.from({ length: 11 }, (_, i) => String(36 + i))   // 36 to 46
+                bottoms: Array.from({ length: 12 }, (_, i) => String(27 + i)), // 27 sampai 38
+                shoes: Array.from({ length: 11 }, (_, i) => String(36 + i))   // 36 sampai 46
             };
             const sizesToGenerate = presets[currentType];
             if (sizesToGenerate) {
@@ -201,12 +201,12 @@
                     addVariantRow(size, stock);
                 });
             } else {
-                addVariantRow('', storedStocks[''] || 0); // Default for 'text' type
+                addVariantRow('', storedStocks[''] || 0); // Default untuk tipe 'text'
             }
         }
 
         /**
-         * Adds a new variant row to the table. The input type depends on the global `currentType`.
+         * Menambahkan baris varian baru ke tabel. Tipe input bergantung pada `currentType` global.
          */
         function addVariantRow(sizeValue = '', stockValue = 0) {
             const container = document.getElementById('variantContainer');
@@ -249,7 +249,7 @@
         }
 
         /**
-         * Removes a specific variant row.
+         * Menghapus baris varian tertentu.
          */
         function removeRow(index) {
             document.getElementById(`row-${index}`)?.remove();
@@ -257,7 +257,7 @@
         }
 
         /**
-         * Recalculates and displays the total stock from all variant rows.
+         * Menghitung ulang dan menampilkan total stok dari semua baris varian.
          */
         function calculateTotal() {
             const total = Array.from(document.querySelectorAll('.stock-input'))
@@ -266,12 +266,12 @@
         }
 
         /**
-         * Initializes the form on page load.
+         * Menginisialisasi form saat halaman dimuat.
          */
         document.addEventListener('DOMContentLoaded', function() {
-            // Priority 1: If validation failed, restore the exact old input.
+            // Prioritas 1: Jika validasi gagal, pulihkan input lama yang tepat.
             @if(old('sizes'))
-                // Determine the correct type based on the old category ID to render the correct inputs.
+                // Tentukan tipe yang benar berdasarkan ID kategori lama untuk merender input yang benar.
                 const categorySelect = document.getElementById('category_id');
                 const selectedOption = categorySelect.options[categorySelect.selectedIndex];
                 const categoryName = selectedOption ? selectedOption.getAttribute('data-name') : '';
@@ -281,16 +281,16 @@
                     else if (['sepatu', 'sandal'].some(el => categoryName.includes(el))) { currentType = 'shoes'; }
                 }
                 
-                // Re-create the rows with old data.
+                // Buat ulang baris dengan data lama.
                 @foreach(old('sizes') as $i => $size)
                     addVariantRow('{{ $size }}', '{{ old('stocks')[$i] ?? 0 }}');
                 @endforeach
             @else
-                // Priority 2: If it's a fresh form, generate variants based on the selected category.
+                // Prioritas 2: Jika form baru, buat varian berdasarkan kategori yang dipilih.
                 checkCategoryAndGenerate();
             @endif
 
-            // Attach the event listener for any subsequent changes to the category.
+            // Pasang event listener untuk setiap perubahan kategori selanjutnya.
             document.getElementById('category_id').addEventListener('change', checkCategoryAndGenerate);
         });
     </script>
