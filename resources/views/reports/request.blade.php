@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan Permintaan Barang')
+@section('title', 'Laporan Permintaan Obat')
 
 @section('header')
     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Laporan Permintaan Barang</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Laporan Permintaan Obat</h1>
         <div class="mt-4 md:mt-0">
             <a href="{{ route('reports.requests.download') }}?{{ http_build_query(request()->query()) }}"
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
@@ -31,7 +31,7 @@
                         <select name="status" id="status"
                             class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             <option value="">Semua</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Tertunda</option>
                             <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Disetujui
                             </option>
                             <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak
@@ -86,7 +86,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Obat
                         </th>
                         <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah
@@ -120,7 +120,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 @if ($request->status === 'pending')
                                     <span
-                                        class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                                        class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Tertunda</span>
                                 @elseif($request->status === 'approved')
                                     <span
                                         class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Disetujui</span>
@@ -138,8 +138,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                                Tidak ada permintaan ditemukan
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 italic font-medium">
+                                Tidak ada data permintaan ditemukan
                             </td>
                         </tr>
                     @endforelse

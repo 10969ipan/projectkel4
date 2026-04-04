@@ -36,12 +36,16 @@ class DashboardController extends Controller
         // Metrik ini penting untuk admin agar tahu ada berapa permintaan yang perlu ditindaklanjuti
         $pendingRequests = ItemRequest::where('status', 'pending')->count();
 
-        // METRIK 3: Hitung jumlah barang dengan stok rendah (kurang dari 10)
-        // Ini adalah early warning system untuk restock barang
-        // Threshold 10 bisa disesuaikan sesuai kebutuhan bisnis
-        $lowStockItems = Item::where('stock', '<', 10)->count();
+        // METRIK 3: Produk Kadaluwarsa (EWS)
+        // Menghitung batch obat yang akan kadaluwarsa dalam 30 hari ke depan
+        $expiringSoonCount = \App\Models\ItemSize::where('expiry_date', '>', now())
+            ->where('expiry_date', '<=', now()->addDays(30))
+            ->count();
+
+        // METRIK 4: Produk Sudah Kadaluwarsa
+        $expiredCount = \App\Models\ItemSize::where('expiry_date', '<=', now())->count();
 
         // Kirim semua metrik ke view dashboard
-        return view('dashboard', compact('totalItems', 'pendingRequests', 'lowStockItems'));
+        return view('dashboard', compact('totalItems', 'pendingRequests', 'expiringSoonCount', 'expiredCount'));
     }
 }

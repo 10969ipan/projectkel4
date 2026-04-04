@@ -8,37 +8,30 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * MODEL ITEM SIZE (VARIAN UKURAN BARANG)
+ * MODEL ITEM BATCH (BATCH OBAT & ALKES) - SIMA-APOTEK
  * 
- * Model ini merepresentasikan varian ukuran dari sebuah barang
- * Setiap barang bisa memiliki banyak varian ukuran dengan stok masing-masing
+ * Model ini merepresentasikan batch dari sebuah obat dalam sistem farmasi.
+ * Setiap obat bisa memiliki banyak batch dengan nomor batch dan tanggal kadaluwarsa sendiri.
  * 
- * Tabel Database: item_sizes
+ * Tabel Database: item_sizes (di-reuse untuk Batch)
  * 
  * Kolom:
  * - id: Primary key
- * - item_id: Foreign key ke tabel items (barang induk)
- * - size: Nama ukuran (contoh: "S", "M", "L", "XL", "27", "28", "39", "40")
- * - stock: Stok untuk ukuran ini
+ * - item_id: Foreign key ke tabel items (obat induk)
+ * - batch_number: Nomor batch (contoh: "BN20240321", "LOT-X123")
+ * - expiry_date: Tanggal kadaluwarsa obat
+ * - stock: Stok untuk batch ini
  * - created_at: Waktu pembuatan
  * - updated_at: Waktu update terakhir
  * 
  * Konsep Penting:
- * - Setiap varian ukuran memiliki stok sendiri
- * - Total stok di tabel items = SUM(stock) dari semua varian
- * - Saat stok varian berubah, total stok di items juga harus diupdate
- * 
- * Contoh Data:
- * Item: Kaos Polos (Total Stock: 50)
- * ├─ ItemSize: S (stock: 10)
- * ├─ ItemSize: M (stock: 20)
- * ├─ ItemSize: L (stock: 15)
- * └─ ItemSize: XL (stock: 5)
+ * - Setiap batch memiliki stok sendiri
+ * - Total stok di tabel items = SUM(stock) dari semua batch aktif
  * 
  * Relasi:
- * - item: Varian belongs to satu barang induk
- * - transactions: Varian bisa tercatat di banyak transaksi
- * - itemRequests: Varian bisa diminta berkali-kali
+ * - item: Batch belongs to satu obat induk
+ * - transactions: Batch bisa tercatat di banyak transaksi
+ * - itemRequests: Batch bisa diminta berkali-kali
  */
 class ItemSize extends Model
 {
@@ -50,9 +43,10 @@ class ItemSize extends Model
      * Kolom yang boleh diisi secara mass assignment
      */
     protected $fillable = [
-        'item_id',  // ID barang induk
-        'size',     // Nama ukuran (S, M, L, XL, 27, 28, 39, 40, dll)
-        'stock'     // Stok untuk ukuran ini
+        'item_id',      // ID obat induk
+        'batch_number',  // Nomor Batch
+        'expiry_date',   // Tanggal Kadaluwarsa
+        'stock'         // Stok untuk batch ini
     ];
 
     // ========================================================================
@@ -60,14 +54,7 @@ class ItemSize extends Model
     // ========================================================================
 
     /**
-     * RELASI: Varian ukuran belongs to satu barang induk
-     * 
-     * Setiap varian ukuran harus memiliki satu barang induk
-     * Contoh: Size M → Kaos Polos
-     * 
-     * Contoh penggunaan:
-     * $itemSize->item // Barang induk
-     * $itemSize->item->name // Nama barang induk
+     * RELASI: Batch belongs to satu obat induk
      * 
      * @return BelongsTo
      */
@@ -77,19 +64,7 @@ class ItemSize extends Model
     }
 
     /**
-     * RELASI: Varian ukuran memiliki banyak riwayat transaksi
-     * 
-     * Satu varian ukuran bisa tercatat di banyak transaksi
-     * Ini penting untuk tracking stok per ukuran
-     * 
-     * Contoh: Size M dari Kaos Polos bisa memiliki transaksi:
-     * - Transaksi 1: Masuk 10 pcs
-     * - Transaksi 2: Keluar 5 pcs
-     * - Transaksi 3: Masuk 20 pcs
-     * 
-     * Contoh penggunaan:
-     * $itemSize->transactions // Semua transaksi untuk ukuran ini
-     * $itemSize->transactions()->where('type', 'out')->sum('quantity') // Total keluar
+     * RELASI: Batch memiliki banyak riwayat transaksi
      * 
      * @return HasMany
      */
@@ -99,19 +74,7 @@ class ItemSize extends Model
     }
 
     /**
-     * RELASI: Varian ukuran bisa diminta berkali-kali
-     * 
-     * Satu varian ukuran bisa diminta berkali-kali oleh staff
-     * Ini penting untuk tracking permintaan per ukuran
-     * 
-     * Contoh: Size M dari Kaos Polos bisa diminta:
-     * - Staff A minta 5 pcs
-     * - Staff B minta 3 pcs
-     * - Staff C minta 10 pcs
-     * 
-     * Contoh penggunaan:
-     * $itemSize->itemRequests // Semua permintaan untuk ukuran ini
-     * $itemSize->itemRequests()->where('status', 'approved')->sum('quantity') // Total approved
+     * RELASI: Batch bisa diminta berkali-kali
      * 
      * @return HasMany
      */

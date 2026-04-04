@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SIMASTOK</title>
+    <title>Login - SIMA-APOTEK</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -71,11 +71,11 @@
     <div class="w-full max-w-md">
         <div class="login-card bg-white">
             <!-- Header -->
-            <div class="bg-primary-600 py-6 px-8 text-center">
+            <div class="bg-indigo-600 py-6 px-8 text-center">
                 <div class="flex flex-col items-center justify-center space-y-2">
-                    <img src="{{ asset('image/sima1.png') }}" alt="SIMASTOK" class="h-20 w-20" />
-                    <h1 class="text-2xl font-bold text-white">SIMASTOK</h1>
-                    <p class="text-primary-100 text-sm">Sistem Manajemen Stok</p>
+                    <img src="{{ asset('image/sima1.png') }}" alt="SIMA-APOTEK" class="h-20 w-20" />
+                    <h1 class="text-2xl font-black text-white tracking-widest">SIMA-APOTEK</h1>
+                    <p class="text-indigo-100 text-xs font-bold uppercase tracking-tighter">Pharmacy Management System</p>
                 </div>
             </div>
             <!-- Form -->

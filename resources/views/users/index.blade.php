@@ -30,13 +30,17 @@
                         <tr class="hover:bg-gray-50">
                             {{-- Kolom Foto --}}
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($user->profile_photo)
-                                    <img class="h-10 w-10 rounded-full object-cover" src="{{ asset('storage/' . $user->profile_photo) }}" alt="{{ $user->name }}">
-                                @else
-                                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
+                                <div class="relative h-10 w-10 flex-shrink-0">
+                                    <div class="absolute inset-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold border border-primary-200">
                                         {{ strtoupper(substr($user->name, 0, 1)) }}
                                     </div>
-                                @endif
+                                    @if($user->profile_photo)
+                                        <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border border-white" 
+                                            src="{{ asset('storage/' . $user->profile_photo) }}" 
+                                            alt="{{ $user->name }}"
+                                            onerror="this.style.display='none'">
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {{ $user->name }}

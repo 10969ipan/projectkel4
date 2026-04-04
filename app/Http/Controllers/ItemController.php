@@ -12,13 +12,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
- * CONTROLLER BARANG (ITEM)
+ * CONTROLLER OBAT & ALKES (SIMA-APOTEK)
  * 
- * Menangani operasi CRUD untuk barang dengan fitur varian ukuran
- * Controller ini kompleks karena menangani:
- * 1. Data barang utama (items table)
- * 2. Varian ukuran barang (item_sizes table)
- * 3. Relasi dengan kategori dan satuan
+ * Menangani operasi CRUD untuk obat-obatan dan alat kesehatan.
+ * Sistem ini mendukung:
+ * 1. Data Obat (Nama Generik, Produsen)
+ * 2. Manajemen Batch (Nomor Batch, Tanggal Kadaluwarsa)
+ * 3. Inventaris Terpusat
  */
 class ItemController extends Controller
 {
@@ -38,11 +38,12 @@ class ItemController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
 
-            // Cari di kolom name, code, atau size dari tabel items
+            // Cari di kolom name, code, generic_name, atau manufacturer
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
                     ->orWhere('code', 'like', "%$search%")
-                    ->orWhere('size', 'like', "%$search%");
+                    ->orWhere('generic_name', 'like', "%$search%")
+                    ->orWhere('manufacturer', 'like', "%$search%");
             })
                 // ATAU cari di nama kategori (relasi)
                 ->orWhereHas('category', function ($q) use ($search) {
@@ -86,67 +87,65 @@ class ItemController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // VALIDASI INPUT
+        // VALIDASI INPUT PHARMACY
         $request->validate([
-            'code' => 'required|string|max:50|unique:items',           // Kode barang harus unik
-            'name' => 'required|string|max:255',                        // Nama barang wajib
-            'category_id' => 'required|exists:categories,id',           // Kategori harus ada di database
-            'unit_id' => 'required|exists:units,id',                    // Satuan harus ada di database
-            'price' => 'required|numeric|min:0',                        // Harga minimal 0
-            'description' => 'nullable|string',                         // Deskripsi opsional
-            'sizes' => 'nullable|array',                                // Array ukuran (opsional)
-            'sizes.*' => 'required|string',                             // Setiap ukuran wajib string
-            'stocks' => 'nullable|array',                               // Array stok per ukuran
-            'stocks.*' => 'required|integer|min:0',                     // Setiap stok minimal 0
+            'code' => 'required|string|max:50|unique:items',
+            'name' => 'required|string|max:255',
+            'generic_name' => 'nullable|string|max:255',
+            'manufacturer' => 'nullable|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'unit_id' => 'required|exists:units,id',
+            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'batch_numbers' => 'nullable|array',
+            'batch_numbers.*' => 'required|string',
+            'expiry_dates' => 'nullable|array',
+            'expiry_dates.*' => 'required|date',
+            'stocks' => 'nullable|array',
+            'stocks.*' => 'required|integer|min:0',
         ]);
 
-        // DATABASE TRANSACTION: Pastikan semua operasi berhasil atau semua dibatalkan
         DB::transaction(function () use ($request) {
             $totalStock = 0;
-            $sizeSummary = null;
+            $batchSummary = null;
 
-            // HITUNG TOTAL STOK: Jika ada varian ukuran
-            if ($request->has('sizes') && is_array($request->sizes)) {
-                // Jumlahkan semua stok dari setiap ukuran
-                // Contoh: [10, 20, 15] = 45 total
+            if ($request->has('batch_numbers') && is_array($request->batch_numbers)) {
                 $totalStock = array_sum($request->stocks ?? []);
-
-                // Buat ringkasan ukuran untuk ditampilkan
-                // Contoh: "S, M, L, XL"
-                $sizeSummary = implode(', ', $request->sizes);
+                $batchSummary = implode(', ', $request->batch_numbers);
             }
 
-            // LANGKAH 1: Simpan data barang utama ke tabel items
+            // SIMPAN DATA OBAT UTAMA
             $item = Item::create([
                 'code' => $request->code,
                 'name' => $request->name,
+                'generic_name' => $request->generic_name,
+                'manufacturer' => $request->manufacturer,
                 'category_id' => $request->category_id,
                 'unit_id' => $request->unit_id,
                 'price' => $request->price,
                 'description' => $request->description,
-                'stock' => $totalStock,           // Total stok dari semua ukuran
-                'size' => $sizeSummary,           // Ringkasan ukuran (untuk display)
+                'stock' => $totalStock,
+                'size' => $batchSummary,
             ]);
 
-            // LANGKAH 2: Simpan setiap varian ukuran ke tabel item_sizes
-            if ($request->has('sizes')) {
-                foreach ($request->sizes as $index => $sizeVal) {
-                    // Skip jika ukuran kosong
-                    if (!empty($sizeVal)) {
+            // SIMPAN DATA BATCH
+            if ($request->has('batch_numbers')) {
+                foreach ($request->batch_numbers as $index => $batchNum) {
+                    if (!empty($batchNum)) {
                         ItemSize::create([
-                            'item_id' => $item->id,                     // ID barang yang baru dibuat
-                            'size' => $sizeVal,                         // Nama ukuran (S, M, L, dll)
-                            'stock' => $request->stocks[$index] ?? 0,   // Stok untuk ukuran ini
+                            'item_id' => $item->id,
+                            'batch_number' => $batchNum,
+                            'expiry_date' => $request->expiry_dates[$index],
+                            'stock' => $request->stocks[$index] ?? 0,
                         ]);
                     }
                 }
             }
         });
 
-        // Redirect ke halaman daftar barang dengan pesan sukses
         return redirect()
             ->route('items.index')
-            ->with('success', 'Barang berhasil ditambahkan.');
+            ->with('success', 'Obat/Alkes berhasil ditambahkan.');
     }
 
     /**
@@ -197,53 +196,54 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item): RedirectResponse
     {
-        // VALIDASI INPUT
+        // VALIDASI UPDATE PHARMACY
         $request->validate([
             'code' => 'required|string|max:50|unique:items,code,' . $item->id,
             'name' => 'required|string|max:255',
+            'generic_name' => 'nullable|string|max:255',
+            'manufacturer' => 'nullable|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'unit_id' => 'required|exists:units,id',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'sizes' => 'nullable|array',
+            'batch_numbers' => 'nullable|array',
+            'expiry_dates' => 'nullable|array',
             'stocks' => 'nullable|array',
         ]);
 
-        // DATABASE TRANSACTION
         DB::transaction(function () use ($request, $item) {
             $totalStock = 0;
-            $sizeSummary = null;
+            $batchSummary = null;
 
-            // HITUNG ULANG TOTAL STOK dari varian baru
-            if ($request->has('sizes') && is_array($request->sizes)) {
+            if ($request->has('batch_numbers') && is_array($request->batch_numbers)) {
                 $totalStock = array_sum($request->stocks ?? []);
-                $sizeSummary = implode(', ', $request->sizes);
+                $batchSummary = implode(', ', $request->batch_numbers);
             }
 
-            // LANGKAH 1: Update data barang utama
+            // UPDATE DATA OBAT UTAMA
             $item->update([
                 'code' => $request->code,
                 'name' => $request->name,
+                'generic_name' => $request->generic_name,
+                'manufacturer' => $request->manufacturer,
                 'category_id' => $request->category_id,
                 'unit_id' => $request->unit_id,
                 'price' => $request->price,
                 'description' => $request->description,
                 'stock' => $totalStock,
-                'size' => $sizeSummary,
+                'size' => $batchSummary,
             ]);
 
-            // LANGKAH 2: RESET VARIAN UKURAN
-            // Hapus semua varian lama, lalu insert varian baru
-            // Ini lebih sederhana daripada update satu per satu
+            // RESET DAN SIMPAN ULANG BATCH
             $item->sizes()->delete();
 
-            // LANGKAH 3: Simpan varian baru
-            if ($request->has('sizes')) {
-                foreach ($request->sizes as $index => $sizeVal) {
-                    if (!empty($sizeVal)) {
+            if ($request->has('batch_numbers')) {
+                foreach ($request->batch_numbers as $index => $batchNum) {
+                    if (!empty($batchNum)) {
                         ItemSize::create([
                             'item_id' => $item->id,
-                            'size' => $sizeVal,
+                            'batch_number' => $batchNum,
+                            'expiry_date' => $request->expiry_dates[$index],
                             'stock' => $request->stocks[$index] ?? 0,
                         ]);
                     }
@@ -251,10 +251,9 @@ class ItemController extends Controller
             }
         });
 
-        // Redirect ke halaman daftar barang dengan pesan sukses
         return redirect()
             ->route('items.index')
-            ->with('success', 'Barang berhasil diperbarui.');
+            ->with('success', 'Obat/Alkes berhasil diperbarui.');
     }
 
     /**

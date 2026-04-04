@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Transaksi')
+@section('title', 'Riwayat Mutasi Stok')
 
 @section('header')
     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Manajemen Transaksi</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Riwayat Mutasi Stok</h1>
         
     </div>
 @endsection
@@ -19,7 +19,7 @@
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal
                         </th>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Obat
                         </th>
                         <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis
@@ -56,8 +56,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Tidak ada transaksi
-                                ditemukan</td>
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 italic font-medium">Tidak ada data mutasi ditemukan</td>
                         </tr>
                     @endforelse
                 </tbody>

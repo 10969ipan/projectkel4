@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Transaction Report</title>
+    <title>PHARMACY TRANSACTION REPORT</title>
     <style>
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
@@ -14,8 +14,21 @@
         .header {
             text-align: center;
             margin-bottom: 20px;
-            border-bottom: 2px solid #3490dc;
+            border-bottom: 2px solid #4f46e5;
             padding-bottom: 10px;
+        }
+
+        .text-indigo {
+            color: #4f46e5;
+        }
+
+        .company-tagline {
+            font-size: 10px;
+            font-weight: bold;
+            color: #6366f1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
         }
 
         .header h1 {
@@ -56,7 +69,7 @@
         }
 
         th {
-            background-color: #3490dc;
+            background-color: #4f46e5;
             color: white;
             text-align: left;
             padding: 8px;
@@ -123,13 +136,14 @@
 
 <body>
     <div class="company-info">
-        <div class="company-name">PT. SIMASTOK</div>
+        <div class="company-name text-indigo">SIMA-APOTEK</div>
+        <div class="company-tagline">Pharmacy Management System</div>
         <div>Jl. Banten No.1 Karang Pawitan, Karawang</div>
         <div>Telp: 0812-2002-2851</div>
     </div>
 
     <div class="header">
-        <h1>INVENTORY TRANSACTION REPORT</h1>
+        <h1>PHARMACY MUTATION LOG REPORT</h1>
         <p>Generated on: {{ now()->format('d F Y H:i') }}</p>
     </div>
 

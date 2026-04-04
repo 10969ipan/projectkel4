@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Permintaan Barang')
+@section('title', 'Manajemen Permintaan Obat')
 
 @section('header')
     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Manajemen Permintaan Barang</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Manajemen Permintaan Obat</h1>
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 mt-4 md:mt-0">
             @if (auth()->user()->isStaff())
                 <a href="{{ route('item-requests.create') }}"
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
                     <i class="fas fa-plus mr-2"></i> Permintaan Baru
                 </a>
             @endif
@@ -20,7 +20,7 @@
                         <select id="status-filter"
                             class="appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
                             <option value="">Semua</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Tertunda</option>
                             <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Disetujui
                             </option>
                             <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak
@@ -43,10 +43,10 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Obat
                         </th>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty
                         </th>
                         <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peminta
@@ -72,7 +72,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 @if ($request->status === 'pending')
                                     <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Tertunda</span>
                                 @elseif($request->status === 'approved')
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Disetujui</span>
@@ -189,13 +189,13 @@
                 <div>
                     <div class="mt-3 sm:mt-0">
                         <h3 class="text-lg leading-6 font-bold text-gray-900 mb-4" id="modal-title">
-                            <i class="fas fa-info-circle text-primary-600 mr-2"></i>Detail Permintaan Barang
+                            <i class="fas fa-info-circle text-primary-600 mr-2"></i>Detail Permintaan Obat
                         </h3>
                         <div class="mt-4">
                             {{-- Grid Informasi --}}
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="bg-gray-50 p-3 rounded-lg">
-                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Barang</label>
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Obat</label>
                                     <p class="text-sm font-semibold text-gray-900" id="detail-item-name">-</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
@@ -308,7 +308,7 @@
             // Status dengan badge warna
             const statusElement = document.getElementById('detail-status');
             if (data.status === 'pending') {
-                statusElement.innerHTML = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fas fa-clock mr-1"></i>Pending</span>';
+                statusElement.innerHTML = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fas fa-clock mr-1"></i>Tertunda</span>';
             } else if (data.status === 'approved') {
                 statusElement.innerHTML = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i>Disetujui</span>';
             } else {

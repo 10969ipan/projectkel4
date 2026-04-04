@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan Transaksi')
+@section('title', 'Laporan Mutasi Stok')
 
 @section('header')
     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Laporan Transaksi</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Laporan Mutasi Stok</h1>
         <div class="mt-4 md:mt-0">
             <a href="{{ route('reports.transactions.download') }}?{{ http_build_query(request()->query()) }}"
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
@@ -73,7 +73,7 @@
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal
                         </th>
                         <th scope="col"
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Obat
                         </th>
                         <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis
@@ -116,8 +116,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
-                                Tidak ada transaksi ditemukan
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 italic font-medium">
+                                Tidak ada data mutasi ditemukan
                             </td>
                         </tr>
                     @endforelse

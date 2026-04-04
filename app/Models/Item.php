@@ -7,37 +7,39 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * MODEL ITEM (BARANG)
+ * MODEL ITEM (OBAT & ALKES) - SIMA-APOTEK
  * 
- * Model ini merepresentasikan barang dalam sistem inventory
- * Barang bisa memiliki varian ukuran (contoh: Kaos dengan size S, M, L, XL)
+ * Model ini merepresentasikan obat atau alat kesehatan dalam sistem farmasi.
+ * Setiap obat memiliki nama generik dan produsen, serta dapat memiliki banyak batch (ItemSize).
  * 
  * Tabel Database: items
  * 
  * Kolom:
  * - id: Primary key
- * - code: Kode barang/SKU (unik, contoh: "CLN-JEANS-001")
- * - name: Nama barang (contoh: "Celana Jeans Slimfit")
- * - size: Ringkasan ukuran (contoh: "S, M, L, XL") - untuk display
+ * - code: Kode obat/SKU (unik, contoh: "OBT-PARA-001")
+ * - name: Nama obat (contoh: "Paracetamol 500mg")
+ * - generic_name: Nama generik obat (contoh: "Paracetamol")
+ * - manufacturer: Nama produsen obat (contoh: "Kimia Farma")
+ * - size: Ringkasan batch (contoh: "Batch #001, Batch #002") - untuk display
  * - category_id: Foreign key ke tabel categories
  * - unit_id: Foreign key ke tabel units
- * - stock: TOTAL stok dari semua varian ukuran
- * - price: Harga barang
- * - description: Deskripsi barang (opsional)
+ * - stock: TOTAL stok dari semua batch
+ * - price: Harga obat
+ * - description: Deskripsi obat (opsional)
  * - created_at: Waktu pembuatan
  * - updated_at: Waktu update terakhir
  * 
  * Konsep Penting:
- * - Kolom 'stock' adalah TOTAL dari semua varian ukuran
- * - Kolom 'size' hanya untuk display, data detail ada di tabel item_sizes
- * - Setiap perubahan stok varian harus update total stock di tabel ini
+ * - Kolom 'stock' adalah TOTAL dari semua batch (item_sizes)
+ * - Kolom 'size' dalam tabel items digunakan untuk menyimpan ringkasan nomor batch untuk tampilan cepat
+ * - Relasi 'sizes' sebenarnya mengarah ke manajemen Batch sekarang
  * 
  * Relasi:
- * - category: Barang belongs to satu kategori
- * - unit: Barang belongs to satu satuan
- * - sizes: Barang memiliki banyak varian ukuran (One-to-Many ke ItemSize)
- * - transactions: Barang memiliki banyak riwayat transaksi
- * - itemRequests: Barang bisa diminta berkali-kali oleh staff
+ * - category: Obat belongs to satu kategori
+ * - unit: Obat belongs to satu satuan
+ * - sizes: Obat memiliki banyak batch (One-to-Many ke ItemSize/Batch)
+ * - transactions: Obat memiliki banyak riwayat transaksi
+ * - itemRequests: Obat bisa diminta berkali-kali oleh staff
  */
 class Item extends Model
 {
@@ -47,14 +49,16 @@ class Item extends Model
      * Kolom yang boleh diisi secara mass assignment
      */
     protected $fillable = [
-        'code',         // Kode barang/SKU (unik)
-        'name',         // Nama barang
-        'size',         // Ringkasan ukuran (contoh: "S, M, L") - untuk display saja
-        'category_id',  // ID kategori
-        'unit_id',      // ID satuan
-        'stock',        // TOTAL stok dari semua varian ukuran
-        'price',        // Harga barang
-        'description'   // Deskripsi barang
+        'code',             // Kode obat (unik)
+        'name',             // Nama obat
+        'generic_name',      // Nama Generik
+        'manufacturer',      // Produsen
+        'size',             // Ringkasan Batch (format string)
+        'category_id',      // ID kategori
+        'unit_id',          // ID satuan
+        'stock',            // TOTAL stok dari semua batch
+        'price',            // Harga
+        'description'       // Deskripsi
     ];
 
     // ========================================================================
@@ -62,10 +66,7 @@ class Item extends Model
     // ========================================================================
 
     /**
-     * RELASI: Barang belongs to satu kategori
-     * 
-     * Setiap barang harus memiliki satu kategori
-     * Contoh: Kaos Polos → Kategori "Pakaian"
+     * RELASI: Obat belongs to satu kategori
      * 
      * @return BelongsTo
      */
@@ -75,10 +76,7 @@ class Item extends Model
     }
 
     /**
-     * RELASI: Barang belongs to satu satuan
-     * 
-     * Setiap barang harus memiliki satu satuan pengukuran
-     * Contoh: Kaos Polos → Satuan "pcs"
+     * RELASI: Obat belongs to satu satuan
      * 
      * @return BelongsTo
      */
@@ -92,17 +90,7 @@ class Item extends Model
     // ========================================================================
 
     /**
-     * RELASI: Barang memiliki banyak varian ukuran
-     * 
-     * Satu barang bisa memiliki banyak varian ukuran
-     * Contoh: Kaos Polos memiliki Size S, M, L, XL
-     * 
-     * PENTING: Ini adalah relasi utama untuk sistem varian ukuran
-     * Setiap varian memiliki stok sendiri yang tercatat di tabel item_sizes
-     * 
-     * Contoh penggunaan:
-     * $item->sizes // Collection of ItemSize
-     * $item->sizes->where('size', 'M')->first()->stock // Stok size M
+     * RELASI: Obat memiliki banyak batch
      * 
      * @return HasMany
      */
@@ -112,14 +100,7 @@ class Item extends Model
     }
 
     /**
-     * RELASI: Barang memiliki banyak riwayat transaksi
-     * 
-     * Satu barang bisa memiliki banyak transaksi (masuk/keluar)
-     * Digunakan untuk tracking riwayat pergerakan stok
-     * 
-     * Contoh penggunaan:
-     * $item->transactions // Semua transaksi barang ini
-     * $item->transactions()->where('type', 'in')->get() // Transaksi masuk saja
+     * RELASI: Obat memiliki banyak riwayat transaksi
      * 
      * @return HasMany
      */
@@ -129,14 +110,7 @@ class Item extends Model
     }
 
     /**
-     * RELASI: Barang memiliki banyak permintaan dari staff
-     * 
-     * Satu barang bisa diminta berkali-kali oleh staff
-     * Digunakan untuk tracking permintaan barang
-     * 
-     * Contoh penggunaan:
-     * $item->itemRequests // Semua permintaan untuk barang ini
-     * $item->itemRequests()->where('status', 'pending')->get() // Permintaan pending
+     * RELASI: Obat memiliki banyak permintaan
      * 
      * @return HasMany
      */

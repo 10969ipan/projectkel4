@@ -53,12 +53,18 @@
 
                     {{-- Input Foto Profil --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Foto Profil</label>
-                        @if ($user->profile_photo)
-                            <div class="mb-2">
-                                <img src="{{ asset('storage/' . $user->profile_photo) }}" alt="Foto Profil" class="h-20 w-20 rounded-full object-cover border border-gray-200">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Foto Profil Saat Ini</label>
+                        <div class="relative h-20 w-20 mb-4">
+                            <div class="absolute inset-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-2xl font-bold border-2 border-indigo-200">
+                                {{ strtoupper(substr($user->name, 0, 1)) }}
                             </div>
-                        @endif
+                            @if($user->profile_photo)
+                                <img class="absolute inset-0 h-20 w-20 rounded-full object-cover border-2 border-white shadow-sm" 
+                                    src="{{ asset('storage/' . $user->profile_photo) }}" 
+                                    alt="Foto Profil"
+                                    onerror="this.style.display='none'">
+                            @endif
+                        </div>
                         <input type="file" name="profile_photo" id="profile_photo" accept="image/*"
                             class="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none">
                         <p class="mt-1 text-xs text-gray-500">Biarkan kosong jika tidak ingin mengubah foto.</p>
