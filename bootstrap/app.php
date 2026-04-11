@@ -14,10 +14,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'staff' => \App\Http\Middleware\StaffMiddleware::class,
+            'backoffice' => \App\Http\Middleware\BackOfficeMiddleware::class,
+            'customer' => \App\Http\Middleware\CustomerMiddleware::class,
+        ]);
+
+        // Exclude AI Reply from CSRF to prevent 419 on stale sessions
+        $middleware->validateCsrfTokens(except: [
+            'consultation/ai-reply',
+            'chatbot/*'
         ]);
 
         // Redireksi dinamis untuk tamu (Guest)
         $middleware->redirectTo(function (\Illuminate\Http\Request $request) {
+            // Bypass redirect for AI Reply
+            if ($request->is('consultation/ai-reply') || $request->is('chatbot/*')) {
+                return null;
+            }
+
             // Jika URL mengandung kata kunci toko/ecommerce, lari ke login toko
             if ($request->is('store*') || 
                 $request->is('cart*') || 

@@ -1,0 +1,1 @@
+﻿<?php require 'C:/laragon/www/qc-project/vendor/autoload.php'; $app = require_once 'C:/laragon/www/qc-project/bootstrap/app.php'; $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class); $kernel->bootstrap(); try { print_r(DB::select('SHOW TABLES')); echo 'SUCCESS'; } catch (Exception $e) { echo $e->getMessage(); }

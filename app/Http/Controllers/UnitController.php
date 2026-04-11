@@ -25,7 +25,7 @@ class UnitController extends Controller
         // Ambil semua satuan dari database
         $units = Unit::all();
 
-        return view('units.index', compact('units'));
+        return view('backend.units.index', compact('units'));
     }
 
     /**
@@ -35,7 +35,7 @@ class UnitController extends Controller
      */
     public function create(): View
     {
-        return view('units.create');
+        return view('backend.units.create');
     }
 
     /**
@@ -71,7 +71,7 @@ class UnitController extends Controller
      */
     public function edit(Unit $unit): View
     {
-        return view('units.edit', compact('unit'));
+        return view('backend.units.edit', compact('unit'));
     }
 
     /**

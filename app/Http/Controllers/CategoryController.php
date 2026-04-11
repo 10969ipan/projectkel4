@@ -25,7 +25,7 @@ class CategoryController extends Controller
         // Ambil semua kategori dari database
         $categories = Category::all();
 
-        return view('categories.index', compact('categories'));
+        return view('backend.categories.index', compact('categories'));
     }
 
     /**
@@ -35,7 +35,7 @@ class CategoryController extends Controller
      */
     public function create(): View
     {
-        return view('categories.create');
+        return view('backend.categories.create');
     }
 
     /**
@@ -71,7 +71,7 @@ class CategoryController extends Controller
      */
     public function edit(Category $category): View
     {
-        return view('categories.edit', compact('category'));
+        return view('backend.categories.edit', compact('category'));
     }
 
     /**

@@ -38,6 +38,7 @@ class CheckoutController extends Controller
                     'qty'                  => $qty,
                     'subtotal'             => $subtotal,
                     'requires_prescription'=> $item->requires_prescription,
+                    'image_path'           => $item->image_path,
                 ];
             }
         }
@@ -47,7 +48,7 @@ class CheckoutController extends Controller
 
         $addresses = Address::where('user_id', $user->id)->orderBy('is_primary', 'desc')->get();
 
-        return view('checkout.index', compact('user', 'cartItems', 'subTotal', 'shippingCost', 'grandTotal', 'addresses'));
+        return view('frontend.checkout.index', compact('user', 'cartItems', 'subTotal', 'shippingCost', 'grandTotal', 'addresses'));
     }
 
     /**

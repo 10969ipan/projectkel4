@@ -14,7 +14,7 @@ class StoreController extends Controller
     {
         // In a real app we might paginate or filter by stock
         $items = Item::with(['category', 'sizes'])->get();
-        return view('store.index', compact('items'));
+        return view('frontend.store.index', compact('items'));
     }
 
     /**
@@ -23,6 +23,6 @@ class StoreController extends Controller
     public function show($id)
     {
         $item = Item::with(['category'])->findOrFail($id);
-        return view('store.show', compact('item'));
+        return view('frontend.store.show', compact('item'));
     }
 }

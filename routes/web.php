@@ -53,10 +53,13 @@ Route::get('/store/register', [\App\Http\Controllers\StoreAuthController::class,
 Route::post('/store/register', [\App\Http\Controllers\StoreAuthController::class, 'register'])->name('store.register.store');
 Route::post('/store/logout', [\App\Http\Controllers\StoreAuthController::class, 'logout'])->name('store.logout');
 
+// Telemedicine AI (Public)
+Route::post('/consultation/ai-reply', [ConsultationController::class, 'aiReply'])->name('telemedicine.ai-reply');
+
 // Telemedicine Directory (Guest Or Auth)
 Route::get('/telemedicine', [ConsultationController::class, 'index'])->name('telemedicine.index');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'customer'])->group(function () {
     // Checkout Process
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
@@ -72,7 +75,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/telemedicine/chat/{doctorId}', [ConsultationController::class, 'chat'])->name('telemedicine.chat');
     Route::post('/telemedicine/chat/{doctorId}', [ConsultationController::class, 'storeMessage'])->name('telemedicine.store_message');
     Route::post('/telemedicine/approve/{userId}', [ConsultationController::class, 'approvePrescription'])->name('telemedicine.approve');
-    Route::post('/telemedicine/ai-reply', [ConsultationController::class, 'aiReply'])->name('telemedicine.ai-reply');
     
     // User Customer Dashboard
     Route::get('/account/orders', [\App\Http\Controllers\AccountController::class, 'index'])->name('account.orders');
@@ -95,7 +97,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Authenticated Routes
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'backoffice'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -132,6 +134,9 @@ Route::middleware('auth')->group(function () {
 
         // PHARMACARE ADMIN ROUTES
         Route::get('/pharmacare', [\App\Http\Controllers\PharmacareAdminController::class, 'index'])->name('admin.pharmacare.index');
+        Route::get('/pharmacare/transactions', [\App\Http\Controllers\PharmacareAdminController::class, 'transactions'])->name('admin.pharmacare.transactions');
+        Route::get('/pharmacare/transaction-logs', [\App\Http\Controllers\PharmacareAdminController::class, 'transactionLogs'])->name('admin.pharmacare.transaction-logs');
+        Route::put('/pharmacare/transactions/{id}', [\App\Http\Controllers\PharmacareAdminController::class, 'updateTransaction'])->name('admin.pharmacare.transactions.update');
         Route::get('/pharmacare/customers', [\App\Http\Controllers\PharmacareAdminController::class, 'customers'])->name('admin.pharmacare.customers');
         Route::put('/pharmacare/customers/{id}', [\App\Http\Controllers\PharmacareAdminController::class, 'updateCustomer'])->name('admin.pharmacare.customers.update');
         Route::post('/pharmacare/approve/{userId}', [\App\Http\Controllers\PharmacareAdminController::class, 'approvePrescription'])->name('admin.pharmacare.approve');

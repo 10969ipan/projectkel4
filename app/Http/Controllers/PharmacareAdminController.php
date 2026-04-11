@@ -17,7 +17,53 @@ class PharmacareAdminController extends Controller
         // Get all users who have store role
         $customers = User::where('store_role', 'customer')->limit(5)->get();
 
-        return view('admin.pharmacare.index', compact('orders', 'customers'));
+        return view('backend.pharmacare.index', compact('orders', 'customers'));
+    }
+
+    public function transactions()
+    {
+        // View to process pending/paid orders
+        $orders = StoreOrder::with(['user', 'address', 'items.item'])
+            ->whereNotIn('order_status', ['completed', 'cancelled'])
+            ->latest()
+            ->get();
+            
+        return view('backend.pharmacare.transactions', compact('orders'));
+    }
+    
+    public function transactionLogs(Request $request)
+    {
+        // View for historical transactions with filtering
+        $query = StoreOrder::with(['user', 'address', 'items.item'])
+            ->whereIn('order_status', ['completed', 'cancelled']);
+
+        if ($request->filled('date_start')) {
+            $query->whereDate('created_at', '>=', $request->date_start);
+        }
+        if ($request->filled('date_end')) {
+            $query->whereDate('created_at', '<=', $request->date_end);
+        }
+        if ($request->filled('status')) {
+            $query->where('order_status', $request->status);
+        }
+
+        $orders = $query->latest()->get();
+            
+        return view('backend.pharmacare.transaction_logs', compact('orders'));
+    }
+    
+    public function updateTransaction(Request $request, $id)
+    {
+        $order = StoreOrder::findOrFail($id);
+        
+        $request->validate([
+            'order_status' => 'required|in:ordered,paid,processing,completed,cancelled'
+        ]);
+        
+        $order->order_status = $request->order_status;
+        $order->save();
+        
+        return back()->with('success', 'Status pesanan berhasil diperbarui!');
     }
 
     public function customers()
@@ -26,7 +72,7 @@ class PharmacareAdminController extends Controller
             ->with(['addresses', 'storeOrders'])
             ->latest()
             ->get();
-        return view('admin.pharmacare.customers', compact('customers'));
+        return view('backend.pharmacare.customers', compact('customers'));
     }
 
     public function updateCustomer(Request $request, $id)

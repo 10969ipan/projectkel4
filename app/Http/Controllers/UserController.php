@@ -33,7 +33,7 @@ class UserController extends Controller
         // Kita gunakan whereIn untuk memastikan semua level manajemen terlihat
         $users = User::whereIn('role', ['admin', 'staff'])->get();
 
-        return view('users.index', compact('users'));
+        return view('backend.users.index', compact('users'));
     }
 
     /**
@@ -45,7 +45,7 @@ class UserController extends Controller
      */
     public function create(): View
     {
-        return view('users.create');
+        return view('backend.users.create');
     }
 
     /**
@@ -111,7 +111,7 @@ class UserController extends Controller
      */
     public function edit(User $user): View
     {
-        return view('users.edit', compact('user'));
+        return view('backend.users.edit', compact('user'));
     }
 
     /**
@@ -224,7 +224,7 @@ class UserController extends Controller
     {
         // Ambil data user yang sedang login
         // auth()->user() mengembalikan instance User yang sedang login
-        return view('users.edit', ['user' => auth()->user()]);
+        return view('backend.users.edit', ['user' => auth()->user()]);
     }
 
     /**

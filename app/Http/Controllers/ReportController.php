@@ -38,7 +38,7 @@ class ReportController extends Controller
         // Eager loading untuk menghindari N+1 query problem
         $items = Item::with(['category', 'unit'])->get();
 
-        return view('reports.stock', compact('items'));
+        return view('backend.reports.stock', compact('items'));
     }
 
     /**
@@ -93,7 +93,7 @@ class ReportController extends Controller
             // Pagination 10 per halaman
             ->paginate(10);
 
-        return view('reports.transaction', compact('transactions'));
+        return view('backend.reports.transaction', compact('transactions'));
     }
 
     /**
@@ -165,7 +165,7 @@ class ReportController extends Controller
             // Pagination 10 per halaman
             ->paginate(10);
 
-        return view('reports.request', compact('requests'));
+        return view('backend.reports.request', compact('requests'));
     }
 
     /**

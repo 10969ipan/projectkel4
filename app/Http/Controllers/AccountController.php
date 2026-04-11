@@ -9,6 +9,8 @@ use App\Models\StoreOrder;
 use App\Models\StoreOrderItem;
 use App\Models\Item;
 use App\Models\Address;
+use App\Models\ItemSize;
+use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
 {
@@ -23,7 +25,7 @@ class AccountController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         $addresses = Address::where('user_id', $user->id)->orderBy('is_primary', 'desc')->get();
-        return view('account.dashboard', compact('user', 'orders', 'addresses'));
+        return view('frontend.account.dashboard', compact('user', 'orders', 'addresses'));
     }
 
     /**
@@ -33,7 +35,7 @@ class AccountController extends Controller
     {
         $user = Auth::user();
         $addresses = Address::where('user_id', $user->id)->orderBy('is_primary', 'desc')->get();
-        return view('account.profile', compact('user', 'addresses'));
+        return view('frontend.account.profile', compact('user', 'addresses'));
     }
 
     /**
@@ -175,7 +177,7 @@ class AccountController extends Controller
             return redirect()->route('account.orders')->with('error', 'Pesanan ini sudah dibayar atau tidak bisa diproses.');
         }
 
-        return view('account.payment', compact('user', 'order'));
+        return view('frontend.account.payment', compact('user', 'order'));
     }
 
     /**
@@ -247,65 +249,108 @@ class AccountController extends Controller
 
         $status = ($request->payment_method === 'cod') ? 'pending' : 'paid';
 
-        if ($orderId) {
-            // Update exist
-            $order->update([
-                'shipping_method' => $request->shipping_method,
-                'shipping_cost'   => $shippingCost,
-                'grand_total'     => $grandTotal,
-                'payment_method'  => $request->payment_method,
-                'payment_status'  => $status,
-                'order_status'    => ($status === 'paid' ? 'paid' : 'ordered'),
-            ]);
-        } else {
-            // CREATE BARU
-            $order = StoreOrder::create([
-                'user_id'        => $user->id,
-                'order_number'   => $pendingData['order_number'] ?? ('ORD-' . strtoupper(uniqid())),
-                'address_id'     => $addressId,
-                'shipping_method'=> $request->shipping_method,
-                'payment_method' => $request->payment_method,
-                'payment_status' => $status,
-                'order_status'   => ($status === 'paid' ? 'paid' : 'ordered'),
-                'sub_total'      => $subTotal,
-                'shipping_cost'  => $shippingCost,
-                'grand_total'    => $grandTotal,
-                'prescription_path' => $prescriptionPath,
-            ]);
-
-            // Save Items
+            // --- VALIDASI STOK AKHIR ---
             $cart = session()->get('cart', []);
             foreach ($cart as $itemId => $qty) {
                 $item = Item::find($itemId);
-                if ($item) {
-                    StoreOrderItem::create([
-                        'store_order_id' => $order->id,
-                        'item_id'        => $item->id,
-                        'quantity'       => $qty,
-                        'price'          => $item->price,
-                        'sub_total'      => $item->price * $qty,
-                    ]);
+                if (!$item || $item->stock < $qty) {
+                    $name = $item->name ?? 'Item';
+                    return back()->with('error', "Maaf, stok $name tidak mencukupi (Sisa: " . ($item->stock ?? 0) . ").");
                 }
             }
 
-            session()->forget('pending_checkout');
+        try {
+            $result = DB::transaction(function() use ($request, $user, $orderId, $pendingData, $subTotal, $prescriptionPath, $addressId, $grandTotal, $shippingCost, $status, $cart) {
+                if ($orderId) {
+                    // Update exist
+                    $order = StoreOrder::where('user_id', $user->id)->findOrFail($orderId);
+                    $order->update([
+                        'shipping_method' => $request->shipping_method,
+                        'shipping_cost'   => $shippingCost,
+                        'grand_total'     => $grandTotal,
+                        'payment_method'  => $request->payment_method,
+                        'payment_status'  => $status,
+                        'order_status'    => ($status === 'paid' ? 'paid' : 'ordered'),
+                    ]);
+                } else {
+                    // CREATE BARU
+                    $order = StoreOrder::create([
+                        'user_id'        => $user->id,
+                        'order_number'   => $pendingData['order_number'] ?? ('ORD-' . strtoupper(uniqid())),
+                        'address_id'     => $addressId,
+                        'shipping_method'=> $request->shipping_method,
+                        'payment_method' => $request->payment_method,
+                        'payment_status' => $status,
+                        'order_status'   => ($status === 'paid' ? 'paid' : 'ordered'),
+                        'sub_total'      => $subTotal,
+                        'shipping_cost'  => $shippingCost,
+                        'grand_total'    => $grandTotal,
+                        'prescription_path' => $prescriptionPath,
+                    ]);
+
+                    // Save Items & SUBTRACT STOCK
+                    foreach ($cart as $itemId => $qty) {
+                        $item = Item::find($itemId);
+                        if ($item) {
+                            StoreOrderItem::create([
+                                'store_order_id' => $order->id,
+                                'item_id'        => $item->id,
+                                'quantity'       => $qty,
+                                'price'          => $item->price,
+                                'sub_total'      => $item->price * $qty,
+                            ]);
+
+                            // 1. Kurangi stok total di tabel items
+                            $item->decrement('stock', $qty);
+
+                            // 2. Kurangi stok di Batch (FIFO - Expire terdekat duluan)
+                            $remainingToReduce = $qty;
+                            $batches = ItemSize::where('item_id', $item->id)
+                                ->where('stock', '>', 0)
+                                ->orderBy('expiry_date', 'asc')
+                                ->get();
+
+                            foreach ($batches as $batch) {
+                                if ($remainingToReduce <= 0) break;
+
+                                $reduction = min($batch->stock, $remainingToReduce);
+                                $batch->decrement('stock', $reduction);
+                                $remainingToReduce -= $reduction;
+                            }
+                        }
+                    }
+
+                    session()->forget('pending_checkout');
+                }
+
+                // Kosongkan keranjang hanya setelah pembayaran sukses
+                session()->forget('cart');
+
+                // Return data untuk response di luar closure
+                return [
+                    'order_number' => $order->order_number,
+                    'grand_total' => $order->grand_total,
+                    'payment_method' => $order->payment_method,
+                    'paylater_limit' => $user->paylater_limit,
+                ];
+            });
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'order_number' => $result['order_number'],
+                    'grand_total' => $result['grand_total'],
+                    'payment_method' => $result['payment_method'],
+                    'paylater_limit' => $result['paylater_limit'],
+                    'redirect_url' => route('account.orders')
+                ]);
+            }
+
+            return redirect()->route('account.orders')->with('success', 'Pembayaran pesanan #' . $result['order_number'] . ' berhasil dikonfirmasi! 🎉');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
         }
-
-        // Kosongkan keranjang hanya setelah pembayaran sukses
-        session()->forget('cart');
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'order_number' => $order->order_number,
-                'grand_total' => $order->grand_total,
-                'payment_method' => $order->payment_method,
-                'paylater_limit' => $user->paylater_limit,
-                'redirect_url' => route('account.orders')
-            ]);
-        }
-
-        return redirect()->route('account.orders')->with('success', 'Pembayaran pesanan #' . $order->order_number . ' berhasil dikonfirmasi! 🎉');
     }
 
     /**

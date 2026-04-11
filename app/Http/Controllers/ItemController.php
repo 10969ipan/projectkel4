@@ -54,7 +54,7 @@ class ItemController extends Controller
         // Pagination 10 item per halaman
         $items = $query->paginate(10);
 
-        return view('items.index', compact('items'));
+        return view('backend.items.index', compact('items'));
     }
 
     /**
@@ -68,7 +68,7 @@ class ItemController extends Controller
         $categories = Category::all();
         $units = Unit::all();
 
-        return view('items.create', compact('categories', 'units'));
+        return view('backend.items.create', compact('categories', 'units'));
     }
 
     /**
@@ -159,7 +159,7 @@ class ItemController extends Controller
         // Load relasi sizes untuk menampilkan detail setiap ukuran
         $item->load('sizes');
 
-        return view('items.show', compact('item'));
+        return view('backend.items.show', compact('item'));
     }
 
     /**
@@ -177,7 +177,7 @@ class ItemController extends Controller
         // Load varian ukuran yang sudah ada
         $item->load('sizes');
 
-        return view('items.edit', compact('item', 'categories', 'units'));
+        return view('backend.items.edit', compact('item', 'categories', 'units'));
     }
 
     /**

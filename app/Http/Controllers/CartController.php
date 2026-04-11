@@ -22,17 +22,18 @@ class CartController extends Controller
                 $subtotal = $item->price * $qty;
                 $grandTotal += $subtotal;
                 $items[] = [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'price' => $item->price,
-                    'qty' => $qty,
-                    'subtotal' => $subtotal,
-                    'requires_prescription' => $item->requires_prescription,
+                    'id'                   => $item->id,
+                    'name'                 => $item->name,
+                    'price'                => $item->price,
+                    'qty'                  => $qty,
+                    'subtotal'             => $subtotal,
+                    'requires_prescription'=> $item->requires_prescription,
+                    'image_path'           => $item->image_path,
                 ];
             }
         }
 
-        return view('cart.index', compact('items', 'grandTotal'));
+        return view('frontend.cart.index', compact('items', 'grandTotal'));
     }
 
     /**

@@ -24,13 +24,13 @@ class ItemRequestController extends Controller
         }
 
         $requests = $query->latest()->paginate(10);
-        return view('item-requests.index', compact('requests'));
+        return view('backend.item-requests.index', compact('requests'));
     }
 
     public function create()
     {
         $items = Item::all();
-        return view('item-requests.create', compact('items'));
+        return view('backend.item-requests.create', compact('items'));
     }
 
     public function store(Request $request)
@@ -177,7 +177,7 @@ class ItemRequestController extends Controller
             abort(403);
         }
 
-        return view('item-requests.show', compact('itemRequest'));
+        return view('backend.item-requests.show', compact('itemRequest'));
     }
 
     /**

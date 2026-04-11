@@ -208,6 +208,16 @@
                                     <i class="fas fa-users mr-3 {{ request()->routeIs('admin.pharmacare.customers') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
                                     Manajemen Pelanggan
                                 </a>
+                                <a href="{{ route('admin.pharmacare.transactions') }}"
+                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-shopping-cart mr-3 {{ request()->routeIs('admin.pharmacare.transactions') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    Transaksi Toko
+                                </a>
+                                <a href="{{ route('admin.pharmacare.transaction-logs') }}"
+                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-history mr-3 {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    Log Transaksi
+                                </a>
                                 <a href="{{ route('categories.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('categories.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                     <i class="fas fa-tags mr-3 {{ request()->routeIs('categories.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
@@ -340,6 +350,18 @@
                             <i
                                 class="fas fa-users mr-4 text-gray-400 group-hover:text-gray-500 {{ request()->routeIs('admin.pharmacare.customers') ? 'text-primary-600' : '' }}"></i>
                             Manajemen Pelanggan
+                        </a>
+                        <a href="{{ route('admin.pharmacare.transactions') }}" @click="mobileMenuOpen = false"
+                            class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{ request()->routeIs('admin.pharmacare.transactions') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                            <i
+                                class="fas fa-shopping-cart mr-4 text-gray-400 group-hover:text-gray-500 {{ request()->routeIs('admin.pharmacare.transactions') ? 'text-primary-600' : '' }}"></i>
+                            Transaksi Toko
+                        </a>
+                        <a href="{{ route('admin.pharmacare.transaction-logs') }}" @click="mobileMenuOpen = false"
+                            class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                            <i
+                                class="fas fa-history mr-4 text-gray-400 group-hover:text-gray-500 {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'text-primary-600' : '' }}"></i>
+                            Log Transaksi
                         </a>
                         <a href="{{ route('categories.index') }}" @click="mobileMenuOpen = false"
                             class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{ request()->routeIs('categories.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">

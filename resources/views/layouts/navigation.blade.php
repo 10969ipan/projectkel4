@@ -52,6 +52,14 @@
                                 class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('admin.pharmacare.index') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
                                 <i class="fas fa-store mr-1"></i> Dashboard Toko
                             </a>
+                            <a href="{{ route('admin.pharmacare.transactions') }}"
+                                class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('admin.pharmacare.transactions') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
+                                Transaksi (Toko)
+                            </a>
+                            <a href="{{ route('admin.pharmacare.transaction-logs') }}"
+                                class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
+                                Log Transaksi
+                            </a>
                         @endif
                     </div>
                 @endauth
@@ -145,6 +153,10 @@
                     class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('reports.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Laporan</a>
                 <a href="{{ route('admin.pharmacare.index') }}"
                     class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.pharmacare.index') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}"><i class="fas fa-store mr-2"></i>Dashboard Toko</a>
+                <a href="{{ route('admin.pharmacare.transactions') }}"
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.pharmacare.transactions') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Transaksi (Toko)</a>
+                <a href="{{ route('admin.pharmacare.transaction-logs') }}"
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Log Transaksi</a>
             @endif
         </div>
 

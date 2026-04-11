@@ -15,7 +15,7 @@ class StoreAuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('store.index');
         }
-        return view('store.login');
+        return view('store-login');
     }
 
     /** Proses login dari form Pharmacare */
@@ -43,7 +43,7 @@ class StoreAuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('store.index');
         }
-        return view('store.register');
+        return view('store-register');
     }
 
     /** Proses registrasi akun baru */

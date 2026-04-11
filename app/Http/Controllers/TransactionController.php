@@ -28,7 +28,7 @@ class TransactionController extends Controller
         // Diurutkan dari yang terbaru (latest) dan dipaginasi 10 per halaman
         $transactions = Transaction::with(['item', 'user'])->latest()->paginate(10);
 
-        return view('transactions.index', compact('transactions'));
+        return view('backend.transactions.index', compact('transactions'));
     }
 
     /**
@@ -42,7 +42,7 @@ class TransactionController extends Controller
         // Ini penting agar data stok per ukuran tersedia untuk validasi di frontend
         $items = Item::with('unit', 'sizes')->get();
 
-        return view('transactions.create', compact('items'));
+        return view('backend.transactions.create', compact('items'));
     }
 
     /**

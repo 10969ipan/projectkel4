@@ -18,7 +18,7 @@ class ConsultationController extends Controller
     {
         // Cari user yang rolenya doctor (atau fiktif)
         $doctors = User::where('store_role', 'doctor')->get();
-        return view('telemedicine.index', compact('doctors'));
+        return view('frontend.telemedicine.index', compact('doctors'));
     }
 
     /**
@@ -32,7 +32,7 @@ class ConsultationController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
             
-        return view('telemedicine.chat', compact('doctor', 'chats'));
+        return view('frontend.telemedicine.chat', compact('doctor', 'chats'));
     }
 
     /**
@@ -68,107 +68,88 @@ class ConsultationController extends Controller
      */
     public function aiReply(Request $request)
     {
+        // Log awal sekali untuk memastikan request sampai
+        \Log::info('AI Bot hit: ' . $request->message);
+
         $request->validate([
             'message' => 'required|string|max:1000',
             'doctor_id' => 'nullable|exists:users,id'
         ]);
 
-        $apiKey = config('services.gemini.api_key');
+        $apiKey = config('services.groq.api_key');
         if (!$apiKey) {
-            return response()->json(['reply' => 'Maaf, layanan AI sedang tidak tersedia. Silakan hubungi apoteker kami secara langsung.']);
+            return response()->json(['reply' => 'Maaf, layanan AI sedang tidak tersedia.']);
         }
 
         // Ambil daftar obat dari database untuk konteks AI
+        // Ditambah category_id agar relasi with('category') tidak null
         $items = Item::with('category')
-            ->select('name', 'description', 'requires_prescription')
-            ->limit(30)
+            ->select('id', 'name', 'description', 'requires_prescription', 'category_id')
+            ->limit(50)
             ->get()
             ->map(fn($i) => "- {$i->name}" . ($i->requires_prescription ? ' [RESEP WAJIB]' : '') . ($i->description ? ": {$i->description}" : ''))
             ->join("\n");
 
         $systemPrompt = <<<EOT
-Kamu adalah **Apoteker Digital Pharmacare** yang berpengetahuan luas tentang farmasi.
-Tugasmu adalah menjawab pertanyaan pelanggan tentang obat-obatan secara profesional, ramah, dan akurat dalam Bahasa Indonesia.
+Kamu adalah **Apoteker Profesional Pharmacare**.
+Tugas Anda adalah memberikan konsultasi kefarmasian secara formal, akurat, dan sangat sopan dalam Bahasa Indonesia.
 
 Panduan respons:
-1. Berikan informasi: kegunaan, dosis umum, efek samping, cara penyimpanan bila relevan.
-2. Jika obat memerlukan resep dokter, SELALU ingatkan pelanggan.
-3. Untuk keluhan serius (nyeri dada, sesak nafas, dll), sarankan segera ke IGD.
-4. Rekomendasikan produk dari daftar toko jika relevan.
-5. Respons singkat, padat, dan menggunakan bahasa yang mudah dipahami (maks 3-4 paragraf).
-6. JANGAN menggantikan diagnosis dokter, selalu sarankan konsultasi bila perlu.
+1. Berikan informasi yang valid: kegunaan berbasis farmakologi, dosis lazim, kontraindikasi, dan cara penyimpanan.
+2. Jika obat termasuk kategori obat keras atau memerlukan resep dokter, Anda WAJIB memberikan peringatan secara formal.
+3. Untuk keluhan yang bersifat krusial, arahkan pasien untuk segera mendapatkan penanganan medis di fasilitas kesehatan terdekat.
+4. Rekomendasikan produk yang tersedia pada data inventaris secara objektif.
+5. Gunakan tata bahasa yang baku, sopan (menggunakan "Anda" dan "Saya"), serta penjelasan yang sistematis.
+6. Hindari memberikan diagnosis final; selalu tegaskan bahwa informasi ini bersifat edukatif dan konsultasi medis langsung tetap diperlukan.
 
 Daftar produk yang tersedia di Pharmacare:
 {$items}
 EOT;
 
         try {
-            $response = Http::timeout(30)->post(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$apiKey}",
+            // Menggunakan Groq API (OpenAI Compatible)
+            $response = Http::withToken($apiKey)->withoutVerifying()->timeout(30)->post(
+                'https://api.groq.com/openai/v1/chat/completions',
                 [
-                    'system_instruction' => [
-                        'parts' => [['text' => $systemPrompt]]
+                    'model' => 'llama-3.3-70b-versatile',
+                    'messages' => [
+                        ['role' => 'system', 'content' => $systemPrompt],
+                        ['role' => 'user', 'content' => $request->message]
                     ],
-                    'contents' => [
-                        ['role' => 'user', 'parts' => [['text' => $request->message]]]
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.7,
-                        'maxOutputTokens' => 800,
-                        'topP' => 0.95,
-                    ],
-                    'safetySettings' => [
-                        [
-                            'category' => 'HARM_CATEGORY_HARASSMENT',
-                            'threshold' => 'BLOCK_NONE',
-                        ],
-                        [
-                            'category' => 'HARM_CATEGORY_HATE_SPEECH',
-                            'threshold' => 'BLOCK_NONE',
-                        ],
-                        [
-                            'category' => 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                            'threshold' => 'BLOCK_NONE',
-                        ],
-                        [
-                            'category' => 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                            'threshold' => 'BLOCK_NONE',
-                        ],
-                    ],
+                    'temperature' => 0.7,
+                    'max_tokens' => 1024,
+                    'top_p' => 1,
                 ]
             );
 
             if ($response->successful()) {
                 $data = $response->json();
-                
-                // Gabungkan semua part jika ada lebih dari satu
-                $parts = $data['candidates'][0]['content']['parts'] ?? [];
-                $reply = '';
-                foreach ($parts as $part) {
-                    $reply .= $part['text'] ?? '';
-                }
+                $reply = $data['choices'][0]['message']['content'] ?? '';
 
                 if (empty($reply)) {
-                    $reply = 'Maaf, saya tidak dapat menjawab pertanyaan tersebut untuk alasan keamanan medis. Silakan konsultasikan langsung dengan dokter.';
+                    $reply = 'Maaf, saya sedang kesulitan memproses jawaban saat ini.';
                 }
             } else {
-                $reply = 'Maaf, layanan AI sementara tidak tersedia. Silakan hubungi apoteker kami secara langsung.';
+                \Log::error('Chatbot API Error (' . $response->status() . '): ' . $response->body());
+                $reply = 'Maaf, layanan sedang sibuk. Silakan coba kembali dalam beberapa saat.';
             }
         } catch (\Exception $e) {
-            $reply = 'Pesan gagal terkirim. Silakan periksa koneksi internet Anda atau coba lagi nanti.';
+            \Log::error('Chatbot Exception: ' . $e->getMessage());
+            $reply = 'Gagal terhubung dengan pusat AI. Silakan periksa koneksi internet Anda atau coba lagi nanti.';
         }
 
-        // Simpan percakapan jika user login (doctor_id bisa null untuk chat global)
-        if (Auth::check()) {
+        // SIMPAN HISTORY (Hanya jika ada doctor_id dan user login)
+        // Karena kolom doctor_id di DB bersifat wajib (NOT NULL), kita lewati simpan jika NULL
+        if (Auth::check() && $request->filled('doctor_id')) {
             TelemedicineChat::create([
                 'user_id'       => Auth::id(),
-                'doctor_id'     => $request->doctor_id, // null jika chat global
+                'doctor_id'     => $request->doctor_id,
                 'message'       => $request->message,
                 'is_from_doctor'=> false,
             ]);
             TelemedicineChat::create([
                 'user_id'       => Auth::id(),
-                'doctor_id'     => $request->doctor_id, // null jika chat global
+                'doctor_id'     => $request->doctor_id,
                 'message'       => $reply,
                 'is_from_doctor'=> true,
             ]);
