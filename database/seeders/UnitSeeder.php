@@ -9,10 +9,12 @@ class UnitSeeder extends Seeder
 {
     public function run(): void
     {
-        Unit::create(['name' => 'Pieces', 'symbol' => 'pcs']);
-        Unit::create(['name' => 'Kilogram', 'symbol' => 'kg']);
-        Unit::create(['name' => 'Liter', 'symbol' => 'L']);
-        Unit::create(['name' => 'Meter', 'symbol' => 'm']);
-        Unit::create(['name' => 'Dus', 'symbol' => 'dus']);
+        Unit::create(['name' => 'Tablet', 'symbol' => 'tab']);
+        Unit::create(['name' => 'Strip', 'symbol' => 'strp']);
+        Unit::create(['name' => 'Botol', 'symbol' => 'btl']);
+        Unit::create(['name' => 'Tube', 'symbol' => 'tube']);
+        Unit::create(['name' => 'Sachet', 'symbol' => 'sch']);
+        Unit::create(['name' => 'Box', 'symbol' => 'box']);
+        Unit::create(['name' => 'Pcs', 'symbol' => 'pcs']);
     }
 }

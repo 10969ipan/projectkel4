@@ -51,6 +51,9 @@ class User extends Authenticatable
         'password',         // Password (akan di-hash otomatis)
         'role',             // Peran: 'admin' atau 'staff'
         'profile_photo',    // Path foto profil (contoh: profile-photos/abc123.jpg)
+        'paylater_limit',
+        'is_prescription_approved',
+        'store_role',
     ];
 
     /**
@@ -153,5 +156,34 @@ class User extends Authenticatable
     public function processedRequests(): HasMany
     {
         return $this->hasMany(ItemRequest::class, 'processed_by');
+    }
+
+    // ========================================================================
+    // PHARMACARE E-COMMERCE RELATIONSHIPS
+    // ========================================================================
+
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    public function storeOrders(): HasMany
+    {
+        return $this->hasMany(StoreOrder::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function telemedicineChatsAsPatient(): HasMany
+    {
+        return $this->hasMany(TelemedicineChat::class, 'user_id');
+    }
+
+    public function telemedicineChatsAsDoctor(): HasMany
+    {
+        return $this->hasMany(TelemedicineChat::class, 'doctor_id');
     }
 }

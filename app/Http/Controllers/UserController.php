@@ -29,8 +29,9 @@ class UserController extends Controller
      */
     public function index(): View
     {
-        // Ambil semua user dari database (admin dan staff)
-        $users = User::all();
+        // Tampilkan semua Admin dan Staff (Akses Penuh)
+        // Kita gunakan whereIn untuk memastikan semua level manajemen terlihat
+        $users = User::whereIn('role', ['admin', 'staff'])->get();
 
         return view('users.index', compact('users'));
     }

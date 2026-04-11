@@ -58,7 +58,9 @@ class Item extends Model
         'unit_id',          // ID satuan
         'stock',            // TOTAL stok dari semua batch
         'price',            // Harga
-        'description'       // Deskripsi
+        'description',      // Deskripsi
+        'requires_prescription',
+        'image_path',
     ];
 
     // ========================================================================
@@ -117,5 +119,19 @@ class Item extends Model
     public function itemRequests(): HasMany
     {
         return $this->hasMany(ItemRequest::class);
+    }
+
+    // ========================================================================
+    // PHARMACARE E-COMMERCE RELATIONSHIPS
+    // ========================================================================
+
+    public function storeOrderItems(): HasMany
+    {
+        return $this->hasMany(StoreOrderItem::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
     }
 }

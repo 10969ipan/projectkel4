@@ -11,21 +11,21 @@ class TransactionSeeder extends Seeder
     {
         // Barang masuk
         Transaction::create([
-            'item_id' => 1,
+            'item_id' => 1, // Paracetamol
             'user_id' => 1,
             'type' => 'in',
-            'quantity' => 10,
+            'quantity' => 50,
             'date' => now()->subDays(10),
-            'note' => 'Pembelian awal'
+            'note' => 'Stok awal dari supplier A'
         ]);
 
         Transaction::create([
-            'item_id' => 2,
+            'item_id' => 2, // Amoxicillin
             'user_id' => 1,
             'type' => 'in',
-            'quantity' => 5,
+            'quantity' => 30,
             'date' => now()->subDays(8),
-            'note' => 'Pembelian awal'
+            'note' => 'Stok awal dari supplier B'
         ]);
 
         // Barang keluar
@@ -33,9 +33,9 @@ class TransactionSeeder extends Seeder
             'item_id' => 1,
             'user_id' => 2,
             'type' => 'out',
-            'quantity' => 2,
+            'quantity' => 5,
             'date' => now()->subDays(5),
-            'note' => 'Untuk cabang A'
+            'note' => 'Permintaan IGD'
         ]);
     }
 }

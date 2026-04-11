@@ -201,7 +201,12 @@
                                 <a href="{{ route('users.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('users.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                     <i class="fas fa-users-cog mr-3 {{ request()->routeIs('users.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
-                                    Manajemen User
+                                    Manajemen Staff
+                                </a>
+                                <a href="{{ route('admin.pharmacare.customers') }}"
+                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-users mr-3 {{ request()->routeIs('admin.pharmacare.customers') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    Manajemen Pelanggan
                                 </a>
                                 <a href="{{ route('categories.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('categories.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
@@ -327,8 +332,14 @@
                         <a href="{{ route('users.index') }}" @click="mobileMenuOpen = false"
                             class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{ request()->routeIs('users.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                             <i
-                                class="fas fa-users mr-4 text-gray-400 group-hover:text-gray-500 {{ request()->routeIs('users.*') ? 'text-primary-600' : '' }}"></i>
-                            Pengguna
+                                class="fas fa-users-cog mr-4 text-gray-400 group-hover:text-gray-500 {{ request()->routeIs('users.*') ? 'text-primary-600' : '' }}"></i>
+                            Manajemen Staff
+                        </a>
+                        <a href="{{ route('admin.pharmacare.customers') }}" @click="mobileMenuOpen = false"
+                            class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{ request()->routeIs('admin.pharmacare.customers') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                            <i
+                                class="fas fa-users mr-4 text-gray-400 group-hover:text-gray-500 {{ request()->routeIs('admin.pharmacare.customers') ? 'text-primary-600' : '' }}"></i>
+                            Manajemen Pelanggan
                         </a>
                         <a href="{{ route('categories.index') }}" @click="mobileMenuOpen = false"
                             class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{ request()->routeIs('categories.*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">

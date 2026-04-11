@@ -26,23 +26,31 @@
                         @if (auth()->user()->isAdmin())
                             <a href="{{ route('transactions.index') }}"
                                 class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('transactions.*') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
-                                Transactions
+                                Transaksi Stok
                             </a>
                             <a href="{{ route('users.index') }}"
                                 class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('users.*') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
-                                Users
+                                Manajemen Staff
+                            </a>
+                            <a href="{{ route('admin.pharmacare.customers') }}"
+                                class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('admin.pharmacare.customers') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
+                                Manajemen Pelanggan
                             </a>
                             <a href="{{ route('categories.index') }}"
                                 class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('categories.*') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
-                                Categories
+                                Kategori Produk
                             </a>
                             <a href="{{ route('units.index') }}"
                                 class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('units.*') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
-                                Units
+                                Satuan Ukur
                             </a>
                             <a href="{{ route('reports.stock') }}"
                                 class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('reports.*') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
-                                Reports
+                                Laporan
+                            </a>
+                            <a href="{{ route('admin.pharmacare.index') }}"
+                                class="border-transparent hover:border-blue-300 hover:text-blue-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('admin.pharmacare.index') ? 'border-blue-500 text-white' : 'text-blue-100' }}">
+                                <i class="fas fa-store mr-1"></i> Dashboard Toko
                             </a>
                         @endif
                     </div>
@@ -124,15 +132,19 @@
             
             @if (auth()->check() && auth()->user()->isAdmin())
                 <a href="{{ route('transactions.index') }}"
-                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('transactions.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Transactions</a>
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('transactions.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Transaksi Stok</a>
                 <a href="{{ route('users.index') }}"
-                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('users.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Users</a>
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('users.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Manajemen Staff</a>
+                <a href="{{ route('admin.pharmacare.customers') }}"
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.pharmacare.customers') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Manajemen Pelanggan</a>
                 <a href="{{ route('categories.index') }}"
-                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('categories.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Categories</a>
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('categories.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Kategori Produk</a>
                 <a href="{{ route('units.index') }}"
-                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('units.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Units</a>
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('units.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Satuan Ukur</a>
                 <a href="{{ route('reports.stock') }}"
-                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('reports.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Reports</a>
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('reports.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}">Laporan</a>
+                <a href="{{ route('admin.pharmacare.index') }}"
+                    class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.pharmacare.index') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:text-white hover:bg-blue-700' }}"><i class="fas fa-store mr-2"></i>Dashboard Toko</a>
             @endif
         </div>
 
