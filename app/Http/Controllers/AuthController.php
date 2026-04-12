@@ -35,16 +35,37 @@ class AuthController extends Controller
         // PROSES AUTENTIKASI: Coba login dengan kredensial yang diberikan
         // Auth::attempt() akan mengecek apakah email dan password cocok dengan database
         if (Auth::attempt($credentials)) {
+            // MERGE GUEST CART TO DATABASE
+            $cart = session()->get('cart', []);
+            $user = Auth::user();
+            foreach ($cart as $id => $details) {
+                // Gunakan updateOrCreate untuk menghindari duplikasi
+                \App\Models\CartItem::updateOrCreate(
+                    ['user_id' => $user->id, 'item_id' => $details['id']],
+                    [
+                        'qty' => $details['qty'], 
+                        'type' => $details['type'] ?? 'once', 
+                        'interval_days' => $details['interval'] ?? 30
+                    ]
+                );
+            }
 
-            // LOGIN BERHASIL
-
-            // KEAMANAN: Regenerate session ID untuk mencegah session fixation attack
-            // Session fixation adalah serangan di mana attacker mencuri session ID
             $request->session()->regenerate();
 
-            // REDIRECT: Arahkan user ke halaman yang dituju (intended)
-            // Jika tidak ada halaman intended, arahkan ke /dashboard
-            return redirect()->intended('/dashboard')->with('success', 'Berhasil masuk!');
+            // PULL FULL CART FROM DATABASE TO SESSION
+            $fullCart = \App\Models\CartItem::where('user_id', $user->id)->get();
+            $newCart = [];
+            foreach ($fullCart as $item) {
+                $newCart[$item->item_id] = [
+                    'id' => $item->item_id,
+                    'qty' => $item->qty,
+                    'type' => $item->type,
+                    'interval' => $item->interval_days
+                ];
+            }
+            session()->put('cart', $newCart);
+
+            return redirect()->intended('/')->with('success', 'Berhasil masuk!');
         }
 
         // LOGIN GAGAL

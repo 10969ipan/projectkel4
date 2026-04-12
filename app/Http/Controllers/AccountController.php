@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use App\Models\StoreOrder;
 use App\Models\StoreOrderItem;
@@ -32,6 +33,15 @@ class AccountController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'orders_page');
 
+        // Fetch specifically for the success modal if requested
+        $justPaidOrder = null;
+        if (request()->has('just_paid')) {
+            $justPaidOrder = StoreOrder::where('user_id', $user->id)
+                ->where('id', request('just_paid'))
+                ->with(['address', 'items.item'])
+                ->first();
+        }
+
         $addresses = Address::where('user_id', $user->id)
             ->select('id', 'user_id', 'label', 'full_address', 'is_primary')
             ->orderBy('is_primary', 'desc')->get();
@@ -43,7 +53,38 @@ class AccountController extends Controller
             ->with('item:id,name,image_path')
             ->get();
 
-        return view('frontend.account.dashboard', compact('user', 'orders', 'addresses', 'subscriptions'));
+        // Personalized Wellness: find article matching latest order's items
+        $latestOrder = StoreOrder::where('user_id', $user->id)->latest()->with('items.item:id,name')->first();
+
+        $wellnessArticles = collect();
+
+        if ($latestOrder && $latestOrder->items->isNotEmpty()) {
+            // Get item names from the latest order
+            $itemNames = $latestOrder->items->pluck('item.name')->filter()->map(fn($n) => strtolower($n));
+
+            // Find articles whose keyword appears in any ordered item name
+            $wellnessArticles = \App\Models\HealthArticle::where('is_active', true)
+                ->get()
+                ->filter(function($a) use ($itemNames) {
+                    $keyword = strtolower($a->keyword ?? '');
+                    if (!$keyword) return false;
+                    foreach ($itemNames as $name) {
+                        if (str_contains($name, $keyword) || str_contains($keyword, $name)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
+                ->take(5)
+                ->values();
+        }
+
+        // Fallback: general tips if no match
+        if ($wellnessArticles->isEmpty()) {
+            $wellnessArticles = \App\Models\HealthArticle::where('is_active', true)->limit(5)->get();
+        }
+
+        return view('frontend.account.dashboard', compact('user', 'orders', 'addresses', 'subscriptions', 'wellnessArticles', 'justPaidOrder'));
     }
 
     /**
@@ -127,8 +168,8 @@ class AccountController extends Controller
             $addressId = $pendingData['address_id'];
         }
 
-        $shippingCost = $request->shipping_method === 'instant' ? 15000 : 10000;
-        $grandTotal = $subTotal + $shippingCost;
+        $shippingCost = (int)($request->shipping_method === 'instant' ? 15000 : 10000);
+        $grandTotal = (float)($subTotal + $shippingCost);
 
         // Validasi Saldo Wallet
         if ($request->payment_method === 'wallet') {
@@ -158,20 +199,32 @@ class AccountController extends Controller
         }
 
         try {
-            DB::transaction(function() use ($request, $user, $orderId, $subTotal, $prescriptionPath, $addressId, $grandTotal, $shippingCost, $cart) {
-                $status = ($request->payment_method === 'cod') ? 'pending' : 'paid';
+            $order = DB::transaction(function() use ($request, $user, $orderId, $subTotal, $prescriptionPath, $addressId, $grandTotal, $shippingCost, $cart) {
+                $status = in_array($request->payment_method, ['cod', 'bank']) ? 'pending' : 'paid';
 
                 if ($request->payment_method === 'wallet') {
+                    // Check balance for Wallet
+                    if ($user->wallet_balance < $grandTotal) {
+                        throw new \Exception('Saldo dompet tidak mencukupi untuk transaksi ini.');
+                    }
                     $user->decrement('wallet_balance', $grandTotal);
-                    WalletTransaction::create([
+                    
+                    // Log wallet transaction
+                    \App\Models\WalletTransaction::create([
                         'user_id' => $user->id,
-                        'amount' => -$grandTotal,
                         'type' => 'payment',
-                        'description' => 'Pembayaran pesanan Pharmacare',
+                        'amount' => $grandTotal,
+                        'description' => "Pembayaran pesanan Pharmacare",
+                        'status' => 'completed'
                     ]);
                 } elseif ($request->payment_method === 'paylater') {
+                    // Check limit for Paylater
+                    if ($user->paylater_limit < $grandTotal) {
+                        throw new \Exception('Limit Paylater tidak mencukupi untuk transaksi ini.');
+                    }
                     $user->decrement('paylater_limit', $grandTotal);
                 }
+                // Other methods (QRIS, Bank, etc.) are "passed" as per user request for demo gateway
 
                 if ($orderId) {
                     $order = StoreOrder::where('user_id', $user->id)->findOrFail($orderId);
@@ -183,6 +236,7 @@ class AccountController extends Controller
                         'payment_status'  => $status,
                         'order_status'    => ($status === 'paid' ? 'paid' : 'ordered'),
                     ]);
+                    return $order;
                 } else {
                     $pendingData = session()->get('pending_checkout');
                     $order = StoreOrder::create([
@@ -216,9 +270,9 @@ class AccountController extends Controller
                                     'user_id' => $user->id,
                                     'item_id' => $item->id,
                                     'quantity' => $details['qty'],
-                                    'interval_days' => $interval,
+                                    'interval_days' => (int)$interval,
                                     'discount_percentage' => 10.00,
-                                    'next_delivery_date' => now()->addDays($interval),
+                                    'next_delivery_date' => now()->addDays((int)$interval),
                                     'status' => 'active'
                                 ]);
                             }
@@ -245,24 +299,45 @@ class AccountController extends Controller
                         }
                     }
                     session()->forget('pending_checkout');
+                    session()->forget('cart');
+                    \App\Models\CartItem::where('user_id', $user->id)->delete();
+                    
+                    // Clear Store Cache for all pages and this specific item
+                    for ($i = 1; $i <= 5; $i++) {
+                        Cache::forget('store_catalog_page_' . $i);
+                    }
+                    foreach ($cart as $details) {
+                        Cache::forget('store_item_' . $details['id']);
+                    }
+                    
+                    return $order;
                 }
-                session()->forget('cart');
             });
 
             if ($request->ajax()) {
+                session()->flash('success', 'Pembayaran berhasil dikonfirmasi! 🎉');
                 return response()->json([
                     'success' => true,
-                    'message' => 'Transaksi berhasil diselesaikan! 🎉',
-                    'redirect_url' => route('account.orders')
+                    'message' => 'Pembayaran berhasil dikonfirmasi!',
+                    'redirect_url' => route('account.orders', ['just_paid' => $order->id])
                 ]);
             }
-            return redirect()->route('account.orders')->with('success', 'Transaksi berhasil diselesaikan! 🎉');
+            return redirect()->route('account.orders', ['just_paid' => $order->id])->with('success', 'Transaksi berhasil diselesaikan! 🎉');
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Payment Error: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'payment_method' => $request->payment_method,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             if ($request->ajax()) {
-                return response()->json(['success' => false, 'error' => 'Gagal memproses: ' . $e->getMessage()], 500);
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                ], 500);
             }
-            return back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
     }
 

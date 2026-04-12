@@ -22,7 +22,7 @@
 
         console.log('QuickView Action Triggered for ID:', id);
         
-        // 1. Check for Embedded Data (Zero-Latency Path)
+        // 1. Zero-Latency Background: Instant UI update with available data
         const embeddedData = {
             id: qvBtn.dataset.id,
             name: qvBtn.dataset.name,
@@ -33,31 +33,38 @@
             stock: qvBtn.dataset.stock,
             image_url: qvBtn.dataset.image
         };
-
-        // If we have at least name and category, we can render instantly
-        if (embeddedData.name && embeddedData.category) {
-            console.log('Zero-Latency Path: Using embedded data.');
+        
+        // Show instantly if we have basic data
+        if (embeddedData.name) {
             populateQuickView(embeddedData);
-            return;
         }
 
-        // 2. AJAX Fallback Path (if data attributes are missing)
+        // 2. Freshness Sync: Always fetch latest details (especially stock)
         const originalHtml = qvBtn.innerHTML;
-        qvBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        qvBtn.style.pointerEvents = 'none';
+        if (!embeddedData.name) {
+            qvBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            qvBtn.style.pointerEvents = 'none';
+        }
 
         try {
-            const url = `${window.PharmacareConfig.routes.quickView}/${id}?_cb=${Date.now()}`;
+            const url = `${window.PharmacareConfig.routes.quickView}/${id}?t=${Date.now()}`;
             const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
+            
+            // Re-populate with official server data (updates stock, etc.)
             populateQuickView(data);
         } catch (err) {
-            console.error('Quick View Error:', err);
-            if (window.showToast) window.showToast('error', 'Gagal memuat data obat.');
+            console.error('Quick View Freshness Error:', err);
+            // If we didn't even have embedded data, show error
+            if (!embeddedData.name && window.showToast) {
+                window.showToast('error', 'Gagal memuat data obat.');
+            }
         } finally {
-            qvBtn.innerHTML = originalHtml;
-            qvBtn.style.pointerEvents = 'auto';
+            if (!embeddedData.name) {
+                qvBtn.innerHTML = originalHtml;
+                qvBtn.style.pointerEvents = 'auto';
+            }
         }
     });
 

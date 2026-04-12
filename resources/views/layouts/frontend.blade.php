@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo.png') }}">
 
     <style>
         :root {
@@ -56,6 +57,102 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* --- Chatbot Greeting Bubble Styling --- */
+        #chat-greeting-bubble {
+            position: fixed;
+            bottom: 105px;
+            right: 30px;
+            background: linear-gradient(135deg, #0076D6 0%, #00a2ff 100%);
+            color: white;
+            padding: 15px 45px 15px 20px;
+            border-radius: 20px 20px 5px 20px;
+            box-shadow: 0 15px 35px rgba(0, 118, 214, 0.2);
+            z-index: 999998;
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.4;
+            max-width: 250px;
+            animation: bubbleFadeIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            display: none;
+        }
+
+        #chat-greeting-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 25px;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid #00a2ff;
+        }
+
+        .bubble-close {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: 0.2s;
+        }
+
+        .bubble-close:hover { background: rgba(255,255,255,0.4); }
+
+        @keyframes bubbleFadeIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .chat-fab-card {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 8px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            cursor: pointer;
+            z-index: 999998;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #f1f5f9;
+        }
+
+        .chat-fab-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .chat-fab-logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #0076D6 0%, #00a2ff 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            box-shadow: 0 5px 15px rgba(0, 118, 214, 0.2);
+        }
+
+        .chat-fab-text {
+            padding-right: 15px;
+        }
+
+        .chat-fab-text h5 { margin: 0; font-size: 0.95rem; font-weight: 800; color: #1e293b; }
+        .chat-fab-text p { margin: 0; font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
 
         /* Minimalist Transitions */
         a, button, .card, .btn, .nav-link, input, select {
@@ -855,10 +952,15 @@
             notifications: [],
             unreadNotificationsCount: 0,
             showNotifications: false,
+            showWellnessModal: false,
+            activeWellnessArticle: {},
 
             init() {
                 console.log('Alpine Storefront State Initialized.');
                 window.StoreUI = this;
+
+                // Auto-refresh cart on page load to ensure sync
+                this.refreshCart();
 
                 // Handle redirect with auth trigger
                 const urlParams = new URLSearchParams(window.location.search);
@@ -899,7 +1001,12 @@
                         headers: { 'X-CSRF-TOKEN': csrf }
                     });
                     this.unreadNotificationsCount = 0;
-                } catch (e) { console.error('Notification mark-read error:', e); }
+                } catch (e) { console.error('Notification read error:', e); }
+            },
+
+            openWellnessModal(article) {
+                this.activeWellnessArticle = article;
+                this.showWellnessModal = true;
             },
 
             async addToCart(itemId, qty = 1) {
@@ -988,17 +1095,16 @@
 
     <div class="container" x-data="PharmacareState" 
          @open-quickview.window="openQuickView($event.detail)"
-         @add-to-cart.window="addToCart($event.detail.id, $event.detail.qty)">
+         @add-to-cart.window="addToCart($event.detail.id, $event.detail.qty)"
+         @open-wellness.window="openWellnessModal($event.detail)">
         <!-- Top Bar Navigation -->
         <div class="top-bar">
             <a href="{{ route('store.index') }}" style="text-decoration: none;">
-                <span
-                    style="font-size: 1.5rem; font-weight: 800; color: var(--primary-blue); letter-spacing: -0.025em;">Pharma<span
-                        style="color: #333;">care</span></span>
+                <span style="font-size: 1.5rem; font-weight: 800; color: var(--primary-blue); letter-spacing: -0.025em;">Pharma<span style="color: #333;">care</span></span>
             </a>
 
             <div class="search-container" style="flex: 1; max-width: 500px; margin: 0 30px;">
-                <input type="text" class="search-input" id="main-search" placeholder="Cari obat atau keluhan..." autocomplete="off">
+                <input type="text" class="search-input" id="main-search" placeholder="Cari obat..." autocomplete="off">
                 <div id="search-results" class="search-results-dropdown"></div>
             </div>
 
@@ -1335,29 +1441,44 @@
                 </div>
             </div>
         </div>
-    </div>
+
 
     <!-- Floating AI Chatbot Widget -->
     <div id="chatbot-widget">
         <div class="chat-window" id="chatWindow">
             <div class="chat-header">
                 <div>
-                    <h4><i class="fas fa-robot"></i> Apoteker Digital</h4>
-                    <small><span class="status-dot"></span> Aktif & Siap Membantu 24/7</small>
+                    <h4><i class="fas fa-robot"></i> SIMA</h4>
+                    <small><span class="status-dot"></span> Aktif & Siap Membantu 24 Jam    </small>
                 </div>
                 <button onclick="toggleChat()" class="chat-close-btn">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="chat-body" id="chatBody">
-                <div class="chat-bubble bot">Halo! Saya AI Pharmacare. Apa yang bisa saya bantu hari ini?</div>
+                <div class="chat-bubble bot">Halo! Saya **SIMA**, asisten pintar Pharmacare. Ada yang bisa saya bantu hari ini?</div>
             </div>
             <form class="chat-input-area" id="chatbotForm" data-url="{{ route('telemedicine.ai-reply') }}">
                 <input type="text" id="chatbotInput" placeholder="Tanya tentang obat..." autocomplete="off">
                 <button type="submit">➤</button>
             </form>
         </div>
-        <div class="chat-fab" onclick="toggleChat()"><i class="fas fa-robot"></i></div>
+        <!-- Greeting Bubble -->
+        <div id="chat-greeting-bubble">
+            <button class="bubble-close" onclick="dismissGreetingBubble(event)">✕</button>
+            Bingung mulai dari mana? <strong>SIMA</strong> bisa bantu!
+        </div>
+
+        <!-- Chat FAB Card Launcher -->
+        <div class="chat-fab-card" onclick="toggleChat()">
+            <div class="chat-fab-logo">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="chat-fab-text">
+                <h5>Chat SIMA</h5>
+                <p><span class="status-dot" style="margin-right: 4px;"></span> Online</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1371,27 +1492,74 @@
                 addToCart: "{{ url('/cart/add-ajax') }}"
             }
         };
-        window.showToast = (icon, title) => {
-            const Toast = Swal.mixin({
+        window.showToast = function(icon, title) {
+            Swal.fire({
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
+                icon: icon,
+                title: title,
                 didOpen: (toast) => {
                     toast.addEventListener('mouseenter', Swal.stopTimer)
                     toast.addEventListener('mouseleave', Swal.resumeTimer)
                 }
             });
-            Toast.fire({ icon, title });
         };
     </script>
     <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>
     <script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
-    <script src="{{ asset('assets/js/pharmacare.js') }}?v=2.3" defer></script>
+    <script src="{{ asset('assets/js/pharmacare.js') }}?v=3.1" defer></script>
     @vite(['resources/js/frontend/chatbot_widget.js'])
     @stack('scripts')
 
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const wm = document.getElementById('wellnessModal');
+            if (wm) {
+                wm.addEventListener('click', function(e) {
+                    if (e.target === this) this.style.display = 'none';
+                });
+            }
+        });
+    </script>
+
+    <!-- WELLNESS DETAIL MODAL (GLOBAL - Pure Vanilla JS) -->
+    <div id="wellnessModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:999999; background:rgba(15,23,42,0.8); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:20px; transition: opacity 0.3s ease;"
+         onclick="if(event.target===this) window.closeArticleModal()">
+        <div style="background:white; border-radius:30px; width:100%; max-width:600px; overflow:hidden; position:relative; box-shadow: 0 25px 50px rgba(0,0,0,0.3); animation: slideUp 0.4s cubic-bezier(0.23,1,0.32,1);">
+            <button onclick="window.closeArticleModal()" style="position:absolute; right:20px; top:20px; border:none; background:white; color:#1e293b; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.1rem; z-index:10; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">✕</button>
+            <div style="height:250px; overflow:hidden;">
+                <img id="wm-img" src="" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div style="padding:40px;">
+                <div style="font-size:0.75rem; font-weight:800; color:var(--primary-blue); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:12px;">Tips & Insight Kesehatan</div>
+                <h2 id="wm-title" style="font-size:1.8rem; font-weight:800; color:#1e293b; margin-bottom:20px; line-height:1.2;"></h2>
+                <p id="wm-content" style="font-size:1.1rem; color:#475569; line-height:1.7; white-space:pre-wrap;"></p>
+                <div style="margin-top:30px; padding-top:20px; border-top:1px solid #f1f5f9;">
+                    <button onclick="window.closeArticleModal()" style="width:100%; padding:14px; background:var(--primary-blue); color:white; border:none; border-radius:15px; font-weight:700; cursor:pointer;">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    window.openArticleModal = function(article) {
+        if (!article) return;
+        document.getElementById('wm-title').textContent = article.title || '';
+        document.getElementById('wm-content').textContent = article.content || '';
+        document.getElementById('wm-img').src = '/' + (article.image_path || '');
+        var m = document.getElementById('wellnessModal');
+        m.style.display = 'flex';
+    };
+    window.closeArticleModal = function() {
+        document.getElementById('wellnessModal').style.display = 'none';
+    };
+    // Keep Alpine compatibility
+    window.openWellnessModal = window.openArticleModal;
+    </script>
+</div>
+    <style>@keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }</style>
     @if (session('success')) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('success', '{{ session('success') }}'));</script> @endif
     @if (session('warning')) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('warning', '{{ session('warning') }}'));</script> @endif
     @if ($errors->any()) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('error', '{{ $errors->first() }}'));</script> @endif

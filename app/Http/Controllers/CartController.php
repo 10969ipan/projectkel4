@@ -12,6 +12,7 @@ class CartController extends Controller
      */
     public function index()
     {
+        $this->syncFromDatabase();
         $cart = session()->get('cart', []);
         $items = [];
         $grandTotal = 0;
@@ -87,6 +88,13 @@ class CartController extends Controller
 
         session()->put('cart', $cart);
 
+        if (auth()->check()) {
+            \App\Models\CartItem::updateOrCreate(
+                ['user_id' => auth()->id(), 'item_id' => $itemId],
+                ['qty' => $cart[$itemId]['qty'], 'type' => $type, 'interval_days' => $interval]
+            );
+        }
+
         if ($request->expectsJson()) {
             return $this->summary();
         }
@@ -118,6 +126,14 @@ class CartController extends Controller
 
         session()->put('cart', $cart);
 
+        if (auth()->check()) {
+            if ($qty < 1) {
+                \App\Models\CartItem::where('user_id', auth()->id())->where('item_id', $itemId)->delete();
+            } else {
+                \App\Models\CartItem::where('user_id', auth()->id())->where('item_id', $itemId)->update(['qty' => $qty]);
+            }
+        }
+
         if ($request->expectsJson()) {
             return $this->summary();
         }
@@ -130,17 +146,31 @@ class CartController extends Controller
      */
     public function remove($itemId)
     {
+        $itemId = intval($itemId);
         $cart = session()->get('cart', []);
         
-        // Robust remove: filter out any item matching the product ID
-        $cart = array_filter($cart, function($details) use ($itemId) {
-            return $details['id'] != $itemId;
-        });
+        // Use the same robust loop logic as update()
+        foreach ($cart as $key => $details) {
+            if (intval($details['id']) === $itemId) {
+                unset($cart[$key]);
+            }
+        }
 
-        session()->put('cart', $cart);
+        if (auth()->check()) {
+            \App\Models\CartItem::where('user_id', auth()->id())
+                ->where('item_id', $itemId)
+                ->delete();
+        }
+
+        // Force a fresh sync to ensure summary is correct
+        if (auth()->check()) {
+            $this->syncFromDatabase();
+        }
+
+        request()->session()->save();
 
         if (request()->expectsJson()) {
-            return $this->summary();
+            return response()->json(array_merge(['success' => true], $this->getCartData()));
         }
 
         return redirect()->route('cart.index')->with('success', 'Item dihapus.');
@@ -152,6 +182,9 @@ class CartController extends Controller
     public function clear()
     {
         session()->forget('cart');
+        if (auth()->check()) {
+            \App\Models\CartItem::where('user_id', auth()->id())->delete();
+        }
         return redirect()->route('store.index')->with('success', 'Keranjang dikosongkan.');
     }
 
@@ -159,6 +192,18 @@ class CartController extends Controller
      * Get Cart Summary for AJAX
      */
     public function summary()
+    {
+        if (auth()->check()) {
+            $this->syncFromDatabase();
+        }
+        
+        return response()->json(array_merge(['success' => true], $this->getCartData()));
+    }
+
+    /**
+     * Helper to get structured cart data for response
+     */
+    private function getCartData()
     {
         $cart = session()->get('cart', []);
         $items = [];
@@ -172,11 +217,9 @@ class CartController extends Controller
                 if ($details['type'] === 'subscription') {
                     $unitPrice = $unitPrice * 0.9;
                 }
-
                 $subtotal = $unitPrice * $details['qty'];
                 $grandTotal += $subtotal;
                 $count += $details['qty'];
-
                 $items[] = [
                     'id'         => $item->id,
                     'name'       => $item->name,
@@ -190,11 +233,30 @@ class CartController extends Controller
             }
         }
 
-        return response()->json([
-            'success'     => true,
+        return [
             'items'       => $items,
             'grand_total' => $grandTotal,
             'cart_count'  => $count,
-        ]);
+        ];
+    }
+
+    /**
+     * Sinkronkan keranjang dari database ke session (Hanya jika login)
+     */
+    private function syncFromDatabase()
+    {
+        if (auth()->check()) {
+            $dbItems = \App\Models\CartItem::where('user_id', auth()->id())->get();
+            $cart = []; // Reset locally then fill from DB
+            foreach ($dbItems as $item) {
+                $cart[$item->item_id] = [
+                    'id' => $item->item_id,
+                    'qty' => $item->qty,
+                    'type' => $item->type,
+                    'interval' => $item->interval_days
+                ];
+            }
+            session()->put('cart', $cart);
+        }
     }
 }

@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 2. Tambah loading bubble (Dokter sedang mengetik)
         const loadingBubble = document.createElement('div');
         loadingBubble.className = 'bubble doctor loading';
-        loadingBubble.innerHTML = '<em>Apoteker Digital sedang mengetik...</em>';
+        loadingBubble.innerHTML = '<em>SIMA sedang mengetik...</em>';
         chatArea.appendChild(loadingBubble);
         scrollToBottom();
 

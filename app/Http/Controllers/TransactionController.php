@@ -7,6 +7,7 @@ use App\Models\ItemSize;
 use App\Models\Transaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 /**
@@ -121,6 +122,12 @@ class TransactionController extends Controller
             // Contoh: Total stok berkurang dari 50 menjadi 45
             $item->decrement('stock', $request->quantity);
         }
+
+        // Clear Store Cache for all pages and this specific item
+        for ($i = 1; $i <= 5; $i++) {
+            Cache::forget('store_catalog_page_' . $i);
+        }
+        Cache::forget('store_item_' . $item->id);
 
         // Redirect ke halaman daftar transaksi dengan pesan sukses
         return redirect()

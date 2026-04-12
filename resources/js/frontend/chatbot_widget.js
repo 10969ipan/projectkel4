@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatBody = document.getElementById('chatBody');
     const chatbotForm = document.getElementById('chatbotForm');
     const chatbotInput = document.getElementById('chatbotInput');
+    const greetingBubble = document.getElementById('chat-greeting-bubble');
 
     if (!chatbotForm) return;
 
@@ -14,8 +15,26 @@ document.addEventListener('DOMContentLoaded', function() {
         if (chatWindow.classList.contains('open')) {
             chatbotInput.focus();
             scrollToBottom();
+            // Hide bubble when chat is opened
+            if (greetingBubble) greetingBubble.style.display = 'none';
         }
     };
+
+    // --- Greeting Bubble Logic ---
+    window.dismissGreetingBubble = function(e) {
+        if (e) e.stopPropagation();
+        if (greetingBubble) greetingBubble.style.display = 'none';
+        localStorage.setItem('pharmacare_sima_bubble_dismissed', 'true');
+    };
+
+    const hasBeenDismissed = localStorage.getItem('pharmacare_sima_bubble_dismissed');
+    if (!hasBeenDismissed && greetingBubble) {
+        setTimeout(() => {
+            if (!chatWindow.classList.contains('open')) {
+                greetingBubble.style.display = 'block';
+            }
+        }, 5000); // Show after 5 seconds
+    }
 
     function scrollToBottom() {
         chatBody.scrollTop = chatBody.scrollHeight;
@@ -36,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
         typingElem.id = typingId;
         typingElem.className = 'typing-indicator';
         typingElem.style.padding = '0 10px 10px';
-        typingElem.innerText = 'Apoteker sedang mengetik...';
+        typingElem.innerText = 'SIMA sedang mengetik...';
         chatBody.appendChild(typingElem);
         scrollToBottom();
 
@@ -45,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json'
             };
 
-            // Tambahkan CSRF jika tersedia (opsional sekarang karena sudah di-exempt)
             if (csrfToken) {
                 headers['X-CSRF-TOKEN'] = csrfToken;
             }
@@ -73,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Chatbot Error:', error);
             const typingIndicator = document.getElementById(typingId);
             if (typingIndicator) typingIndicator.remove();
-            appendBubble('Gagal menghubungi Apoteker Digital. Silakan coba lagi atau periksa koneksi Anda.', 'bot');
+            appendBubble('Gagal menghubungi SIMA. Silakan coba lagi atau periksa koneksi Anda.', 'bot');
         }
     });
 

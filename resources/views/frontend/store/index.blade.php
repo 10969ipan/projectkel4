@@ -14,13 +14,13 @@
             
             <div style="position: relative; z-index: 10; max-width: 600px;">
                 <h1 style="font-size: 3.5rem; font-weight: 900; margin-bottom: 20px; line-height: 1.05; letter-spacing: -0.05em;">Solusi Sehat,<br><span style="color: #93C5FD;">Cerdas & Terpercaya.</span></h1>
-                <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 35px; line-height: 1.6; font-weight: 400; max-width: 500px;">Konsultasi kesehatan Anda dengan asisten <strong>Apoteker Digital bertenaga AI</strong> yang siap membantu kapan saja.</p>
+                <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 35px; line-height: 1.6; font-weight: 400; max-width: 500px;">Konsultasi kesehatan Anda dengan asisten <strong>SIMA</strong> yang siap membantu kapan saja.</p>
                 
                 <div style="display: flex; gap: 20px; align-items: center;">
                     <a href="#katalog" style="background: white; color: var(--primary-blue); padding: 16px 36px; border-radius: 14px; font-weight: 800; text-decoration: none; font-size: 1.1rem; transition: 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)'">Jelajahi Produk</a>
                     <a href="javascript:void(0)" onclick="toggleChat()" style="color: white; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 1rem; opacity: 0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
                         <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);"><i class="fas fa-comment-dots"></i></div>
-                        Chat Apoteker AI
+                        Chat SIMA
                     </a>
                 </div>
             </div>
@@ -37,7 +37,7 @@
     <div id="katalog" style="margin-bottom: 60px; scroll-margin-top: 120px; padding-top: 40px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
             <div>
-                <h2 style="font-size: 2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.02em; margin-bottom: 5px;">Katalog Obat</h2>
+                <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.03em; margin-bottom: 5px;"><span style="color: var(--primary-blue);">Katalog</span> Obat</h2>
                 <p style="color: #64748b; font-size: 0.95rem;">Daftar obat-obatan terpercaya & bersertifikat</p>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
@@ -89,6 +89,13 @@
 
                 const cards = Array.from(track.children);
                 if (cards.length === 0) return;
+
+                // Threshold: If cards don't even fill the view, don't clone
+                if (cards.length <= 5) {
+                    track.style.justifyContent = 'center';
+                    track.style.transform = 'none';
+                    return; 
+                }
 
                 // Clone cards for seamless looping (prepend + append)
                 const clonesBefore = cards.map(c => c.cloneNode(true));
@@ -173,9 +180,62 @@
         </script>
     </div>
 
+    <!-- Wellness Highlights Section: Immersive & Educational -->
+    @if(isset($wellnessArticles) && count($wellnessArticles) > 0)
+    <div style="margin-top: 80px; margin-bottom: 20px;">
+        <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.03em; margin-bottom: 40px;"><span style="color: var(--primary-blue);">Insight</span> Kesehatan</h2>
+        
+        <div x-data="{ 
+            active: 0, 
+            items: {{ $wellnessArticles->count() }},
+            init() {
+                setInterval(() => {
+                    this.active = (this.active + 1) % this.items;
+                }, 7000); // 7 Seconds for better readability
+            }
+        }" x-init="init()" class="wellness-highlights" style="position: relative; overflow: hidden; border-radius: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.12); height: 480px; background: #000;">
+            
+            @foreach($wellnessArticles as $index => $article)
+                <script>window._wellnessArticles = window._wellnessArticles || []; window._wellnessArticles[{{ $index }}] = {!! \Illuminate\Support\Js::from($article) !!};</script>
+                <div x-show="active === {{ $index }}" 
+                     x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-1200"
+                     x-transition:enter-start="opacity-0 transform translate-x-1/3"
+                     x-transition:enter-end="opacity-100 transform translate-x-0"
+                     x-transition:leave="transition cubic-bezier(0.16, 1, 0.3, 1) duration-1200"
+                     x-transition:leave-start="opacity-100 transform translate-x-0"
+                     x-transition:leave-end="opacity-0 transform -translate-x-1/3"
+                     class="slide-item" 
+                     style="position: absolute; inset: 0; background-image: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%), url('{{ asset($article->image_path) }}'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; padding: 50px 80px; height: 100%;">
+                
+                <div style="max-width: 580px; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                    <h3 style="font-size: 2.8rem; font-weight: 800; margin-top: 0; margin-bottom: 20px; line-height: 1.15; letter-spacing: -0.03em;">{{ $article->title }}</h3>
+                    <p style="font-size: 1.2rem; opacity: 0.9; line-height: 1.7; margin-bottom: 35px; font-weight: 500;">{{ Str::limit($article->content, 140) }}</p>
+                    <a href="javascript:void(0)" onclick="window.openArticleModal(window._wellnessArticles[{{ $index }}])"
+                       style="display: inline-flex; align-items: center; gap: 12px; background: #ffffff; color: #0f172a; text-decoration: none; font-weight: 800; font-size: 1rem; padding: 16px 32px; border-radius: 18px; box-shadow: 0 15px 30px rgba(0,0,0,0.25); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: none; cursor: pointer; z-index: 50; position: relative;"
+                       onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 20px 40px rgba(0,0,0,0.3)'"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.25)'">
+                        Baca Selengkapnya <i class="fas fa-arrow-right" style="font-size: 0.85rem; color: var(--primary-blue);"></i>
+                    </a>
+                </div>
+            </div>
+            @endforeach
+
+
+            <!-- Navigation Indicators -->
+            <div style="position: absolute; bottom: 40px; right: 60px; display: flex; gap: 12px; z-index: 10;">
+                @foreach($wellnessArticles as $index => $article)
+                <button @click="active = {{ $index }}" 
+                        :style="active === {{ $index }} ? 'width: 40px; background: white;' : 'width: 12px; background: rgba(255,255,255,0.3);'" 
+                        style="height: 6px; border-radius: 3px; cursor: pointer; border: none; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);"></button>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Customer Reviews Section: High Trust & Premium Social Proof -->
-    <div style="margin-top: 100px; padding: 60px 0; border-top: 1px solid #f1f5f9;">
-        <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.03em; margin-bottom: 50px;">Kata Mereka tentang <span style="color: var(--primary-blue);">Pharmacare</span></h2>
+    <div style="margin-top: 80px; padding: 60px 0; border-top: 1px solid #f1f5f9;">
+        <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.03em; margin-bottom: 50px;"><span style="color: var(--primary-blue);">Kata Mereka</span> tentang Pharmacare</h2>
         
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;">
             <!-- Review 1 -->

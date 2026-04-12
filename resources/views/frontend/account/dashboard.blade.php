@@ -110,8 +110,27 @@
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="content-card">
+        <!-- Main Content Area -->
+        <div style="display: flex; flex-direction: column; gap: 30px;">
+            
+            <!-- SINGLE RELEVANT WELLNESS ARTICLE -->
+            @if(count($wellnessArticles) > 0)
+            @php $article = $wellnessArticles->first(); @endphp
+            <script>window._dashboardArticle = {!! \Illuminate\Support\Js::from($article) !!};</script>
+
+            <div class="wellness-highlights" style="position: relative; overflow: hidden; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,118,214,0.1); height: 280px; background-image: linear-gradient(to right, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.4) 50%, transparent 100%), url('{{ asset($article->image_path) }}'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; padding: 40px;">
+                <div style="max-width: 450px; color: white; position: relative; z-index: 10;">
+                    <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; color: #93c5fd;">Terkait Pesanan Anda</div>
+                    <h3 style="font-size: 1.8rem; font-weight: 800; margin-top: 0; margin-bottom: 15px; line-height: 1.2;">{{ $article->title }}</h3>
+                    <p style="font-size: 1rem; opacity: 0.9; line-height: 1.6; margin-bottom: 20px;">{{ Str::limit($article->content, 120) }}</p>
+                    <a href="javascript:void(0)" onclick="window.openArticleModal(window._dashboardArticle)" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; font-weight: 700; font-size: 0.9rem; border-bottom: 2px solid var(--primary-blue); cursor: pointer; position: relative;">Baca Selengkapnya <i class="fas fa-arrow-right" style="font-size: 0.7rem;"></i></a>
+                </div>
+            </div>
+
+            @endif
+
+
+            <div class="content-card" style="min-height: 600px;">
             
             <!-- SECTION: ORDERS -->
             <div id="section-orders" class="content-section">
@@ -131,33 +150,41 @@
                                 </div>
                             </div>
 
-                            <!-- Progress Tracker with SVG Icons -->
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 25px; position: relative; padding: 0 10px;">
-                                @php
-                                    $steps = [
-                                        ['id' => 'ordered', 'label' => 'Dipesan', 'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>'],
-                                        ['id' => 'paid',    'label' => 'Dibayar',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'],
-                                        ['id' => 'processing','label' => 'Dikirim',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'],
-                                        ['id' => 'completed','label' => 'Selesai',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'],
-                                    ];
-                                    $currentIdx = 0;
-                                    foreach($steps as $idx => $s) {
-                                        if($order->order_status == $s['id']) $currentIdx = $idx;
-                                    }
-                                @endphp
-                                <div style="position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: #eee; z-index: 1; border-radius:99px;"></div>
-                                <div style="position: absolute; top: 20px; left: 10%; height: 3px; width: calc({{ $currentIdx }} * (80% / 3)); background: var(--primary-blue); z-index: 1; border-radius:99px; transition: width 0.5s ease;"></div>
-
-                                @foreach($steps as $idx => $step)
-                                @php $done = $idx <= $currentIdx; $active = $idx == $currentIdx; @endphp
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; flex: 1;">
-                                    <div style="width: 42px; height: 42px; background: {{ $done ? 'var(--primary-blue)' : 'white' }}; border: 2px solid {{ $done ? 'var(--primary-blue)' : '#e2e8f0' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: {{ $done ? 'white' : '#cbd5e1' }}; transition: all 0.4s; box-shadow: {{ $active ? '0 0 0 4px rgba(0,118,214,0.15)' : 'none' }};">
-                                        {!! $step['icon'] !!}
+                            @if(in_array($order->order_status, ['cancelled', 'rejected']))
+                                <div style="display: flex; justify-content: center; margin-bottom: 25px; padding: 15px; background: #FFF5F5; border-radius: 12px; border: 1px dashed #ffa8a8;">
+                                    <div style="font-weight: 800; color: #C92A2A; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-times-circle"></i> Pesanan Dibatalkan
                                     </div>
-                                    <span style="font-size: 0.72rem; font-weight: 800; color: {{ $done ? 'var(--primary-blue)' : '#94a3b8' }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ $step['label'] }}</span>
                                 </div>
-                                @endforeach
-                            </div>
+                            @else
+                                <!-- Progress Tracker with SVG Icons -->
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 25px; position: relative; padding: 0 10px;">
+                                    @php
+                                        $steps = [
+                                            ['id' => 'ordered', 'label' => 'Dipesan', 'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>'],
+                                            ['id' => 'paid',    'label' => 'Dibayar',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'],
+                                            ['id' => 'processing','label' => 'Dikirim',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'],
+                                            ['id' => 'completed','label' => 'Selesai',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'],
+                                        ];
+                                        $currentIdx = 0;
+                                        foreach($steps as $idx => $s) {
+                                            if($order->order_status == $s['id']) $currentIdx = $idx;
+                                        }
+                                    @endphp
+                                    <div style="position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: #eee; z-index: 1; border-radius:99px;"></div>
+                                    <div style="position: absolute; top: 20px; left: 10%; height: 3px; width: calc({{ $currentIdx }} * (80% / 3)); background: var(--primary-blue); z-index: 1; border-radius:99px; transition: width 0.5s ease;"></div>
+
+                                    @foreach($steps as $idx => $step)
+                                    @php $done = $idx <= $currentIdx; $active = $idx == $currentIdx; @endphp
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; flex: 1;">
+                                        <div style="width: 42px; height: 42px; background: {{ $done ? 'var(--primary-blue)' : 'white' }}; border: 2px solid {{ $done ? 'var(--primary-blue)' : '#e2e8f0' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: {{ $done ? 'white' : '#cbd5e1' }}; transition: all 0.4s; box-shadow: {{ $active ? '0 0 0 4px rgba(0,118,214,0.15)' : 'none' }};">
+                                            {!! $step['icon'] !!}
+                                        </div>
+                                        <span style="font-size: 0.72rem; font-weight: 800; color: {{ $done ? 'var(--primary-blue)' : '#94a3b8' }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ $step['label'] }}</span>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            @endif
 
                             @php
                                 $hasPrescription = !empty($order->prescription_path) || $user->is_prescription_approved;
@@ -201,7 +228,7 @@
                         @endforeach
                     </div>
                     <div style="margin-top: 25px; display: flex; justify-content: center; width: 100%;">
-                        {{ $orders->links() }}
+                        {{ $orders->links('vendor.pagination.pharmacare') }}
                     </div>
                 @else
                     <div class="empty-state">
@@ -462,6 +489,31 @@
         @endphp
         {{ $order->id }}: {!! json_encode($orderData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
         @endforeach
+
+        @if($justPaidOrder)
+        {{ $justPaidOrder->id }}: {!! json_encode([
+            'number'          => $justPaidOrder->order_number,
+            'date'            => $justPaidOrder->created_at->format('d M Y, H:i'),
+            'created_at'      => $justPaidOrder->created_at->format('d M Y, H:i'),
+            'updated_at'      => $justPaidOrder->updated_at->format('d M Y, H:i'),
+            'customer'        => $user->name,
+            'address'         => $justPaidOrder->address->full_address ?? 'Alamat belum diisi',
+            'address_label'   => $justPaidOrder->address->label ?? '-',
+            'payment_method'  => strtoupper($justPaidOrder->payment_method ?? '-'),
+            'shipping_method' => ($justPaidOrder->shipping_method === 'instant' ? 'Instant Delivery (2 Jam)' : 'JNE / J&T Reguler'),
+            'shipping_cost'   => $justPaidOrder->shipping_cost ?? 0,
+            'sub_total'       => $justPaidOrder->sub_total,
+            'grand_total'     => $justPaidOrder->grand_total,
+            'status'          => $justPaidOrder->order_status,
+            'items'           => collect($justPaidOrder->items)->map(fn($oi) => [
+                'name'     => $oi->item->name ?? 'Item Dihapus',
+                'qty'      => $oi->quantity,
+                'price'    => $oi->price,
+                'subtotal' => $oi->sub_total,
+                'image'    => $oi->item->image_path ?? null,
+            ])->toArray(),
+        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
+        @endif
     };
 </script>
 
@@ -469,8 +521,12 @@
     <div id="orderDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:99998; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 20px; backdrop-filter:blur(4px);">
         <div style="background:white; border-radius:24px; width:100%; max-width:680px; position:relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: slideUp 0.35s cubic-bezier(0.23,1,0.32,1);">
             <!-- Header -->
-            <div style="background: linear-gradient(135deg, #0076D6, #005FA3); padding: 28px 30px; border-radius: 24px 24px 0 0; color:white; position:relative;">
-                <button onclick="document.getElementById('orderDetailModal').style.display='none'" style="position:absolute; right:20px; top:20px; border:none; background:rgba(255,255,255,0.2); color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1rem; transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✕</button>
+            <div style="background:var(--primary-blue); color:white; padding:30px; border-radius:32px 32px 0 0; position:relative;">
+                <button onclick="document.getElementById('orderDetailModal').style.display='none'" 
+                        style="position:absolute; right:24px; top:50%; transform:translateY(-50%); border:none; background:rgba(255,255,255,0.2); color:white; width:42px; height:42px; border-radius:50%; cursor:pointer; font-size:1.2rem; transition:all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" 
+                        onmouseover="this.style.background='rgba(255,255,255,0.35)'; this.style.transform='translateY(-50%) scale(1.1)'" 
+                        onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='translateY(-50%) scale(1)'"
+                        onmousedown="this.style.transform='translateY(-50%) scale(0.9)'">✕</button>
                 <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.8; margin-bottom:6px;">Detail Pesanan</div>
                 <div id="od-number" style="font-size:1.5rem; font-weight:800;">ORD-XXXX</div>
                 <div id="od-date" style="font-size:0.85rem; opacity:0.75; margin-top:4px;"></div>
@@ -586,6 +642,75 @@
         </div>
     </div>
 
+    <!-- SUCCESS MODAL (POST-PAYMENT) -->
+    @if($justPaidOrder)
+    <div id="successModal" style="display:flex; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999999; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+        <div style="background:white; border-radius:32px; width:100%; max-width:480px; text-align:center; padding:50px 40px; position:relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: zoomIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <button onclick="document.getElementById('successModal').style.display='none'" 
+                    style="position:absolute; right:20px; top:20px; border:none; background:#f1f5f9; color:#64748b; width:42px; height:42px; border-radius:50%; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:1.1rem; transition:all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"
+                    onmouseover="this.style.background='#e2e8f0'; this.style.transform='scale(1.1)'"
+                    onmouseout="this.style.background='#f1f5f9'; this.style.transform='scale(1)'"
+                    onmousedown="this.style.transform='scale(0.9)'">✕</button>
+            
+            <!-- Success Animation (CSS only) -->
+            <div style="width:100px; height:100px; background:#f0fdf4; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 30px; border:4px solid #fff; box-shadow:0 0 0 4px #f0fdf4;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: checkmark 0.6s ease-in-out forwards;"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+
+            @if($justPaidOrder->payment_status === 'paid')
+                <h3 style="font-size:1.8rem; font-weight:800; color:#0f172a; margin-bottom:12px;">Yeay! Pembayaran Berhasil</h3>
+                <p style="color:#64748b; font-size:1rem; line-height:1.6; margin-bottom:30px;">Pesanan kamu sedang kami siapkan. Terima kasih telah mempercayai Pharmacare.</p>
+            @else
+                <h3 style="font-size:1.8rem; font-weight:800; color:#0f172a; margin-bottom:12px;">Pesanan Berhasil Dibuat!</h3>
+                <p style="color:#64748b; font-size:1rem; line-height:1.6; margin-bottom:30px;">Silakan selesaikan pembayaran agar pesanan kamu bisa segera kami proses.</p>
+            @endif
+
+            <div style="background:#f8fafc; border-radius:24px; padding:25px; margin-bottom:30px; text-align:left;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px dashed #e2e8f0; padding-bottom:15px;">
+                    <span style="font-size:0.85rem; color:#64748b; font-weight:600;">No Pesanan</span>
+                    <span style="font-size:0.85rem; color:#0f172a; font-weight:800;">#{{ $justPaidOrder->order_number }}</span>
+                </div>
+
+                @if($justPaidOrder->payment_method === 'bank')
+                <div style="margin-bottom:20px; background:white; border:1px solid #e2e8f0; border-radius:16px; padding:15px;">
+                    <div style="font-size:0.75rem; color:#64748b; margin-bottom:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Transfer Pembayaran (BCA)</div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/id/thumb/5/55/BNI_logo.svg/1200px-BNI_logo.svg.png" style="height:20px; filter: grayscale(1);" alt="Bank">
+                        <div style="text-align:left;">
+                            <div style="font-size:1.1rem; color:#0f172a; font-weight:800; letter-spacing:1px;">8832 1922 33</div>
+                            <div style="font-size:0.75rem; color:#64748b; font-weight:600;">a/n PT Pharmacare Indonesia</div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <span style="font-size:0.85rem; color:#64748b; font-weight:600;">Total Tagihan</span>
+                    <span style="font-size:0.95rem; color:#0076D6; font-weight:800;">Rp {{ number_format($justPaidOrder->grand_total, 0, ',', '.') }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:0.85rem; color:#64748b; font-weight:600;">Metode Pembayaran</span>
+                    <span style="font-size:0.85rem; color:#0f172a; font-weight:800; text-transform:uppercase;">{{ $justPaidOrder->payment_method }}</span>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <button onclick="document.getElementById('successModal').style.display='none'; openOrderDetail({{ $justPaidOrder->id }})" style="width:100%; padding:16px; background:#0076D6; color:white; border:none; border-radius:16px; font-weight:800; font-size:1rem; cursor:pointer; transition:0.2s; box-shadow:0 10px 15px -3px rgba(0,118,214,0.3);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Lihat Detail Pesanan</button>
+                <button onclick="document.getElementById('successModal').style.display='none'" style="width:100%; padding:14px; background:white; color:#64748b; border:2px solid #e2e8f0; border-radius:16px; font-weight:700; font-size:0.95rem; cursor:pointer;">{{ $justPaidOrder->payment_status === 'paid' ? 'Tutup' : 'Selesai' }}</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('just_paid')) {
+            url.searchParams.delete('just_paid');
+            history.replaceState(null, '', url.pathname + (url.search || ''));
+        }
+    })();
+    </script>
+    @endif
+
     <script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -618,27 +743,37 @@
 
             // Build Timeline with timestamps
             const timeline = document.getElementById('od-timeline');
-            const timestamps = {
-                'ordered':    data.created_at,
-                'paid':       data.status !== 'ordered' ? data.updated_at : null,
-                'processing': (data.status === 'processing' || data.status === 'completed') ? data.updated_at : null,
-                'completed':  data.status === 'completed' ? data.updated_at : null,
-            };
-            timeline.innerHTML = `
-                <div style="position:absolute; top:21px; left:10%; right:10%; height:3px; background:#e2e8f0; border-radius:99px;"></div>
-                <div style="position:absolute; top:21px; left:10%; height:3px; width:calc(${currentIdx} * (80% / 3)); background:#0076D6; border-radius:99px; transition:width 0.5s ease;"></div>
-                ${statusOrder.map((s, i) => {
-                    const done = i <= currentIdx;
-                    const act = i === currentIdx;
-                    const st = statuses[s];
-                    const ts = timestamps[s];
-                    return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px; z-index:2; flex:1;">
-                        <div style="width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:${done ? '#0076D6' : 'white'}; border:2px solid ${done ? '#0076D6' : '#e2e8f0'}; color:${done ? 'white' : '#cbd5e1'}; transition:0.4s; box-shadow:${act ? '0 0 0 5px rgba(0,118,214,0.15)' : 'none'};">${st.icon}</div>
-                        <span style="font-size:0.68rem; font-weight:800; color:${done ? '#0076D6' : '#94a3b8'}; text-transform:uppercase; letter-spacing:0.5px;">${st.label}</span>
-                        ${done && ts ? `<span style="font-size:0.6rem; color:#94a3b8; font-weight:500; text-align:center; line-height:1.3;">${ts}</span>` : '<span style="font-size:0.6rem; color:transparent;">-</span>'}
+            
+            if (data.status === 'cancelled' || data.status === 'rejected') {
+                timeline.innerHTML = `
+                    <div style="padding: 15px; background: #FFF5F5; border-radius: 12px; border: 1px dashed #ffa8a8; text-align: center; width: 100%;">
+                        <div style="font-weight: 800; color: #C92A2A; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-times-circle"></i> Pesanan Dibatalkan
+                        </div>
                     </div>`;
-                }).join('')}
-            `;
+            } else {
+                const timestamps = {
+                    'ordered':    data.created_at,
+                    'paid':       data.status !== 'ordered' ? data.updated_at : null,
+                    'processing': (data.status === 'processing' || data.status === 'completed') ? data.updated_at : null,
+                    'completed':  data.status === 'completed' ? data.updated_at : null,
+                };
+                timeline.innerHTML = `
+                    <div style="position:absolute; top:21px; left:10%; right:10%; height:3px; background:#e2e8f0; border-radius:99px;"></div>
+                    <div style="position:absolute; top:21px; left:10%; height:3px; width:calc(${currentIdx} * (80% / 3)); background:#0076D6; border-radius:99px; transition:width 0.5s ease;"></div>
+                    ${statusOrder.map((s, i) => {
+                        const done = i <= currentIdx;
+                        const act = i === currentIdx;
+                        const st = statuses[s];
+                        const ts = timestamps[s];
+                        return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px; z-index:2; flex:1;">
+                            <div style="width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:${done ? '#0076D6' : 'white'}; border:2px solid ${done ? '#0076D6' : '#e2e8f0'}; color:${done ? 'white' : '#cbd5e1'}; transition:0.4s; box-shadow:${act ? '0 0 0 5px rgba(0,118,214,0.15)' : 'none'};">${st.icon}</div>
+                            <span style="font-size:0.68rem; font-weight:800; color:${done ? '#0076D6' : '#94a3b8'}; text-transform:uppercase; letter-spacing:0.5px;">${st.label}</span>
+                            ${done && ts ? `<span style="font-size:0.6rem; color:#94a3b8; font-weight:500; text-align:center; line-height:1.3;">${ts}</span>` : '<span style="font-size:0.6rem; color:transparent;">-</span>'}
+                        </div>`;
+                    }).join('')}
+                `;
+            }
 
             // Customer & Payment
             document.getElementById('od-customer').innerText = data.customer;
@@ -672,10 +807,12 @@
             document.getElementById('orderDetailModal').style.display = 'flex';
         }
 
-        // Close on backdrop click
-        document.getElementById('orderDetailModal').addEventListener('click', function(e) {
-            if (e.target === this) this.style.display = 'none';
-        });
+        // Close wellness modal on backdrop click
+        if (document.getElementById('wellnessModal')) {
+            document.getElementById('wellnessModal').addEventListener('click', function(e) {
+                if (e.target === this) this.style.display = 'none';
+            });
+        }
 
         let currentSubtotal = 0;
         function openPaymentModal(data) {
@@ -731,8 +868,42 @@
             const modal = document.getElementById(modalId);
             modal.style.display = (modal.style.display === 'none' || modal.style.display === '') ? 'flex' : 'none';
         }
+
+        window.openArticleModal = function(article) {
+            if (!article) return;
+            document.getElementById('wm-title').textContent = article.title || '';
+            document.getElementById('wm-content').textContent = article.content || '';
+            document.getElementById('wm-img').src = '/' + (article.image_path || '');
+            document.getElementById('wellnessModal').style.display = 'flex';
+        };
+
+        window.closeArticleModal = function() {
+            document.getElementById('wellnessModal').style.display = 'none';
+        };
     </script>
+
+    <!-- WELLNESS MODAL HTML -->
+    <div id="wellnessModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:999999; background:rgba(15,23,42,0.8); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) window.closeArticleModal()">
+        <div style="background:white; border-radius:30px; width:100%; max-width:600px; overflow:hidden; position:relative; box-shadow: 0 25px 50px rgba(0,0,0,0.3); animation: slideUp 0.4s cubic-bezier(0.23,1,0.32,1);">
+            <button onclick="window.closeArticleModal()" style="position:absolute; right:20px; top:20px; border:none; background:white; color:#1e293b; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.1rem; z-index:10; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">✕</button>
+            <div style="height:250px; overflow:hidden;">
+                <img id="wm-img" src="" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div style="padding:40px;">
+                <div style="font-size:0.75rem; font-weight:800; color:#0076D6; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:12px;">Tips & Insight Kesehatan</div>
+                <h2 id="wm-title" style="font-size:1.8rem; font-weight:800; color:#1e293b; margin-bottom:20px; line-height:1.2;"></h2>
+                <p id="wm-content" style="font-size:1.1rem; color:#475569; line-height:1.7; white-space:pre-wrap;"></p>
+                <div style="margin-top:30px; padding-top:20px; border-top:1px solid #f1f5f9;">
+                    <button onclick="window.closeArticleModal()" style="width:100%; padding:14px; background:#0076D6; color:white; border:none; border-radius:15px; font-weight:700; cursor:pointer;">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <style>@keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }</style>
+    <style>
+        @keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity:0; } to { transform: scale(1); opacity:1; } }
+        @keyframes checkmark { from { stroke-dasharray: 100; stroke-dashoffset: 100; } to { stroke-dasharray: 100; stroke-dashoffset: 0; } }
+    </style>
 </body>
 </html>

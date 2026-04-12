@@ -8,6 +8,7 @@ use App\Models\ItemSize;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -143,6 +144,11 @@ class ItemController extends Controller
             }
         });
 
+        // Clear Store Cache for all pages
+        for ($i = 1; $i <= 5; $i++) {
+            Cache::forget('store_catalog_page_' . $i);
+        }
+
         return redirect()
             ->route('items.index')
             ->with('success', 'Obat/Alkes berhasil ditambahkan.');
@@ -251,6 +257,12 @@ class ItemController extends Controller
             }
         });
 
+        // Clear Store Cache for all pages and this specific item
+        for ($i = 1; $i <= 5; $i++) {
+            Cache::forget('store_catalog_page_' . $i);
+        }
+        Cache::forget('store_item_' . $item->id);
+
         return redirect()
             ->route('items.index')
             ->with('success', 'Obat/Alkes berhasil diperbarui.');
@@ -268,6 +280,12 @@ class ItemController extends Controller
     {
         // Hapus barang (varian ukuran akan terhapus otomatis)
         $item->delete();
+
+        // Clear Store Cache for all pages and this specific item
+        for ($i = 1; $i <= 5; $i++) {
+            Cache::forget('store_catalog_page_' . $i);
+        }
+        Cache::forget('store_item_' . $item->id);
 
         // Redirect ke halaman daftar barang dengan pesan sukses
         return redirect()

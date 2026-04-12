@@ -80,8 +80,8 @@
                                 <div style="font-weight: 700; color: #1e293b; font-size: 0.9rem;">{{ $trx->description }}</div>
                                 <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">{{ $trx->type }}</div>
                             </td>
-                            <td style="padding: 15px 20px; text-align: right; font-weight: 800; color: {{ $trx->amount > 0 ? '#10b981' : '#ef4444' }}; font-size: 1rem;">
-                                {{ $trx->amount > 0 ? '+' : '' }}Rp {{ number_format($trx->amount, 0, ',', '.') }}
+                            <td style="padding: 15px 20px; text-align: right; font-weight: 800; color: {{ $trx->type === 'payment' ? '#ef4444' : '#10b981' }}; font-size: 1rem;">
+                                {{ $trx->type === 'payment' ? '-' : '+' }}Rp {{ number_format($trx->amount, 0, ',', '.') }}
                             </td>
                         </tr>
                         @empty

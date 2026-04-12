@@ -247,8 +247,8 @@
                     <div style="font-weight: 700; font-size: 0.95rem;">{{ $trx->description }}</div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);">{{ $trx->created_at->format('d M Y, H:i') }}</div>
                 </div>
-                <div style="font-weight: 800; color: {{ $trx->amount >= 0 ? '#10b981' : '#ef4444' }};">
-                    {{ $trx->amount >= 0 ? '+' : '' }}Rp {{ number_format($trx->amount, 0, ',', '.') }}
+                <div style="font-weight: 800; color: {{ $trx->type === 'payment' ? '#ef4444' : '#10b981' }};">
+                    {{ $trx->type === 'payment' ? '-' : '+' }}Rp {{ number_format($trx->amount, 0, ',', '.') }}
                 </div>
             </div>
             @empty

@@ -26,7 +26,12 @@ class StoreController extends Controller
             return view('frontend.store.partials.product-grid', compact('items'))->render();
         }
 
-        return view('frontend.store.index', compact('items'));
+        // Fetch all curated wellness articles for the homepage highlight
+        $wellnessArticles = Cache::remember('store_wellness_highlights_v2', 3600, function() {
+            return \App\Models\HealthArticle::where('is_active', true)->latest()->get();
+        });
+
+        return view('frontend.store.index', compact('items', 'wellnessArticles'));
     }
 
     /**

@@ -409,7 +409,11 @@
                         this.items = data.items;
                         this.grandTotal = data.grand_total;
                         this.cartCount = data.cart_count;
-                        if (window.StoreUI) window.StoreUI.cartCount = data.cart_count;
+                        if (window.StoreUI) {
+                            window.StoreUI.cartItems = data.items || [];
+                            window.StoreUI.cartTotal = data.grand_total || 0;
+                            window.StoreUI.cartCount = data.cart_count || 0;
+                        }
                     }
                 } catch (e) {
                     item.qty = oldQty;
@@ -419,26 +423,14 @@
             },
 
             async removeItem(itemId) {
-                const confirmed = await Swal.fire({
-                    title: 'Hapus Produk?',
-                    text: "Produk akan dihapus dari keranjang Anda.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
-                });
-
-                if (!confirmed.isConfirmed) return;
-
-                // Optimistic UI Removal
+                // Langsung hapus (Optimistic UI)
                 const originalItems = [...this.items];
                 this.items = this.items.filter(i => i.id !== itemId);
                 this.recalculateTotal();
 
                 try {
-                    const res = await fetch(`{{ url('/cart/remove') }}/${itemId}`, {
+                    const timestamp = new Date().getTime();
+                    const res = await fetch(`{{ url('/cart/remove') }}/${itemId}?t=${timestamp}`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -447,22 +439,29 @@
                         }
                     });
                     
+                    if (!res.ok) throw new Error('Server returned ' + res.status);
+
                     const data = await res.json();
                     if (data.success) {
-                        this.items = data.items; // Full sync to ensure it's gone
-                        this.grandTotal = data.grand_total;
-                        this.cartCount = data.cart_count;
-                        if (window.StoreUI) window.StoreUI.cartCount = data.cart_count;
-                        window.showToast('success', 'Item berhasil dihapus');
+                        // Sync final state from server
+                        this.items = data.items || [];
+                        this.grandTotal = data.grand_total || 0;
+                        this.cartCount = data.cart_count || 0;
+
+                        if (window.StoreUI) {
+                            window.StoreUI.cartItems = data.items || [];
+                            window.StoreUI.cartTotal = data.grand_total || 0;
+                            window.StoreUI.cartCount = data.cart_count || 0;
+                        }
                     } else {
-                        this.items = originalItems;
-                        this.recalculateTotal();
-                        window.showToast('error', 'Gagal menghapus item');
+                        throw new Error(data.message || 'Gagal menghapus item');
                     }
                 } catch (e) {
+                    console.error('Remove Error:', e);
+                    // Kembalikan jika error
                     this.items = originalItems;
                     this.recalculateTotal();
-                    window.showToast('error', 'Koneksi bermasalah.');
+                    if (window.showToast) window.showToast('error', 'Gagal: ' + e.message);
                 }
             },
 
