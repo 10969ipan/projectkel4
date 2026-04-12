@@ -47,18 +47,8 @@ class StoreAuthController extends Controller
     }
 
     /** Proses registrasi akun baru */
-    public function register(Request $request)
+    public function register(\App\Http\Requests\StoreRegisterRequest $request)
     {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|confirmed|min:8',
-        ], [
-            'email.unique'        => 'Email ini sudah terdaftar. Silakan login.',
-            'password.confirmed'  => 'Konfirmasi password tidak cocok.',
-            'password.min'        => 'Password minimal 8 karakter.',
-        ]);
-
         // Buat user baru dengan role customer
         $user = User::create([
             'name'       => $request->name,

@@ -17,7 +17,8 @@ class NotificationController extends Controller
             return response()->json(['notifications' => [], 'unreadCount' => 0]);
         }
 
-        $notifications = $user->unreadNotifications->map(function ($notification) {
+        $unread = $user->unreadNotifications;
+        $notifications = $unread->map(function ($notification) {
             return [
                 'id' => $notification->id,
                 'data' => $notification->data,
@@ -27,7 +28,7 @@ class NotificationController extends Controller
 
         return response()->json([
             'notifications' => $notifications,
-            'unreadCount' => $user->unreadNotifications->count()
+            'unreadCount' => $unread->count()
         ]);
     }
 

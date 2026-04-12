@@ -146,6 +146,17 @@
 
                 window.scrollGrid = (dir) => slide(dir);
 
+                // --- Mouse Wheel Support ---
+                outer.addEventListener('wheel', (e) => {
+                    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                        e.preventDefault();
+                        if (!isSliding) slide(e.deltaX > 0 ? 1 : -1);
+                    } else if (e.shiftKey && Math.abs(e.deltaY) > 0) {
+                        e.preventDefault();
+                        if (!isSliding) slide(e.deltaY > 0 ? 1 : -1);
+                    }
+                }, { passive: false });
+
                 // Recalculate on resize
                 window.addEventListener('resize', () => {
                     jumpToReal();
@@ -161,5 +172,46 @@
         })();
         </script>
     </div>
+
+    <!-- Customer Reviews Section: High Trust & Premium Social Proof -->
+    <div style="margin-top: 100px; padding: 60px 0; border-top: 1px solid #f1f5f9;">
+        <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.03em; margin-bottom: 50px;">Kata Mereka tentang <span style="color: var(--primary-blue);">Pharmacare</span></h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;">
+            <!-- Review 1 -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                    <img src="{{ asset('assets/images/reviews/user1.png') }}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div>
+                    <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Sangat membantu.. malam-malam butuh obat, tidak perlu keluar rumah. Layanan cepat dan terpercaya."</p>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Sainem Wiyono</div>
+                </div>
+            </div>
+
+            <!-- Review 2 -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                    <img src="{{ asset('assets/images/reviews/user2.png') }}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div>
+                    <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Sangat Helpful!!! Terima kasih yaa, sangat menghemat waktu dan respon dokternya juga baik. Rekep obatnya juga manjur sekali!"</p>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Lintang Anindhitya Indraswari</div>
+                </div>
+            </div>
+
+            <!-- Review 2 -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+                    <img src="{{ asset('assets/images/reviews/user3.png') }}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div>
+                    <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Menggunakan Pharmacare untuk layanan kesehatan keluarga sangat memuaskan. Proses cepat, refund mudah & transparan."</p>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Ahkbar Felayati</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 

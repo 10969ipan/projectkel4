@@ -39,11 +39,17 @@
             display: none !important;
         }
 
+        html, body {
+            height: 100%;
+        }
+
         body {
             background-color: #F8FAFC;
             color: var(--text-main);
             overflow-x: hidden;
             animation: fadeInPage 0.6s ease-out;
+            display: flex;
+            flex-direction: column;
         }
 
         @keyframes fadeInPage {
@@ -60,6 +66,9 @@
             max-width: 1200px;
             margin: 0 auto;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
         }
 
         /* Shared Styles */
@@ -439,8 +448,8 @@
             background: #1e293b;
             color: #f1f5f9;
             padding: 80px 0 40px;
-            margin-top: 80px;
             border-top: 1px solid rgba(255,255,255,0.05);
+            width: 100%;
         }
         .footer-grid {
             display: grid;
@@ -765,8 +774,15 @@
         .typing-indicator { font-style: italic; font-size: 0.8rem; color: #888; }
 
         /* --- Quick View Modal --- */
-        .qv-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .qv-modal-content { background: white; width: 100%; max-width: 900px; border-radius: 24px; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .qv-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(14px); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .qv-modal-content { 
+            background: white; width: 100%; max-width: 900px; border-radius: 24px; 
+            display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; position: relative; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            will-change: transform, opacity;
+        }
+        .qv-modal-content > div { animation: qv-content-fade 0.6s cubic-bezier(0.23, 1, 0.32, 1) both; }
+        @keyframes qv-content-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .qv-left { background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 40px; }
         .qv-right { padding: 40px; display: flex; flex-direction: column; }
         .qv-close { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%; border: none; background: #f1f5f9; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: 0.2s; }
@@ -1127,7 +1143,9 @@
             </div>
         </div>
 
-        @yield('content')
+        <main style="flex: 1;">
+            @yield('content')
+        </main>
 
         <!-- Footer Section -->
         <footer class="site-footer">
@@ -1180,10 +1198,21 @@
         </footer>
 
         <!-- Auth Modal (Unified Login/Register) -->
-        <div class="auth-modal-overlay" x-show="showAuthModal" x-cloak x-transition.opacity @click.self="showAuthModal = false">
-            <div class="auth-modal-content" x-show="showAuthModal" 
-                 x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-10" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95 translate-y-10">
+        <div class="auth-modal-overlay" x-show="showAuthModal" x-cloak
+             x-transition:enter="transition ease-out duration-250"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click.self="showAuthModal = false">
+            <div class="auth-modal-content"
+                 x-transition:enter="transition ease-out duration-300" 
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-6" 
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200" 
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0" 
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-6">
                 <button class="auth-modal-close" @click="showAuthModal = false">
                     <i class="fas fa-times"></i>
                 </button>
@@ -1257,21 +1286,20 @@
 
         <!-- Quick View Modal -->
         <div class="qv-modal-overlay" x-show="showQuickView" x-cloak
-             x-transition:enter="transition ease-out duration-250"
+             x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave="transition ease-in duration-250"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click.self="showQuickView = false">
             <div class="qv-modal-content"
-                 x-show="showQuickView"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95 translate-y-6"
+                 x-transition:enter="transition cubic-bezier(0.34, 1.56, 0.64, 1) duration-500"
+                 x-transition:enter-start="opacity-0 scale-90 translate-y-12"
                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 scale-95 translate-y-6"
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-8"
                  id="quick-view-modal-content">
                 <button class="qv-close" @click="showQuickView = false">
                     <i class="fas fa-times"></i>

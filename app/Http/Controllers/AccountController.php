@@ -12,6 +12,10 @@ use App\Models\Address;
 use App\Models\ItemSize;
 use App\Models\Subscription;
 use App\Models\WalletTransaction;
+use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\StoreAddressRequest;
+use App\Http\Requests\ProcessPaymentRequest;
 use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
@@ -23,15 +27,20 @@ class AccountController extends Controller
     {
         $user = Auth::user();
         $orders = StoreOrder::where('user_id', $user->id)
-            ->with(['items.item', 'address'])
+            ->select('id', 'user_id', 'order_number', 'address_id', 'shipping_method', 'shipping_cost', 'sub_total', 'grand_total', 'order_status', 'payment_status', 'payment_method', 'created_at', 'updated_at', 'prescription_path')
+            ->with(['items.item:id,name,image_path', 'address:id,label,full_address'])
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'orders_page');
-        $addresses = Address::where('user_id', $user->id)->orderBy('is_primary', 'desc')->get();
+
+        $addresses = Address::where('user_id', $user->id)
+            ->select('id', 'user_id', 'label', 'full_address', 'is_primary')
+            ->orderBy('is_primary', 'desc')->get();
         
         // Data Langganan Aktif
         $subscriptions = Subscription::where('user_id', $user->id)
+            ->select('id', 'user_id', 'item_id', 'quantity', 'interval_days', 'status', 'next_delivery_date')
             ->where('status', 'active')
-            ->with('item')
+            ->with('item:id,name,image_path')
             ->get();
 
         return view('frontend.account.dashboard', compact('user', 'orders', 'addresses', 'subscriptions'));
@@ -44,6 +53,7 @@ class AccountController extends Controller
     {
         $user = Auth::user();
         $transactions = WalletTransaction::where('user_id', $user->id)
+            ->select('id', 'user_id', 'amount', 'type', 'description', 'created_at')
             ->orderBy('created_at', 'desc')
             ->get();
         return view('frontend.account.wallet', compact('user', 'transactions'));
@@ -76,9 +86,13 @@ class AccountController extends Controller
     public function showProfile()
     {
         $user = Auth::user();
-        $addresses = Address::where('user_id', $user->id)->orderBy('is_primary', 'desc')->get();
-        $transactions = \App\Models\WalletTransaction::where('user_id', $user->id)
+        $addresses = Address::where('user_id', $user->id)
+            ->select('id', 'user_id', 'label', 'full_address', 'is_primary')
+            ->orderBy('is_primary', 'desc')->get();
+        $transactions = WalletTransaction::where('user_id', $user->id)
+            ->select('id', 'user_id', 'amount', 'type', 'description', 'created_at')
             ->orderBy('created_at', 'desc')
+            ->limit(10) // Optimization: limit transaction history in secondary views
             ->get();
         return view('frontend.account.profile', compact('user', 'addresses', 'transactions'));
     }
@@ -86,14 +100,9 @@ class AccountController extends Controller
     /**
      * Proses pembayaran (Handle Wallet & Subscription Creation)
      */
-    public function processPayment(Request $request, $orderId = null)
+    public function processPayment(ProcessPaymentRequest $request, $orderId = null)
     {
         $user = Auth::user();
-        
-        $request->validate([
-            'payment_method' => 'required|in:qris,paylater,bank,ewallet,cod,wallet',
-            'shipping_method' => 'required|in:instant,regular'
-        ]);
 
         $order = null;
         $prescriptionPath = null;
@@ -260,13 +269,8 @@ class AccountController extends Controller
     /**
      * Store a new address
      */
-    public function storeAddress(Request $request)
+    public function storeAddress(StoreAddressRequest $request)
     {
-        $request->validate([
-            'label' => 'required|string|max:50',
-            'full_address' => 'required|string|max:500',
-        ]);
-
         $user = Auth::user();
         
         // Check if user already has addresses
@@ -313,14 +317,9 @@ class AccountController extends Controller
     /**
      * Update User Profile
      */
-    public function updateProfile(Request $request)
+    public function updateProfile(UpdateProfileRequest $request)
     {
         $user = Auth::user();
-        
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-        ]);
 
         $user->update([
             'name' => $request->name,
@@ -333,13 +332,8 @@ class AccountController extends Controller
     /**
      * Change Password
      */
-    public function changePassword(Request $request)
+    public function changePassword(ChangePasswordRequest $request)
     {
-        $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
-        ]);
-
         $user = Auth::user();
 
         if (!Hash::check($request->current_password, $user->password)) {
