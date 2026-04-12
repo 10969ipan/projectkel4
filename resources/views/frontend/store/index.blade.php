@@ -5,80 +5,161 @@
 @section('content')
 <div style="padding: 0 40px 60px;">
 
-    <!-- Hero Banner -->
-    <div style="padding-top: 20px; position: relative; margin-bottom: 0;">
-        <div style="background: linear-gradient(135deg, #0076D6 0%, #004F8A 100%); color: white; border-radius: 24px; padding: 55px 60px; display: flex; justify-content: space-between; align-items: flex-end; box-shadow: 0 20px 50px rgba(0, 79, 138, 0.15); position: relative; min-height: 250px; overflow: visible;">
-            <!-- Glow -->
-            <div style="position: absolute; top: -10%; right: 5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%); pointer-events: none; border-radius: 50%;"></div>
-
-            <div style="position: relative; z-index: 2; max-width: 560px; padding-bottom: 5px;">
-                <h2 style="font-size: 2.8rem; font-weight: 900; margin-bottom: 20px; line-height: 1.1; letter-spacing: -0.04em; text-shadow: 0 4px 12px rgba(0,0,0,0.1);">Layanan Farmasi Modern<br>Terintegrasi Teknologi AI</h2>
-                <p style="font-size: 1.05rem; opacity: 0.9; margin-bottom: 35px; line-height: 1.7; font-weight: 400; max-width: 480px;">Meningkatkan akurasi pelayanan melalui asisten <strong>Apoteker Digital AI</strong>. Solusi kesehatan terpercaya yang hadir 24 jam untuk mendukung kesejahteraan Anda secara profesional.</p>
+    <!-- Hero Section: Premium AI Experience -->
+    <div style="padding-top: 40px; margin-bottom: 40px;">
+        <div style="background: linear-gradient(135deg, #0076D6 0%, #005FA3 100%); color: white; border-radius: 32px; padding: 60px 80px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 30px 60px rgba(0, 118, 214, 0.2); position: relative; overflow: hidden; min-height: 400px;">
+            <!-- Decorative Elements -->
+            <div style="position: absolute; top: -20%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+            <div style="position: absolute; bottom: -10%; left: -5%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%); border-radius: 50%;"></div>
+            
+            <div style="position: relative; z-index: 10; max-width: 600px;">
+                <h1 style="font-size: 3.5rem; font-weight: 900; margin-bottom: 20px; line-height: 1.05; letter-spacing: -0.05em;">Solusi Sehat,<br><span style="color: #93C5FD;">Cerdas & Terpercaya.</span></h1>
+                <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 35px; line-height: 1.6; font-weight: 400; max-width: 500px;">Konsultasi kesehatan Anda dengan asisten <strong>Apoteker Digital bertenaga AI</strong> yang siap membantu kapan saja.</p>
                 
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <a href="#produk-pilihan" style="background-color: white; color: var(--primary-blue); padding: 15px 35px; border-radius: 14px; font-weight: 800; text-decoration: none; display: inline-block; box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 15px 30px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)'">Belanja Sekarang</a>
-                    <a href="javascript:void(0)" onclick="toggleChat()" style="color: white; font-weight: 600; text-decoration: none; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; opacity: 0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
-                        <i class="fas fa-comment-medical"></i> Tanya AI
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <a href="#katalog" style="background: white; color: var(--primary-blue); padding: 16px 36px; border-radius: 14px; font-weight: 800; text-decoration: none; font-size: 1.1rem; transition: 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)'">Jelajahi Produk</a>
+                    <a href="javascript:void(0)" onclick="toggleChat()" style="color: white; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 1rem; opacity: 0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
+                        <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);"><i class="fas fa-comment-dots"></i></div>
+                        Chat Apoteker AI
                     </a>
                 </div>
             </div>
 
-            <div style="position: absolute; bottom: 0; right: 50px; z-index: 3; line-height: 0;">
-                <img src="{{ asset('assets/images/branding/dokter.png') }}" alt="Doctor" style="height: 400px; width: auto; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15)); display: block;">
+            <div style="position: absolute; bottom: 0; right: 40px; z-index: 5; display: flex; align-items: flex-end;">
+                <img src="{{ asset('assets/images/branding/dokter1.png') }}" style="height: 450px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -80px; position: relative; z-index: 2;">
+                <img src="{{ asset('assets/images/branding/dokter.png') }}" style="height: 420px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;">
             </div>
         </div>
     </div>
 
-    <!-- Product Carousel Section -->
-    <div id="produk-pilihan" style="padding-top: 40px;">
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="font-size: 1.3rem; font-weight: 700; color: #1a1a1a;">Produk Farmasi Populer</h3>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <a href="#" style="color: var(--primary-blue); text-decoration: none; font-weight: 600; font-size: 0.9rem;">Lihat Semua</a>
-                <button onclick="scrollCarousel(-1)" style="width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #E0E0E0; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #555; transition: all 0.2s;" onmouseover="this.style.background='var(--primary-blue)';this.style.color='white';this.style.borderColor='var(--primary-blue)'" onmouseout="this.style.background='white';this.style.color='#555';this.style.borderColor='#E0E0E0'">‹</button>
-                <button onclick="scrollCarousel(1)" style="width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #E0E0E0; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #555; transition: all 0.2s;" onmouseover="this.style.background='var(--primary-blue)';this.style.color='white';this.style.borderColor='var(--primary-blue)'" onmouseout="this.style.background='white';this.style.color='#555';this.style.borderColor='#E0E0E0'">›</button>
+
+    <!-- Product Grid Section -->
+    <div id="katalog" style="margin-bottom: 60px; scroll-margin-top: 120px; padding-top: 40px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+            <div>
+                <h2 style="font-size: 2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.02em; margin-bottom: 5px;">Katalog Obat</h2>
+                <p style="color: #64748b; font-size: 0.95rem;">Daftar obat-obatan terpercaya & bersertifikat</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button onclick="scrollGrid(-1)"
+                    style="width:32px;height:32px;border-radius:50%;border:1px solid #e2e8f0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:0.75rem;transition:all 0.2s;outline:none;"
+                    onmouseover="this.style.borderColor='#0076D6';this.style.color='#0076D6';this.style.background='#f0f7ff'"
+                    onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#94a3b8';this.style.background='transparent'">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button onclick="scrollGrid(1)"
+                    style="width:32px;height:32px;border-radius:50%;border:1px solid #e2e8f0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:0.75rem;transition:all 0.2s;outline:none;"
+                    onmouseover="this.style.borderColor='#0076D6';this.style.color='#0076D6';this.style.background='#f0f7ff'"
+                    onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#94a3b8';this.style.background='transparent'">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
 
-        <!-- Track -->
-        <div id="product-carousel" style="display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 10px; scrollbar-width: none;">
-            @forelse($items as $item)
-            <div style="min-width: 210px; max-width: 210px; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #F0F0F0; display: flex; flex-direction: column; scroll-snap-align: start; flex-shrink: 0; position: relative; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 25px rgba(0,0,0,0.06)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.02)'">
-                <a href="{{ route('store.show', $item->id) }}" style="text-decoration: none; color: inherit;">
-                    <div style="width: 100%; height: 140px; margin-bottom: 16px; background-color: #F8F9FB; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        @if($item->image_path)
-                            <img src="{{ asset($item->image_path) }}" alt="{{ $item->name }}" style="height: 100%; width: 100%; object-fit: contain;">
-                        @else
-                            <span style="font-size: 2.5rem;">{{ $item->requires_prescription ? '⚕️' : '💊' }}</span>
-                        @endif
-                    </div>
-                    <div style="font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $item->name }}</div>
-                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">{{ $item->unit->name ?? 'Kemasan' }}</div>
-                    <div style="font-size: 1.1rem; font-weight: 800; color: var(--primary-blue);">Rp {{ number_format($item->price, 0, ',', '.') }}</div>
-                </a>
-                <form action="{{ route('cart.add', $item->id) }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="qty" value="1">
-                    <button type="submit" style="position: absolute; bottom: 18px; right: 18px; width: 36px; height: 36px; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-size: 1.3rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,118,214,0.3); transition: background 0.2s;" onmouseover="this.style.background='#005BAA'" onmouseout="this.style.background='var(--primary-blue)'">+</button>
-                </form>
-            </div>
-            @empty
-            <div style="text-align:center; padding: 60px; color: #999; background: white; border-radius: 16px; width: 100%;">Belum ada produk tersedia.</div>
-            @endforelse
+        <!-- AJAX Wrapper for Grid -->
+        <div id="item-grid-wrapper" style="transition: opacity 0.3s ease;">
+            @include('frontend.store.partials.product-grid')
         </div>
+
+        <style>
+            #carousel-track-outer {
+                overflow: hidden;
+                position: relative;
+            }
+            #carousel-track {
+                display: flex;
+                gap: 20px;
+                padding: 10px 5px 30px;
+                will-change: transform;
+                transition: none;
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            #carousel-track::-webkit-scrollbar { display: none; }
+        </style>
+
+        <script>
+        (function() {
+            let isSliding = false;
+
+            function initInfiniteCarousel() {
+                const outer = document.getElementById('carousel-track-outer');
+                const track = document.getElementById('carousel-track');
+                if (!outer || !track) return;
+
+                const cards = Array.from(track.children);
+                if (cards.length === 0) return;
+
+                // Clone cards for seamless looping (prepend + append)
+                const clonesBefore = cards.map(c => c.cloneNode(true));
+                const clonesAfter  = cards.map(c => c.cloneNode(true));
+                clonesBefore.forEach(c => { c.setAttribute('aria-hidden','true'); track.prepend(c); });
+                clonesAfter.forEach(c  => { c.setAttribute('aria-hidden','true'); track.append(c); });
+
+                // Calculate width of one set
+                const gapPx = 20;
+                function getSetWidth() {
+                    const card = track.querySelector('.product-card');
+                    if (!card) return 0;
+                    return cards.length * (card.offsetWidth + gapPx);
+                }
+
+                // Start scroll at the "real" cards (after the clones before)
+                let currentOffset = 0;
+                function jumpToReal() {
+                    const w = getSetWidth();
+                    currentOffset = w;
+                    track.style.transition = 'none';
+                    track.style.transform = `translateX(-${currentOffset}px)`;
+                }
+                jumpToReal();
+
+                function slide(direction) {
+                    if (isSliding) return;
+                    isSliding = true;
+
+                    const card = track.querySelector('.product-card');
+                    if (!card) { isSliding = false; return; }
+                    const cardWidth = card.offsetWidth + gapPx;
+
+                    currentOffset += direction * cardWidth;
+
+                    track.style.transition = 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    track.style.transform = `translateX(-${currentOffset}px)`;
+
+                    // After animation: silently jump if we hit the clone boundary
+                    setTimeout(() => {
+                        const setWidth = getSetWidth();
+                        if (currentOffset >= setWidth * 2) {
+                            currentOffset -= setWidth;
+                            track.style.transition = 'none';
+                            track.style.transform = `translateX(-${currentOffset}px)`;
+                        } else if (currentOffset <= 0) {
+                            currentOffset += setWidth;
+                            track.style.transition = 'none';
+                            track.style.transform = `translateX(-${currentOffset}px)`;
+                        }
+                        // Force repaint before releasing lock
+                        requestAnimationFrame(() => { isSliding = false; });
+                    }, 460);
+                }
+
+                window.scrollGrid = (dir) => slide(dir);
+
+                // Recalculate on resize
+                window.addEventListener('resize', () => {
+                    jumpToReal();
+                });
+            }
+
+            // Init after DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initInfiniteCarousel);
+            } else {
+                initInfiniteCarousel();
+            }
+        })();
+        </script>
     </div>
-
-</div>
-
-<style>
-    #product-carousel::-webkit-scrollbar { display: none; }
-</style>
-<script>
-    function scrollCarousel(direction) {
-        const carousel = document.getElementById('product-carousel');
-        carousel.scrollBy({ left: direction * (210 + 18) * 3, behavior: 'smooth' });
-    }
-</script>
 @endsection
 

@@ -101,16 +101,12 @@
                 <div style="font-size: 0.85rem; color: var(--text-muted);">{{ $user->email }}</div>
             </div>
 
-            <!-- Group: Pesanan -->
             <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; margin-bottom: 8px;">Transaksi</div>
-            <button class="nav-item active" id="btn-orders" onclick="showSection('orders', this)">
-                Pesanan
-            </button>
-
+            <button class="nav-item active" id="btn-orders" onclick="showSection('orders', this)">Pesanan</button>
+            <button class="nav-item" id="btn-subscriptions" onclick="showSection('subscriptions', this)">Langganan</button>
+            
             <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-                <a href="{{ route('account.profile') }}" class="nav-item" style="text-decoration: none; display: flex; color: var(--primary-blue);">
-                    Akun Saya
-                </a>
+                <a href="{{ route('account.profile') }}" class="nav-item" style="color: var(--primary-blue);">Pengaturan Akun</a>
             </div>
         </div>
 
@@ -135,36 +131,47 @@
                                 </div>
                             </div>
 
-                            <!-- Progress Tracker -->
+                            <!-- Progress Tracker with SVG Icons -->
                             <div style="display: flex; justify-content: space-between; margin-bottom: 25px; position: relative; padding: 0 10px;">
-                                <div style="position: absolute; top: 15px; left: 10%; right: 10%; height: 2px; background: #eee; z-index: 1;"></div>
                                 @php
                                     $steps = [
-                                        ['id' => 'ordered', 'label' => 'Dipesan'],
-                                        ['id' => 'paid', 'label' => 'Dibayar'],
-                                        ['id' => 'processing', 'label' => 'Dikirim'],
-                                        ['id' => 'completed', 'label' => 'Selesai'],
+                                        ['id' => 'ordered', 'label' => 'Dipesan', 'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>'],
+                                        ['id' => 'paid',    'label' => 'Dibayar',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'],
+                                        ['id' => 'processing','label' => 'Dikirim',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'],
+                                        ['id' => 'completed','label' => 'Selesai',  'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'],
                                     ];
                                     $currentIdx = 0;
                                     foreach($steps as $idx => $s) {
                                         if($order->order_status == $s['id']) $currentIdx = $idx;
                                     }
                                 @endphp
+                                <div style="position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: #eee; z-index: 1; border-radius:99px;"></div>
+                                <div style="position: absolute; top: 20px; left: 10%; height: 3px; width: calc({{ $currentIdx }} * (80% / 3)); background: var(--primary-blue); z-index: 1; border-radius:99px; transition: width 0.5s ease;"></div>
 
                                 @foreach($steps as $idx => $step)
+                                @php $done = $idx <= $currentIdx; $active = $idx == $currentIdx; @endphp
                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; flex: 1;">
-                                    <div style="width: 32px; height: 32px; background: {{ $idx <= $currentIdx ? 'var(--primary-blue)' : 'white' }}; border: 2px solid {{ $idx <= $currentIdx ? 'var(--primary-blue)' : '#eee' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: {{ $idx <= $currentIdx ? 'white' : '#ccc' }}; font-size: 0.9rem; transition: all 0.3s;">
-                                        {{ $idx <= $currentIdx ? '✓' : '' }}
+                                    <div style="width: 42px; height: 42px; background: {{ $done ? 'var(--primary-blue)' : 'white' }}; border: 2px solid {{ $done ? 'var(--primary-blue)' : '#e2e8f0' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: {{ $done ? 'white' : '#cbd5e1' }}; transition: all 0.4s; box-shadow: {{ $active ? '0 0 0 4px rgba(0,118,214,0.15)' : 'none' }};">
+                                        {!! $step['icon'] !!}
                                     </div>
-                                    <span style="font-size: 0.75rem; font-weight: 700; color: {{ $idx <= $currentIdx ? 'var(--text-dark)' : 'var(--text-muted)' }}">{{ $step['label'] }}</span>
+                                    <span style="font-size: 0.72rem; font-weight: 800; color: {{ $done ? 'var(--primary-blue)' : '#94a3b8' }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ $step['label'] }}</span>
                                 </div>
                                 @endforeach
                             </div>
 
                             @php
-                                $itemDetails = '';
+                                $hasPrescription = !empty($order->prescription_path) || $user->is_prescription_approved;
+                                $reqPres = false;
+                                foreach($order->items as $it) { if($it->item && $it->item->requires_prescription) { $reqPres = true; break; } }
+                                $orderItemsJson = [];
                                 foreach($order->items as $oi) {
-                                    $itemDetails .= '- ' . ($oi->item->name ?? 'Item dihapus') . ' (' . $oi->quantity . 'x)&#10;';
+                                    $orderItemsJson[] = [
+                                        'name'     => $oi->item->name ?? 'Item Dihapus',
+                                        'qty'      => $oi->quantity,
+                                        'price'    => $oi->price,
+                                        'subtotal' => $oi->sub_total,
+                                        'image'    => $oi->item->image_path ?? null,
+                                    ];
                                 }
                             @endphp
                             <div style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; padding: 15px 20px; border-radius: 12px; gap: 10px; flex-wrap: wrap;">
@@ -173,11 +180,6 @@
                                 </div>
                                 <div style="display: flex; gap: 10px; align-items: center;">
                                     @if($order->order_status === 'ordered' && $order->payment_status === 'pending')
-                                        @php
-                                            $hasPrescription = !empty($order->prescription_path) || $user->is_prescription_approved;
-                                            $reqPres = false;
-                                            foreach($order->items as $it) { if($it->item && $it->item->requires_prescription) { $reqPres = true; break; } }
-                                        @endphp
                                         <button onclick="openPaymentModal({
                                             id: {{ $order->id }},
                                             number: '{{ $order->order_number }}',
@@ -185,14 +187,63 @@
                                             reqPres: {{ $reqPres ? 'true' : 'false' }},
                                             hasPres: {{ $hasPrescription ? 'true' : 'false' }},
                                             url: '{{ route('account.orders.pay.post', $order->id) }}'
-                                        })" style="background: #2F9E44; color: white; padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; border:none; cursor:pointer; display: inline-flex; align-items: center; gap: 6px;">Bayar Sekarang</button>
+                                        })" style="background: #2F9E44; color: white; padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; border:none; cursor:pointer;">Bayar Sekarang</button>
                                         <form action="{{ route('account.orders.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Yakin ingin membatalkan dan menghapus pesanan ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" style="background: #FFF5F5; color: #C92A2A; border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Batalkan</button>
                                         </form>
                                     @endif
-                                    <button onclick="Swal.fire({title: 'Detail Order #{{ $order->order_number }}', html: '<pre style=\'text-align:left; font-family:inherit;\'>{{ $itemDetails }}</pre>', icon: 'info'})" style="background: white; border: 1px solid #ddd; padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Lihat Detail</button>
+                                    <button onclick="openOrderDetail({{ $order->id }})" style="background: white; border: 1px solid #ddd; padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Lihat Detail</button>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    <div style="margin-top: 25px; display: flex; justify-content: center; width: 100%;">
+                        {{ $orders->links() }}
+                    </div>
+                @else
+                    <div class="empty-state">
+                        <div style="font-size:3rem; color:#ddd;"><i class="fas fa-shopping-bag"></i></div>
+                        <p>Anda belum memiliki riwayat pesanan.</p>
+                        <a href="{{ route('store.index') }}" style="color: var(--primary-blue); font-weight: 700; text-decoration: none; display: block; margin-top: 15px;">Ayo berbelanja sekarang!</a>
+                    </div>
+                @endif
+            </div>
+
+            <!-- SECTION: SUBSCRIPTIONS -->
+            <div id="section-subscriptions" class="content-section">
+                <h2>Langganan Obat Saya</h2>
+                @if($subscriptions->count() > 0)
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                        @foreach($subscriptions as $sub)
+                        <div style="background: #fdfdfd; border: 1px solid #edf2f7; border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 20px;">
+                            <div style="width: 80px; height: 80px; background: white; border: 1px solid #eee; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                                @if($sub->item->image_path)
+                                    <img src="{{ asset($sub->item->image_path) }}" style="width: 100%; height: 100%; object-fit: contain;">
+                                @else
+                                    <span style="font-size: 2rem;">💊</span>
+                                @endif
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h4 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">{{ $sub->item->name }}</h4>
+                                        <div style="color: #64748b; font-size: 0.85rem;">Interval: <strong>Setiap {{ $sub->interval_days }} Hari</strong></div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Status</div>
+                                        <span class="badge badge-delivered" style="background: #ecfdf5; color: #059669;">{{ strtoupper($sub->status) }}</span>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-size: 0.85rem; color: #475569;">
+                                        <i class="far fa-calendar-alt"></i> Pengiriman Berikutnya: <strong>{{ \Carbon\Carbon::parse($sub->next_delivery_date)->format('d M Y') }}</strong>
+                                    </div>
+                                    <div style="color: #059669; font-weight: 800; font-size: 0.95rem;">
+                                        Hemat 10% Aktif
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -200,9 +251,9 @@
                     </div>
                 @else
                     <div class="empty-state">
-                        <div style="font-size:3rem; color:#ddd;"><i class="fas fa-shopping-bag"></i></div>
-                        <p>Anda belum memiliki riwayat pesanan.</p>
-                        <a href="{{ route('store.index') }}" style="color: var(--primary-blue); font-weight: 700; text-decoration: none; display: block; margin-top: 15px;">Ayo berbelanja sekarang!</a>
+                        <div style="font-size:3rem; color:#ddd;"><i class="fas fa-sync-alt"></i></div>
+                        <p>Anda belum berlangganan obat apapun.</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">Pilih opsi "Langganan" saat membeli obat untuk pengiriman otomatis.</p>
                     </div>
                 @endif
             </div>
@@ -377,6 +428,96 @@
     @endif
 </script>
 
+{{-- Pre-encode all order data safely as a JS map --}}
+<script>
+    const orderDataMap = {
+        @foreach($orders as $order)
+        @php
+            $mapItems = [];
+            foreach($order->items as $oi) {
+                $mapItems[] = [
+                    'name'     => $oi->item->name ?? 'Item Dihapus',
+                    'qty'      => $oi->quantity,
+                    'price'    => $oi->price,
+                    'subtotal' => $oi->sub_total,
+                    'image'    => $oi->item->image_path ?? null,
+                ];
+            }
+            $orderData = [
+                'number'          => $order->order_number,
+                'date'            => $order->created_at->format('d M Y, H:i'),
+                'created_at'      => $order->created_at->format('d M Y, H:i'),
+                'updated_at'      => $order->updated_at->format('d M Y, H:i'),
+                'customer'        => $user->name,
+                'address'         => $order->address->full_address ?? 'Alamat belum diisi',
+                'address_label'   => $order->address->label ?? '-',
+                'payment_method'  => strtoupper($order->payment_method ?? '-'),
+                'shipping_method' => ($order->shipping_method === 'instant' ? 'Instant Delivery (2 Jam)' : 'JNE / J&T Reguler'),
+                'shipping_cost'   => $order->shipping_cost ?? 0,
+                'sub_total'       => $order->sub_total,
+                'grand_total'     => $order->grand_total,
+                'status'          => $order->order_status,
+                'items'           => $mapItems,
+            ];
+        @endphp
+        {{ $order->id }}: {!! json_encode($orderData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
+        @endforeach
+    };
+</script>
+
+    <!-- ORDER DETAIL MODAL -->
+    <div id="orderDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:99998; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 20px; backdrop-filter:blur(4px);">
+        <div style="background:white; border-radius:24px; width:100%; max-width:680px; position:relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: slideUp 0.35s cubic-bezier(0.23,1,0.32,1);">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #0076D6, #005FA3); padding: 28px 30px; border-radius: 24px 24px 0 0; color:white; position:relative;">
+                <button onclick="document.getElementById('orderDetailModal').style.display='none'" style="position:absolute; right:20px; top:20px; border:none; background:rgba(255,255,255,0.2); color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1rem; transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✕</button>
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.8; margin-bottom:6px;">Detail Pesanan</div>
+                <div id="od-number" style="font-size:1.5rem; font-weight:800;">ORD-XXXX</div>
+                <div id="od-date" style="font-size:0.85rem; opacity:0.75; margin-top:4px;"></div>
+            </div>
+
+            <div style="padding:28px 30px;">
+                <!-- Status Timeline -->
+                <div id="od-timeline" style="display:flex; justify-content:space-between; position:relative; margin-bottom:28px; padding:0 5px;"></div>
+
+                <!-- Customer Info -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:22px;">
+                    <div style="background:#f8fafc; border-radius:14px; padding:18px;">
+                        <div style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:#94a3b8; letter-spacing:1px; margin-bottom:8px;">Pelanggan</div>
+                        <div id="od-customer" style="font-weight:700; font-size:0.95rem; color:#1e293b;"></div>
+                    </div>
+                    <div style="background:#f8fafc; border-radius:14px; padding:18px;">
+                        <div style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:#94a3b8; letter-spacing:1px; margin-bottom:8px;">Metode & Pengiriman</div>
+                        <div id="od-payment" style="font-weight:700; font-size:0.9rem; color:#1e293b;"></div>
+                        <div id="od-shipping-method" style="font-size:0.8rem; color:#64748b; margin-top:3px;"></div>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:14px; padding:16px 20px; margin-bottom:22px; display:flex; gap:12px; align-items:flex-start;">
+                    <div style="color:#3b82f6; flex-shrink:0; margin-top:2px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </div>
+                    <div>
+                        <div id="od-addr-label" style="font-weight:700; font-size:0.9rem; color:#1d4ed8; margin-bottom:4px;"></div>
+                        <div id="od-address" style="font-size:0.9rem; color:#374151; line-height:1.5;"></div>
+                    </div>
+                </div>
+
+                <!-- Items List -->
+                <div style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:#94a3b8; letter-spacing:1px; margin-bottom:12px;">Daftar Produk</div>
+                <div id="od-items" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;"></div>
+
+                <!-- Price Summary -->
+                <div style="background:#f8fafc; border-radius:14px; padding:18px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem; color:#64748b;"><span>Subtotal Produk</span><span id="od-subtotal" style="font-weight:600; color:#1e293b;"></span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:14px; font-size:0.9rem; color:#64748b;"><span>Ongkos Kirim</span><span id="od-ship-cost" style="font-weight:600; color:#1e293b;"></span></div>
+                    <div style="display:flex; justify-content:space-between; padding-top:14px; border-top:2px solid #e2e8f0; font-size:1.1rem; font-weight:800; color:var(--primary-blue);"><span>Total Bayar</span><span id="od-grand-total"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- PAYMENT MODAL -->
     <div id="paymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; align-items:flex-start; justify-content:center; overflow-y:auto; padding: 40px 20px;">
         <div style="background:white; border-radius:24px; width:100%; max-width:800px; position:relative; animation: slideUp 0.3s ease-out;">
@@ -413,12 +554,22 @@
                         <div class="right-col">
                             <div class="pay-section" style="background:#f8f9fa;">
                                 <div class="pay-title">Metode Pembayaran</div>
-                                <label><input type="radio" name="payment_method" value="qris" checked>
-                                    <div class="pay-method-card"><strong>QRIS</strong></div>
-                                </label>
-                                <label><input type="radio" name="payment_method" value="paylater">
-                                    <div class="pay-method-card"><strong>Paylater</strong></div>
-                                </label>
+                                <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                                    <label><input type="radio" name="payment_method" value="qris" checked>
+                                        <div class="pay-method-card"><strong>QRIS</strong></div>
+                                    </label>
+                                    <label><input type="radio" name="payment_method" value="wallet">
+                                        <div class="pay-method-card" style="border-color: #059669; background: #ecfdf5;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <strong style="color: #059669;"><i class="fas fa-wallet"></i> Saldo Dompet</strong>
+                                                <span style="font-size: 0.75rem; color: #065f46; font-weight: 800;">Rp {{ number_format($user->wallet_balance, 0, ',', '.') }}</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label><input type="radio" name="payment_method" value="paylater">
+                                        <div class="pay-method-card"><strong>Paylater</strong></div>
+                                    </label>
+                                </div>
 
                                 <div style="margin-top:20px; padding-top:15px; border-top:1px dashed #ddd;">
                                     <div class="pay-row"><span>Subtotal</span><span id="pay-subtotal">Rp 0</span></div>
@@ -446,6 +597,84 @@
                 const btn = document.querySelector(`button[onclick*="id: ${payId},"]`);
                 if (btn) btn.click();
             }
+        });
+
+        function openOrderDetail(orderId) {
+            const data = orderDataMap[orderId];
+            if (!data) return;
+            const fmt = n => 'Rp ' + new Intl.NumberFormat('id-ID').format(n);
+            const statuses = {
+                'ordered':    { label: 'Dipesan',  color: '#0076D6', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>' },
+                'paid':       { label: 'Dibayar',  color: '#0076D6', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>' },
+                'processing': { label: 'Dikirim',  color: '#0076D6', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' },
+                'completed':  { label: 'Selesai',  color: '#0076D6', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' },
+            };
+            const statusOrder = ['ordered','paid','processing','completed'];
+            const currentIdx = statusOrder.indexOf(data.status);
+
+            // Inject header
+            document.getElementById('od-number').innerText = '#' + data.number;
+            document.getElementById('od-date').innerText = data.date;
+
+            // Build Timeline with timestamps
+            const timeline = document.getElementById('od-timeline');
+            const timestamps = {
+                'ordered':    data.created_at,
+                'paid':       data.status !== 'ordered' ? data.updated_at : null,
+                'processing': (data.status === 'processing' || data.status === 'completed') ? data.updated_at : null,
+                'completed':  data.status === 'completed' ? data.updated_at : null,
+            };
+            timeline.innerHTML = `
+                <div style="position:absolute; top:21px; left:10%; right:10%; height:3px; background:#e2e8f0; border-radius:99px;"></div>
+                <div style="position:absolute; top:21px; left:10%; height:3px; width:calc(${currentIdx} * (80% / 3)); background:#0076D6; border-radius:99px; transition:width 0.5s ease;"></div>
+                ${statusOrder.map((s, i) => {
+                    const done = i <= currentIdx;
+                    const act = i === currentIdx;
+                    const st = statuses[s];
+                    const ts = timestamps[s];
+                    return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px; z-index:2; flex:1;">
+                        <div style="width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:${done ? '#0076D6' : 'white'}; border:2px solid ${done ? '#0076D6' : '#e2e8f0'}; color:${done ? 'white' : '#cbd5e1'}; transition:0.4s; box-shadow:${act ? '0 0 0 5px rgba(0,118,214,0.15)' : 'none'};">${st.icon}</div>
+                        <span style="font-size:0.68rem; font-weight:800; color:${done ? '#0076D6' : '#94a3b8'}; text-transform:uppercase; letter-spacing:0.5px;">${st.label}</span>
+                        ${done && ts ? `<span style="font-size:0.6rem; color:#94a3b8; font-weight:500; text-align:center; line-height:1.3;">${ts}</span>` : '<span style="font-size:0.6rem; color:transparent;">-</span>'}
+                    </div>`;
+                }).join('')}
+            `;
+
+            // Customer & Payment
+            document.getElementById('od-customer').innerText = data.customer;
+            document.getElementById('od-payment').innerText = data.payment_method;
+            document.getElementById('od-shipping-method').innerText = data.shipping_method;
+            document.getElementById('od-addr-label').innerText = data.address_label;
+            document.getElementById('od-address').innerText = data.address;
+
+            // Items
+            const itemsContainer = document.getElementById('od-items');
+            itemsContainer.innerHTML = data.items.map(item => `
+                <div style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:#fff; border:1px solid #f0f0f0; border-radius:12px;">
+                    <div style="width:50px; height:50px; background:#f1f5f9; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;">
+                        ${item.image ? `<img src="/${item.image}" style="width:100%; height:100%; object-fit:contain;">` : '<span style="font-size:1.4rem;">💊</span>'}
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
+                        <div style="font-size:0.82rem; color:#64748b;">${item.qty} x ${fmt(item.price)}</div>
+                    </div>
+                    <div style="text-align:right; flex-shrink:0;">
+                        <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">${fmt(item.subtotal)}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Totals
+            document.getElementById('od-subtotal').innerText = fmt(data.sub_total);
+            document.getElementById('od-ship-cost').innerText = fmt(data.shipping_cost);
+            document.getElementById('od-grand-total').innerText = fmt(data.grand_total);
+
+            document.getElementById('orderDetailModal').style.display = 'flex';
+        }
+
+        // Close on backdrop click
+        document.getElementById('orderDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
         });
 
         let currentSubtotal = 0;

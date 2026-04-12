@@ -41,9 +41,12 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama & Email</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Password</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Saldo Dompet</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Limit Paylater</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Resep</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Langganan</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Alamat Utama</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Riwayat Transaksi</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Riwayat Order</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
@@ -65,7 +68,31 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-gray-400 font-mono">********</span>
+                            <div class="text-sm font-bold text-gray-900">Rp {{ number_format($customer->wallet_balance, 0, ',', '.') }}</div>
+                            <div class="text-xs text-gray-500">{{ $customer->walletTransactions->count() }} Transaksi</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-bold text-teal-600">Rp {{ number_format($customer->paylater_limit, 0, ',', '.') }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($customer->is_prescription_approved)
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-black rounded-full uppercase tracking-tighter">
+                                    <i class="fas fa-check-circle mr-1"></i> Terverifikasi
+                                </span>
+                            @else
+                                <span class="px-2 py-1 bg-red-50 text-red-500 text-[10px] font-black rounded-full uppercase tracking-tighter">
+                                    <i class="fas fa-times-circle mr-1"></i> Belum Verif
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($customer->subscriptions->where('status', 'active')->count() > 0)
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                    <i class="fas fa-sync-alt fa-spin mr-1"></i> {{ $customer->subscriptions->where('status', 'active')->count() }} Aktif
+                                </span>
+                            @else
+                                <span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-full italic">Tidak ada</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900 max-w-xs truncate">
@@ -79,7 +106,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                             <button type="button" 
-                                onclick="openEditModal({{ $customer->id }}, '{{ $customer->name }}', '{{ $customer->email }}', '{{ $primaryAddress ? $primaryAddress->full_address : '' }}')" 
+                                onclick="openEditModal({{ $customer->id }}, '{{ $customer->name }}', '{{ $customer->email }}', '{{ $primaryAddress ? $primaryAddress->full_address : '' }}', {{ $customer->wallet_balance }}, {{ $customer->paylater_limit }}, {{ $customer->is_prescription_approved ? 1 : 0 }})" 
                                 class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all">
                                 <i class="fas fa-edit mr-2"></i> Edit Data
                             </button>
@@ -87,7 +114,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-10 whitespace-nowrap text-center text-gray-400 italic">
+                        <td colspan="8" class="px-6 py-10 whitespace-nowrap text-center text-gray-400 italic">
                             Belum ada pelanggan terdaftar di sistem e-commerce.
                         </td>
                     </tr>
@@ -95,18 +122,21 @@
                 </tbody>
             </table>
         </div>
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+            {{ $customers->appends(request()->query())->links() }}
+        </div>
     </div>
 </div>
 
 <!-- MODAL EDIT CUSTOMER -->
 <div id="editModal" class="fixed inset-0 z-50 overflow-y-auto hidden" style="background: rgba(0,0,0,0.5);">
-    <div class="flex items-center justify-center min-h-screen px-4">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
             <div class="bg-teal-600 px-6 py-4 flex justify-between items-center text-white">
                 <h3 class="text-xl font-bold">Edit Data Pelanggan</h3>
                 <button onclick="closeEditModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
             </div>
-            <form id="editForm" method="POST" class="p-6 space-y-4">
+            <form id="editForm" method="POST" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
                 @csrf
                 @method('PUT')
                 <div>
@@ -117,13 +147,29 @@
                     <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
                     <input type="email" name="email" id="edit_email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Saldo Dompet (Rp)</label>
+                        <input type="number" name="wallet_balance" id="edit_wallet_balance" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Limit Paylater (Rp)</label>
+                        <input type="number" name="paylater_limit" id="edit_paylater_limit" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+                <div class="flex items-center bg-blue-50 p-3 rounded-lg">
+                    <input type="checkbox" name="is_prescription_approved" id="edit_is_prescription_approved" value="1" class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded">
+                    <label for="edit_is_prescription_approved" class="ml-3 block text-sm font-bold text-blue-700">
+                        Verifikasi Resep Dokter (Apoteker)
+                    </label>
+                </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Password Baru (Kosongkan jika tidak diubah)</label>
                     <input type="password" name="password" id="edit_password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Ketik password baru...">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Alamat Utama</label>
-                    <textarea name="address" id="edit_address" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Masukkan alamat lengkap..."></textarea>
+                    <textarea name="address" id="edit_address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Masukkan alamat lengkap..."></textarea>
                 </div>
                 <div class="pt-4 flex gap-3">
                     <button type="button" onclick="closeEditModal()" class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition-colors">Batal</button>
@@ -175,6 +221,7 @@
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
+            iconColor: '#0076D6',
             didOpen: (toast) => {
                 toast.addEventListener('mouseenter', Swal.stopTimer)
                 toast.addEventListener('mouseleave', Swal.resumeTimer)
@@ -196,11 +243,14 @@
         @endif
 
         // MODAL EDIT LOGIC
-        function openEditModal(id, name, email, address) {
+        function openEditModal(id, name, email, address, wallet, paylater, isVerified) {
             document.getElementById('editForm').action = `/admin/pharmacare/customers/${id}`;
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_email').value = email;
             document.getElementById('edit_address').value = address;
+            document.getElementById('edit_wallet_balance').value = wallet;
+            document.getElementById('edit_paylater_limit').value = paylater;
+            document.getElementById('edit_is_prescription_approved').checked = isVerified == 1;
             document.getElementById('edit_password').value = '';
             document.getElementById('editModal').classList.remove('hidden');
         }

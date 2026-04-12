@@ -5,27 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Subscription extends Model
+class WalletTransaction extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'item_id',
-        'quantity',
-        'interval_days',
-        'discount_percentage',
-        'next_delivery_date',
-        'status',
+        'amount',
+        'type', // topup, payment, refund
+        'description',
+        'reference_id',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function item()
-    {
-        return $this->belongsTo(Item::class);
     }
 }

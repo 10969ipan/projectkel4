@@ -64,8 +64,13 @@
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
         .modal-overlay.open { display: flex; }
-        .modal-box { background: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 500px; }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 500px; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 25px; }
+
+        @keyframes slideUp { 
+            from { transform: translateY(30px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
         .modal-footer { display: flex; gap: 10px; margin-top: 25px; }
         .btn-cancel { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: white; cursor: pointer; font-weight: 700; }
 
@@ -79,8 +84,8 @@
 
 <div class="container">
     <div class="header">
-        <h1>👤 Akun Saya</h1>
-        <a href="{{ route('store.index') }}" class="back-link">❮ Kembali ke Toko</a>
+        <h1>Akun Saya</h1>
+        <a href="{{ route('store.index') }}" class="back-link">Kembali ke Toko</a>
     </div>
 
     <div class="dashboard-grid">
@@ -95,17 +100,18 @@
             </div>
 
             <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 10px; margin-bottom: 8px;">Pengaturan Akun</div>
-            <button class="nav-item active" id="btn-profile" onclick="showSection('profile', this)">👤 Edit Profil</button>
-            <button class="nav-item" id="btn-addresses" onclick="showSection('addresses', this)">📍 Alamat Pengiriman</button>
-            <button class="nav-item" id="btn-password" onclick="showSection('password', this)">🔐 Ganti Password</button>
+            <button class="nav-item active" id="btn-profile" onclick="showSection('profile', this)">Edit Profil</button>
+            <button class="nav-item" id="btn-addresses" onclick="showSection('addresses', this)">Alamat Pengiriman</button>
+            <button class="nav-item" id="btn-password" onclick="showSection('password', this)">Ganti Password</button>
+            <button class="nav-item" id="btn-wallet" onclick="toggleModal('walletModal')">Dompet Saya</button>
 
             <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
-                <a href="{{ route('account.orders') }}" class="nav-item" style="color: var(--primary-blue);">📦 Riwayat Pesanan</a>
+                <a href="{{ route('account.orders') }}" class="nav-item" style="color: var(--primary-blue);">Riwayat Pesanan</a>
             </div>
 
             <form action="{{ route('store.logout') }}" method="POST" style="margin-top: 8px;">
                 @csrf
-                <button type="submit" class="nav-item" style="color: #FF6B6B;">🚪 Keluar</button>
+                <button type="submit" class="nav-item" style="color: #FF6B6B;">Keluar</button>
             </form>
         </div>
 
@@ -114,7 +120,7 @@
 
             <!-- SECTION: PROFILE -->
             <div id="section-profile" class="content-section active">
-                <h2>👤 Edit Profil</h2>
+                <h2>Edit Profil</h2>
                 <form action="{{ route('account.profile.update') }}" method="POST">
                     @csrf
                     @method('PUT')
@@ -126,14 +132,14 @@
                         <label class="form-label">Alamat Email</label>
                         <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
                     </div>
-                    <button type="submit" class="btn-update">💾 Simpan Perubahan</button>
+                    <button type="submit" class="btn-update">Simpan Perubahan</button>
                 </form>
             </div>
 
             <!-- SECTION: ADDRESSES -->
             <div id="section-addresses" class="content-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                    <h2>📍 Alamat Pengiriman</h2>
+                    <h2>Alamat Pengiriman</h2>
                     <button class="btn-add-address" onclick="toggleModal('addressModal')">+ Tambah Alamat</button>
                 </div>
 
@@ -173,7 +179,7 @@
 
             <!-- SECTION: PASSWORD -->
             <div id="section-password" class="content-section">
-                <h2>🔐 Ganti Password</h2>
+                <h2>Ganti Password</h2>
                 <form action="{{ route('account.password.update') }}" method="POST">
                     @csrf
                     @method('PUT')
@@ -189,7 +195,7 @@
                         <label class="form-label">Konfirmasi Password Baru</label>
                         <input type="password" name="new_password_confirmation" class="form-control" placeholder="Ulangi password baru" required>
                     </div>
-                    <button type="submit" class="btn-update">🚀 Update Password</button>
+                    <button type="submit" class="btn-update">Update Password</button>
                 </form>
             </div>
 
@@ -200,7 +206,7 @@
 <!-- Modal Tambah Alamat -->
 <div id="addressModal" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-title">🏠 Tambah Alamat Baru</div>
+        <div class="modal-title">Tambah Alamat Baru</div>
         <form action="{{ route('account.address.store') }}" method="POST">
             @csrf
             <div class="form-group">
@@ -216,6 +222,42 @@
                 <button type="submit" class="btn-update" style="flex: 1;">Simpan Alamat</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal Dompet Saya -->
+<div id="walletModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 700px; padding: 0; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, var(--primary-blue), #005BAA); padding: 40px; color: white;">
+            <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 10px;">Saldo Dompet Tersedia</div>
+            <div style="font-size: 2.5rem; font-weight: 800; margin-bottom: 30px;">Rp {{ number_format($user->wallet_balance, 0, ',', '.') }}</div>
+            <form action="{{ url('/account/wallet/topup') }}" method="POST">
+                @csrf
+                <input type="hidden" name="amount" value="100000">
+                <button type="submit" style="background: white; color: var(--primary-blue); border: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    Isi Saldo (Simulasi Rp 100.000)
+                </button>
+            </form>
+        </div>
+        <div style="padding: 30px; max-height: 400px; overflow-y: auto;">
+            <h4 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 20px;">Riwayat Transaksi</h4>
+            @forelse($transactions as $trx)
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;">
+                <div>
+                    <div style="font-weight: 700; font-size: 0.95rem;">{{ $trx->description }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ $trx->created_at->format('d M Y, H:i') }}</div>
+                </div>
+                <div style="font-weight: 800; color: {{ $trx->amount >= 0 ? '#10b981' : '#ef4444' }};">
+                    {{ $trx->amount >= 0 ? '+' : '' }}Rp {{ number_format($trx->amount, 0, ',', '.') }}
+                </div>
+            </div>
+            @empty
+            <div style="text-align: center; padding: 30px; color: var(--text-muted); font-style: italic;">Belum ada riwayat transaksi.</div>
+            @endforelse
+        </div>
+        <div style="padding: 20px; text-align: center; background: #f8fafc; border-top: 1px solid #f0f0f0;">
+            <button class="btn-cancel" onclick="toggleModal('walletModal')" style="width: 100%;">Tutup</button>
+        </div>
     </div>
 </div>
 
@@ -245,10 +287,20 @@
 
     // Auto-open from ?tab= param
     document.addEventListener('DOMContentLoaded', function() {
-        const tab = new URLSearchParams(window.location.search).get('tab');
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab');
         const tabMap = { 'profile': 'profile', 'addresses': 'addresses', 'password': 'password' };
         const target = tabMap[tab] || 'profile';
         showSection(target, document.getElementById('btn-' + target));
+
+        // Auto-open Add Address modal if requested
+        if (params.get('add_address') === '1') {
+            toggleModal('addressModal');
+            // Clean up the URL so it doesn't stay open on next refresh/redirect
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.delete('add_address');
+            window.history.replaceState({}, '', newUrl);
+        }
     });
 
     const Toast = Swal.mixin({

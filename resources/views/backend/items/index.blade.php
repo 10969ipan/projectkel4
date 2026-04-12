@@ -43,6 +43,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Informasi Obat</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Produsen</th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Deskripsi Medis</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Batch & Kadaluwarsa</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stok Total</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategori</th>
@@ -77,6 +78,20 @@
                                 <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
                                     {{ $item->manufacturer ?? 'N/A' }}
                                 </span>
+                            </td>
+
+                            {{-- Deskripsi Medis --}}
+                            <td class="px-6 py-4">
+                                @if($item->description)
+                                    <div class="text-xs text-gray-600 max-w-[200px] truncate" title="{{ $item->description }}">
+                                        <i class="fas fa-info-circle text-primary-500 mr-1"></i>
+                                        {{ $item->description }}
+                                    </div>
+                                @else
+                                    <span class="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                        Belum ada deskripsi
+                                    </span>
+                                @endif
                             </td>
 
                             {{-- Batch & Kadaluwarsa --}}

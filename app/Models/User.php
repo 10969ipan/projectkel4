@@ -39,6 +39,23 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+    
+    /**
+     * BOOTED METHOD
+     * 
+     * Handles automatic limit assignment for new customers.
+     */
+    protected static function booted()
+    {
+        static::creating(function ($user) {
+            // Default Paylater limit for Customers only
+            if ($user->store_role === 'customer' || $user->role === 'pelanggan') {
+                $user->paylater_limit = 500000;
+            } else {
+                $user->paylater_limit = 0;
+            }
+        });
+    }
 
     /**
      * MASS ASSIGNMENT
@@ -52,6 +69,7 @@ class User extends Authenticatable
         'role',             // Peran: 'admin' atau 'staff'
         'profile_photo',    // Path foto profil (contoh: profile-photos/abc123.jpg)
         'paylater_limit',
+        'wallet_balance',
         'is_prescription_approved',
         'store_role',
     ];
@@ -185,5 +203,10 @@ class User extends Authenticatable
     public function telemedicineChatsAsDoctor(): HasMany
     {
         return $this->hasMany(TelemedicineChat::class, 'doctor_id');
+    }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
     }
 }

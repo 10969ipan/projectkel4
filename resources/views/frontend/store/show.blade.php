@@ -22,23 +22,37 @@
             padding: 40px;
         }
 
-        /* Top Nav */
+        /* Top Nav - RESTORED TO MINIMALIST */
         .top-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 30px;
         }
-        .top-bar a { text-decoration: none; color: var(--text-main); font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+
+        .top-bar a { 
+            text-decoration: none; 
+            color: var(--text-main); 
+            font-size: 1.2rem; 
+            font-weight: 600; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
         .top-bar a:hover { color: var(--primary-blue); }
 
         .cart-link {
             background: #E6F3FF;
             color: var(--primary-blue);
             padding: 10px 20px;
-            border-radius: 20px;
+            border-radius: 30px;
             font-weight: 600;
             position: relative;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .cart-badge {
@@ -158,30 +172,83 @@
 
         .btn-disabled { background: #B0BEC5; cursor: not-allowed; }
 
+        /* Transitions & Animations */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .product-wrapper {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            overflow: hidden;
+            animation: slideUpFade 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        .image-section img {
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        .details-section > * {
+            opacity: 0;
+            animation: slideUpFade 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        .details-section > *:nth-child(1) { animation-delay: 0.1s; }
+        .details-section > *:nth-child(2) { animation-delay: 0.15s; }
+        .details-section > *:nth-child(3) { animation-delay: 0.2s; }
+        .details-section > *:nth-child(4) { animation-delay: 0.25s; }
+        .details-section > *:nth-child(5) { animation-delay: 0.3s; }
+        .details-section > *:nth-child(6) { animation-delay: 0.35s; }
+        .details-section > .action-container { animation-delay: 0.4s; }
+
+        .top-bar {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .cart-link {
+            transition: all 0.3s ease;
+        }
+        .cart-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,118,214,0.2);
+        }
+
         @media (max-width: 900px) {
             .product-wrapper { grid-template-columns: 1fr; }
             .image-section { min-height: 300px; }
             .action-container { flex-direction: column; }
         }
+
+        /* SweetAlert2 Toast Adjustment */
+        .swal2-container.swal2-top-end, .swal2-container.swal2-top-right {
+            top: 70px !important;
+            right: 20px !important;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" x-data="productPage">
     <div class="top-bar">
         <a href="{{ route('store.index') }}" style="text-decoration: none; color: var(--text-main); font-weight: 700; display: flex; align-items: center; gap: 8px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Katalog
+            Kembali
         </a>
-        <a href="{{ route('cart.index') }}" style="background: #E6F3FF; color: var(--primary-blue); padding: 0 20px; border-radius: 30px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 8px; height: 50px;">
+        <a href="{{ route('cart.index') }}" class="cart-link">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
             </svg>
-            @php $cartCount = array_sum(session()->get('cart', [])); @endphp
-            @if($cartCount > 0)
-                <span style="font-size: 0.9rem; font-weight: 800;">{{ $cartCount }}</span>
-            @endif
+            <span x-text="cartCount" x-show="cartCount > 0" style="font-size: 0.9rem; font-weight: 800;"></span>
         </a>
     </div>
 
@@ -208,6 +275,16 @@
 
             <div class="price">Rp {{ isset($item) ? number_format($item->price, 0, ',', '.') : '50.000' }}</div>
 
+            @if(isset($item) && $item->requires_prescription)
+            <div style="background: #FFF5F5; border: 1px solid #FEB2B2; border-radius: 12px; padding: 20px; margin-bottom: 30px; display: flex; align-items: flex-start; gap: 15px;">
+                <div style="background: #F56565; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 800;">!</div>
+                <div>
+                    <h4 style="color: #C53030; font-size: 1rem; margin-bottom: 5px;">Wajib Resep Dokter</h4>
+                    <p style="color: #742A2A; font-size: 0.9rem; line-height: 1.5;">Obat ini termasuk golongan obat keras. Anda <strong>wajib melampirkan foto resep dokter asli</strong> pada saat melakukan pembayaran/checkout.</p>
+                </div>
+            </div>
+            @endif
+
             <h3 class="desc-title">Deskripsi Medis</h3>
             <p class="desc-text">
                 {{ $item->description ?? 'Obat ini ditujukan untuk mengobati gejala gangguan kesehatan. Digunakan melalui pertimbangan matang atau atas petunjuk Dokter sesuai dengan dosisnya. Simpan di tempat sejuk.' }}
@@ -215,59 +292,107 @@
 
             <!-- Action Buttons -->
             <div class="action-container">
-                <form action="{{ route('cart.add', $item->id ?? 1) }}" method="POST" style="display: flex; gap: 20px; flex: 1;">
-                    @csrf
+                <div style="display: flex; gap: 20px; flex: 1;">
                     <div class="qty-selector">
-                        <button type="button" class="btn-qty" onclick="document.getElementById('qty-input').stepDown()">−</button>
-                        <input type="number" name="qty" id="qty-input" class="qty-number" value="1" min="1" max="99" style="width:60px; border:none; text-align:center;">
-                        <button type="button" class="btn-qty" onclick="document.getElementById('qty-input').stepUp()">+</button>
+                        <button type="button" class="btn-qty" @click="qty > 1 ? qty-- : null">−</button>
+                        <input type="number" name="qty" x-model.number="qty" class="qty-number" min="1" max="99" style="width:60px; border:none; text-align:center;">
+                        <button type="button" class="btn-qty" @click="qty < 99 ? qty++ : null">+</button>
                     </div>
 
-                    @if(isset($item) && $item->requires_prescription && !Auth::user()?->is_prescription_approved)
-                        <a href="{{ route('telemedicine.index') }}" class="btn-buy" style="background:#EF5350;">
-                            🔒 Butuh Resep Dokter
-                        </a>
-                    @else
-                        <button type="submit" class="btn-buy">+ Tambah ke Keranjang</button>
-                    @endif
-                </form>
+                    <button type="button" @click="addToCart({{ $item->id }})" class="btn-buy">+ Tambah ke Keranjang</button>
+                </div>
             </div>
 
-            <div style="margin-top: 15px;">
-                <a href="{{ route('cart.index') }}" style="color: var(--primary-blue); font-weight: 600; text-decoration: none;">🛒 Lihat Keranjang →</a>
-            </div>
         </div>
     </div>
 </div>
 
-    <!-- SweetAlert2 -->
+    <!-- SweetAlert2 & Alpine.js -->
     <script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>
+    
+    @php
+        $initialCart = session()->get('cart', []);
+        $initialCount = 0;
+        foreach($initialCart as $details) {
+            $initialCount += $details['qty'];
+        }
+    @endphp
+
     <script>
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('productPage', () => ({
+                cartCount: {{ $initialCount }},
+                qty: 1,
+                isLoading: false,
+                isAuthenticated: {{ Auth::check() ? 'true' : 'false' }},
+
+                async addToCart(itemId) {
+                    if (!this.isAuthenticated) {
+                        Swal.fire({
+                            title: 'Silakan Masuk',
+                            text: 'Anda harus masuk akun untuk berbelanja.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#0076D6',
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: 'Masuk Sekarang',
+                            cancelButtonText: 'Nanti Saja'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = "{{ route('store.index') }}?auth=login";
+                            }
+                        });
+                        return;
+                    }
+
+                    console.log('ProductPage Action (Optimistic): Adding', this.qty, 'pcs');
+                    
+                    const addedQty = parseInt(this.qty);
+                    // 1. Optimistic UI Update
+                    this.cartCount = parseInt(this.cartCount) + addedQty;
+                    
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        iconColor: '#0076D6'
+                    });
+
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Ditambahkan ke keranjang'
+                    });
+
+                    const url = `{{ url('/cart/add-ajax') }}/${itemId}?qty=${addedQty}&type=once&interval=30`;
+                    try {
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: { 
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        const data = await res.json();
+                        if (data.success) {
+                            // Sync real count from server
+                            this.cartCount = data.cart_count;
+                        } else {
+                            // Revert on error
+                            this.cartCount -= addedQty;
+                            Toast.fire({ icon: 'error', title: data.message });
+                        }
+                    } catch (e) {
+                        this.cartCount -= addedQty;
+                        console.error('Cart Error:', e);
+                    }
+                }
+            }));
         });
-
-        @if (session('success'))
-            Toast.fire({
-                icon: 'success',
-                title: '{{ session('success') }}'
-            });
-        @endif
-
-        @if (session('error'))
-            Toast.fire({
-                icon: 'error',
-                title: '{{ session('error') }}'
-            });
-        @endif
     </script>
 </body>
 </html>

@@ -4,95 +4,265 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacare - Keranjang Belanja</title>
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>
     <style>
-        :root { --primary-blue: #0076D6; --bg: #F8F9FB; --muted: #888; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background: var(--bg); color: #333; }
+        :root { 
+            --primary-blue: #0076D6; 
+            --bg: #F8FAFC; 
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text-main); line-height: 1.5; animation: fadeIn 0.8s ease-out; }
 
-        .container { max-width: 1200px; margin: 40px auto; padding: 0 40px; }
-        .top-bar { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
-        .top-bar a { text-decoration: none; color: var(--primary-blue); font-weight: 600; font-size: 1.1rem; }
-        .top-bar h1 { font-size: 2rem; font-weight: 700; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
 
-        .alert-success { background: #E8F5E9; color: #2E7D32; border-left: 4px solid #4CAF50; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
-        .alert-error { background: #FFEBEE; color: #C62828; border-left: 4px solid #EF5350; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
+        @keyframes pageSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        .cart-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px; }
+        
+        /* Navigation Area */
+        .top-bar { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            margin-bottom: 30px; 
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .btn-back-link { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-weight: 700; 
+            color: var(--text-main); 
+            text-decoration: none; 
+            font-size: 1rem; 
+            transition: 0.2s;
+        }
+        .btn-back-link:hover { color: var(--primary-blue); transform: translateX(-3px); }
+        .page-title { font-size: 1.25rem; font-weight: 800; color: var(--text-muted); }
 
-        /* Cart Table */
-        .cart-table-wrap { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .cart-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; align-items: start; }
+
+        /* Modern Cart Table */
+        .cart-card { 
+            background: white; 
+            border-radius: 24px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); 
+            border: 1px solid var(--border-color);
+            animation: pageSlideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
         .cart-table { width: 100%; border-collapse: collapse; }
-        .cart-table thead { background: #F0F4F8; }
-        .cart-table th { padding: 18px 20px; text-align: left; font-size: 0.9rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .cart-table td { padding: 20px; border-bottom: 1px solid #F0F0F0; vertical-align: middle; }
+        .cart-table thead { background: #f8fafc; }
+        .cart-table th { 
+            padding: 20px 15px; 
+            text-align: left; 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            color: #94a3b8; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .cart-table th:nth-child(1) { width: 40%; }
+        .cart-table th:nth-child(2) { width: 15%; }
+        .cart-table th:nth-child(3) { width: 20%; }
+        .cart-table th:nth-child(4) { width: 20%; }
+        .cart-table th:nth-child(5) { width: 5%; }
+
+        .cart-table td { padding: 30px 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         .cart-table tr:last-child td { border-bottom: none; }
 
-        .item-info { display: flex; align-items: center; gap: 15px; }
-        .item-icon { width: 60px; height: 60px; background: #F0F4F8; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
-        .item-name { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
-        .item-badge { background: #ffebeb; color: #c62828; font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; }
+        .item-info { display: flex; align-items: center; gap: 20px; }
+        .item-image { 
+            width: 80px; 
+            height: 80px; 
+            background: #f8fafc; 
+            border-radius: 16px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 10px;
+            border: 1px solid #f1f5f9;
+        }
+        .item-name { font-weight: 700; font-size: 1.1rem; color: var(--text-main); margin-bottom: 4px; }
+        .item-badge { 
+            background: #ffebeb; 
+            color: #ef4444; 
+            font-size: 0.7rem; 
+            padding: 4px 10px; 
+            border-radius: 30px; 
+            font-weight: 700;
+            display: inline-block;
+        }
 
-        /* Qty Input */
-        .qty-control { display: flex; align-items: center; border: 2px solid #E0E0E0; border-radius: 10px; overflow: hidden; width: fit-content; }
-        .qty-btn { width: 36px; height: 36px; background: #F5F5F5; border: none; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: background 0.2s; }
-        .qty-btn:hover { background: #E6F3FF; color: var(--primary-blue); }
-        .qty-input { width: 50px; height: 36px; border: none; text-align: center; font-size: 1rem; font-weight: 600; outline: none; }
+        /* Qty Controls */
+        .qty-box { 
+            display: flex; 
+            align-items: center; 
+            background: #f1f5f9; 
+            border-radius: 12px; 
+            padding: 4px;
+            width: fit-content;
+        }
+        .qty-btn { 
+            width: 32px; 
+            height: 32px; 
+            background: transparent; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            font-weight: 800; 
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .qty-btn:hover { background: white; color: var(--primary-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .qty-input { 
+            width: 44px; 
+            border: none; 
+            background: transparent; 
+            text-align: center; 
+            font-size: 1rem; 
+            font-weight: 800; 
+            color: var(--text-main);
+            outline: none;
+        }
 
-        .btn-remove { background: none; border: none; color: #EF5350; cursor: pointer; font-size: 0.9rem; font-weight: 600; padding: 5px 10px; border-radius: 8px; transition: background 0.2s; }
-        .btn-remove:hover { background: #FFEBEE; }
+        .price-text { font-weight: 700; font-size: 1.05rem; color: var(--text-main); white-space: nowrap; }
+        .subtotal-text { font-weight: 800; font-size: 1.15rem; color: var(--primary-blue); white-space: nowrap; }
+        
+        .btn-delete { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #fff5f5; 
+            border: 1.5px solid #ffebeb; 
+            color: #ef4444; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            border-radius: 12px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-delete:hover { 
+            background: #ef4444; 
+            color: white; 
+            border-color: #ef4444;
+            transform: scale(1.1) rotate(5deg);
+        }
 
-        .price-col { font-weight: 700; font-size: 1.1rem; }
-        .subtotal-col { font-weight: 700; font-size: 1.1rem; color: var(--primary-blue); }
+        /* Sidebar UI */
+        .summary-card { 
+            background: white; 
+            border-radius: 24px; 
+            padding: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); 
+            border: 1px solid var(--border-color);
+            position: sticky; 
+            top: 40px; 
+            animation: pageSlideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.1s both;
+        }
+        .summary-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 25px; color: var(--text-main); }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; color: var(--text-muted); font-weight: 500; }
+        .summary-row.total { 
+            border-top: 2px dashed var(--border-color); 
+            padding-top: 20px; 
+            margin-top: 20px; 
+            font-weight: 800; 
+            font-size: 1.5rem; 
+            color: var(--primary-blue); 
+        }
 
-        /* Empty Cart */
-        .empty-cart { text-align: center; padding: 80px 40px; }
-        .empty-cart div { font-size: 5rem; margin-bottom: 20px; }
-        .empty-cart h2 { font-size: 1.5rem; color: var(--muted); margin-bottom: 15px; }
-        .empty-cart a { background: var(--primary-blue); color: white; padding: 14px 30px; border-radius: 12px; text-decoration: none; font-weight: 600; }
+        .user-mini-card { 
+            background: #f0f7ff; 
+            border-radius: 20px; 
+            padding: 20px; 
+            margin-bottom: 25px; 
+            border: 1px solid #d0e7ff;
+        }
+        .user-name { font-weight: 800; color: #1e3a8a; font-size: 1rem; margin-bottom: 2px; }
+        .user-email { color: #60a5fa; font-size: 0.85rem; margin-bottom: 12px; }
+        .limit-pill { background: white; border-radius: 12px; padding: 10px 15px; font-weight: 800; font-size: 0.85rem; color: var(--primary-blue); display: flex; justify-content: space-between; }
 
-        /* Summary Box */
-        .summary-box { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); height: fit-content; position: sticky; top: 40px; }
-        .summary-box h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 25px; border-bottom: 2px solid #F0F0F0; padding-bottom: 15px; }
-        .summary-row { display: flex; justify-content: space-between; font-size: 1rem; margin-bottom: 15px; color: #555; }
-        .summary-row.total { font-weight: 700; font-size: 1.4rem; color: var(--primary-blue); border-top: 2px solid #F0F0F0; padding-top: 20px; margin-top: 10px; margin-bottom: 25px; }
+        .btn-primary-action { 
+            width: 100%; 
+            background: var(--primary-blue); 
+            color: white; 
+            padding: 20px; 
+            border-radius: 16px; 
+            border: none; 
+            font-size: 1.1rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: block; 
+            text-align: center; 
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(0,118,214,0.15);
+        }
+        .btn-primary-action:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(0,118,214,0.25); filter: brightness(1.1); }
+        
+        .btn-secondary-action { 
+            display: block; 
+            text-align: center; 
+            margin-top: 20px; 
+            color: var(--text-muted); 
+            text-decoration: none; 
+            font-weight: 700; 
+            font-size: 0.9rem;
+        }
+        .btn-secondary-action:hover { color: var(--primary-blue); }
 
-        /* User Info Card */
-        .user-card { background: #E6F3FF; border-radius: 14px; padding: 18px; margin-bottom: 20px; }
-        .user-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 5px; }
-        .user-card p { font-size: 0.9rem; color: #555; }
-        .paylater-limit { margin-top: 10px; background: white; border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; font-weight: 600; color: var(--primary-blue); }
+        /* Notification Adjustment */
+        .swal2-container.swal2-top-end { top: 70px !important; }
 
-        .btn-checkout { width: 100%; background: var(--primary-blue); color: white; padding: 18px; border-radius: 12px; border: none; font-size: 1.15rem; font-weight: 700; cursor: pointer; text-decoration: none; display: block; text-align: center; transition: background 0.2s; }
-        .btn-checkout:hover { background: #005FA3; }
-
-        .btn-continue { display: block; text-align: center; margin-top: 15px; color: var(--primary-blue); text-decoration: none; font-weight: 600; }
-
-        @media (max-width: 900px) { .cart-layout { grid-template-columns: 1fr; } }
+        @media (max-width: 1024px) { .cart-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" x-data="cartPage">
+    <!-- Top Bar Navigation -->
     <div class="top-bar">
-        <a href="{{ route('store.index') }}">←</a>
-        <h1>Keranjang Belanja</h1>
+        <a href="{{ route('store.index') }}" class="btn-back-link">
+            <i class="fas fa-chevron-left"></i> Kembali Belanja
+        </a>
+        <div class="page-title">Ringkasan Keranjang</div>
     </div>
 
-
-
-    @if(count($items) === 0)
-        <div class="cart-table-wrap">
-            <div class="empty-cart">
-                <div style="font-size:3rem; color:#ddd;">∅</div>
-                <h2>Keranjang Anda masih kosong</h2>
-                <a href="{{ route('store.index') }}">Mulai Belanja Obat</a>
+    <template x-if="items.length === 0">
+        <div class="cart-card">
+            <div style="text-align: center; padding: 100px 40px;">
+                <div style="font-size: 4rem; color: #e2e8f0; margin-bottom: 20px;"><i class="fas fa-shopping-basket"></i></div>
+                <h2 style="font-weight: 800; color: var(--text-muted); margin-bottom: 25px;">Keranjang belanja Anda kosong</h2>
+                <a href="{{ route('store.index') }}" class="btn-primary-action" style="display:inline-block; width:auto; padding: 15px 40px;">Buka Katalog Obat</a>
             </div>
         </div>
-    @else
+    </template>
+
+    <template x-if="items.length > 0">
         <div class="cart-layout">
-            <!-- Cart Table -->
-            <div class="cart-table-wrap">
-                <table class="cart-table">
+            <!-- Items Section -->
+            <div class="cart-card">
+                <div style="overflow-x: auto;">
+                    <table class="cart-table">
                     <thead>
                         <tr>
                             <th>Produk</th>
@@ -103,152 +273,243 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($items as $cartItem)
-                        <tr>
+                        <template x-for="item in items" :key="item.id">
+                        <tr x-show="true" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
                             <td>
                                 <div class="item-info">
-                                    <div class="item-icon" style="overflow: hidden;">
-                                        @if(!empty($cartItem['image_path']))
-                                            <img src="{{ asset($cartItem['image_path']) }}" alt="{{ $cartItem['name'] }}" style="width:100%; height:100%; object-fit:contain;">
-                                        @else
-                                            <span style="font-size:1.5rem;">{{ $cartItem['requires_prescription'] ? '⚕️' : '💊' }}</span>
-                                        @endif
+                                    <div class="item-image">
+                                        <template x-if="item.image_path">
+                                            <img :src="'{{ asset('') }}' + item.image_path" :alt="item.name" style="width:100%; height:100%; object-fit:contain;">
+                                        </template>
+                                        <template x-if="!item.image_path">
+                                            <span style="font-size:2rem;" x-text="item.requires_prescription ? '⚕️' : '💊'"></span>
+                                        </template>
                                     </div>
                                     <div>
-                                        <div class="item-name">{{ $cartItem['name'] }}</div>
-                                        @if($cartItem['requires_prescription'])
+                                        <div class="item-name" x-text="item.name"></div>
+                                        <template x-if="item.requires_prescription">
                                             <span class="item-badge">Wajib Resep</span>
-                                        @endif
+                                        </template>
                                     </div>
                                 </div>
                             </td>
-                            <td class="price-col">Rp {{ number_format($cartItem['price'], 0, ',', '.') }}</td>
                             <td>
-                                <form action="{{ route('cart.update', $cartItem['id']) }}" method="POST" class="qty-form" style="display:flex; align-items: center;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <div class="qty-control">
-                                        <button type="button" class="qty-btn" onclick="decrementQty(this)">−</button>
-                                        <input type="number" name="qty" class="qty-input" value="{{ $cartItem['qty'] }}" min="1" max="99">
-                                        <button type="button" class="qty-btn" onclick="incrementQty(this)">+</button>
-                                    </div>
-                                </form>
+                                <div class="price-text" x-text="formatIDR(item.price)"></div>
                             </td>
-                            <td class="subtotal-col">Rp {{ number_format($cartItem['subtotal'], 0, ',', '.') }}</td>
                             <td>
-                                <form action="{{ route('cart.remove', $cartItem['id']) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn-remove" type="submit">Hapus</button>
-                                </form>
+                                <div class="qty-box">
+                                    <button type="button" class="qty-btn" @click="updateQty(item.id, -1)">−</button>
+                                    <input type="number" class="qty-input" x-model.number="item.qty" readonly>
+                                    <button type="button" class="qty-btn" @click="updateQty(item.id, 1)">+</button>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="subtotal-text" x-text="formatIDR(item.price * item.qty)"></div>
+                            </td>
+                            <td style="text-align: right;">
+                                <button class="btn-delete" @click="removeItem(item.id)" title="Hapus Produk">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
                             </td>
                         </tr>
-                        @endforeach
+                        </template>
                     </tbody>
                 </table>
+                </div>
             </div>
 
-            <!-- Summary Sidebar -->
-            <div>
-                <!-- User Info (mengikuti data user yang login) -->
+            <!-- Summary Section -->
+            <aside>
                 @auth
-                <div class="user-card">
-                    <h3>{{ Auth::user()->name }}</h3>
-                    <p>{{ Auth::user()->email }}</p>
-                    <div class="paylater-limit">
-                        Limit Paylater: Rp {{ number_format(Auth::user()->paylater_limit ?? 0, 0, ',', '.') }}
+                <div class="user-mini-card">
+                    <div class="user-name">{{ Auth::user()->name }}</div>
+                    <div class="user-email">{{ Auth::user()->email }}</div>
+                    <div class="limit-pill">
+                        <span>Limit Paylater</span>
+                        <span>Rp {{ number_format(Auth::user()->paylater_limit ?? 0, 0, ',', '.') }}</span>
                     </div>
                 </div>
                 @endauth
 
-                <div class="summary-box">
-                    <h2>Ringkasan</h2>
+                <div class="summary-card">
+                    <h2 class="summary-title">Ringkasan Belanja</h2>
+                    
                     <div class="summary-row">
-                        <span>Subtotal ({{ count($items) }} produk)</span>
-                        <span>Rp {{ number_format($grandTotal, 0, ',', '.') }}</span>
+                        <span>Subtotal (<span x-text="items.length"></span> produk)</span>
+                        <span style="color: var(--text-main); font-weight: 700;" x-text="formatIDR(grandTotal)"></span>
                     </div>
                     <div class="summary-row">
-                        <span>Estimasi Ongkir</span>
-                        <span>Rp 15.000</span>
+                        <span>Estimasi Pengiriman</span>
+                        <span style="color: #059669; font-weight: 700;">GRATIS</span>
                     </div>
+                    
                     <div class="summary-row total">
                         <span>Total</span>
-                        <span>Rp {{ number_format($grandTotal + 15000, 0, ',', '.') }}</span>
+                        <span x-text="formatIDR(grandTotal)"></span>
                     </div>
 
-                    <a href="{{ route('checkout.index') }}" class="btn-checkout">
-                        Lanjut ke Pembayaran →
+                    <a href="{{ route('checkout.index') }}" class="btn-primary-action">
+                        Lanjut ke Pembayaran <i class="fas fa-arrow-right" style="margin-left:8px; font-size:0.9rem;"></i>
                     </a>
-                    <a href="{{ route('store.index') }}" class="btn-continue">← Lanjut Belanja</a>
 
-                    <form action="{{ route('cart.clear') }}" method="POST" style="margin-top: 15px; text-align: center;">
+                    <a href="{{ route('store.index') }}" class="btn-secondary-action">
+                        <i class="fas fa-arrow-left"></i> Tambah Produk Lain
+                    </a>
+
+                    <form action="{{ route('cart.clear') }}" method="POST" style="margin-top: 25px; border-top: 1px solid #f1f5f9; padding-top: 20px; text-align: center;">
                         @csrf
-                        <button type="submit" style="background: none; border: none; color: var(--muted); font-size: 0.9rem; cursor: pointer;">Kosongkan keranjang</button>
+                        <button type="submit" style="background: none; border: none; color: #cbd5e1; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'">Kosongkan keranjang</button>
                     </form>
                 </div>
-            </div>
+            </aside>
         </div>
-    @endif
+    </template>
 </div>
 
+<!-- Scripts -->
 <script>
-    let debounceTimers = {};
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('cartPage', () => ({
+            items: @json($items),
+            grandTotal: {{ $grandTotal }},
+            cartCount: {{ count($items) }},
+            isLoading: false,
 
-    function decrementQty(btn) {
-        const input = btn.nextElementSibling;
-        const val = parseInt(input.value);
-        if (val > 1) {
-            input.value = val - 1;
-            autoSubmit(input);
-        }
-    }
+            async updateQty(itemId, change) {
+                let item = this.items.find(i => i.id === itemId);
+                if (!item) return;
 
-    function incrementQty(btn) {
-        const input = btn.previousElementSibling;
-        const val = parseInt(input.value);
-        if (val < 99) {
-            input.value = val + 1;
-            autoSubmit(input);
-        }
-    }
+                let newQty = item.qty + change;
+                if (newQty < 1 || newQty > 99) return;
 
-    function autoSubmit(input) {
-        const form = input.closest('form');
-        const formId = form.action; // unique per form
-        clearTimeout(debounceTimers[formId]);
-        debounceTimers[formId] = setTimeout(() => {
-            form.submit();
-        }, 400); // submit after 400ms pause
-    }
-</script>
-    <!-- SweetAlert2 -->
-    <script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
-    <script>
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                // Optimistic UI Update
+                const oldQty = item.qty;
+                item.qty = newQty;
+                this.recalculateTotal();
+
+                try {
+                    const res = await fetch(`{{ url('/cart/update') }}/${itemId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ qty: newQty })
+                    });
+                    
+                    const data = await res.json();
+                    if (!data.success) {
+                        item.qty = oldQty;
+                        this.recalculateTotal();
+                        window.showToast('error', data.message || 'Gagal memperbarui kuantitas');
+                    } else {
+                        // Sync EVERYTHING with server data
+                        this.items = data.items;
+                        this.grandTotal = data.grand_total;
+                        this.cartCount = data.cart_count;
+                        if (window.StoreUI) window.StoreUI.cartCount = data.cart_count;
+                    }
+                } catch (e) {
+                    item.qty = oldQty;
+                    this.recalculateTotal();
+                    window.showToast('error', 'Koneksi bermasalah.');
+                }
+            },
+
+            async removeItem(itemId) {
+                const confirmed = await Swal.fire({
+                    title: 'Hapus Produk?',
+                    text: "Produk akan dihapus dari keranjang Anda.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                });
+
+                if (!confirmed.isConfirmed) return;
+
+                // Optimistic UI Removal
+                const originalItems = [...this.items];
+                this.items = this.items.filter(i => i.id !== itemId);
+                this.recalculateTotal();
+
+                try {
+                    const res = await fetch(`{{ url('/cart/remove') }}/${itemId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                        this.items = data.items; // Full sync to ensure it's gone
+                        this.grandTotal = data.grand_total;
+                        this.cartCount = data.cart_count;
+                        if (window.StoreUI) window.StoreUI.cartCount = data.cart_count;
+                        window.showToast('success', 'Item berhasil dihapus');
+                    } else {
+                        this.items = originalItems;
+                        this.recalculateTotal();
+                        window.showToast('error', 'Gagal menghapus item');
+                    }
+                } catch (e) {
+                    this.items = originalItems;
+                    this.recalculateTotal();
+                    window.showToast('error', 'Koneksi bermasalah.');
+                }
+            },
+
+            recalculateTotal() {
+                this.grandTotal = this.items.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            },
+
+            formatIDR(num) {
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(num).replace('Rp', 'Rp ');
             }
+        }));
+    });
+</script>
+
+<!-- SweetAlert2 -->
+<script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
+<script>
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        iconColor: '#0076D6',
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+
+    @if (session('success'))
+        Toast.fire({
+            icon: 'success',
+            title: '{{ session('success') }}'
         });
+    @endif
 
-        @if (session('success'))
-            Toast.fire({
-                icon: 'success',
-                title: '{{ session('success') }}'
-            });
-        @endif
-
-        @if (session('error'))
-            Toast.fire({
-                icon: 'error',
-                title: '{{ session('error') }}'
-            });
-        @endif
-    </script>
+    @if (session('error'))
+        Toast.fire({
+            icon: 'error',
+            title: '{{ session('error') }}'
+        });
+    @endif
+</script>
 </body>
 </html>

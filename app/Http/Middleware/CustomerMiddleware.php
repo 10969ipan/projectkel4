@@ -15,20 +15,27 @@ class CustomerMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-            // Only allow users with store_role 'customer'
-            // and NOT internal users accidentally accessing store features with admin account
-            if ($user->store_role === 'customer' && is_null($user->role)) {
-                return $next($request);
+        // Jika tidak login, biarkan sebagai TAMU (Guest) melihat-lihat toko dulu
+        if (!auth()->check()) {
+            return $next($request);
+        }
+
+        $user = auth()->user();
+        
+        // JIKA sudah login, pastikan dia adalah akun Pelanggan
+        // Jika dia adalah Admin atau Staff, blokir akses ke halaman toko
+        if ($user->role === 'admin' || $user->role === 'staff') {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Akun Internal (Admin/Staff) tidak diperbolehkan mengakses fitur toko.'], 403);
             }
+            return redirect()->route('dashboard')->with('error', 'Informasi: Anda saat ini login sebagai Admin/Staff. Fitur toko hanya dapat diakses melalui akun Pelanggan terpisah (Guest atau login khusus Pelanggan).');
         }
 
-        // Redirect Admin/Staff back to dashboard or show 403
-        if ($request->expectsJson()) {
-            return response()->json(['message' => 'Admin/Staff cannot use store e-commerce features.'], 403);
+        // Jika dia login sebagai customer, biarkan lanjut
+        if ($user->store_role === 'customer') {
+            return $next($request);
         }
 
-        return redirect()->route('dashboard')->with('warning', 'Informasi: Akun Admin/Staff tidak dapat melakukan transaksi di toko. Silakan gunakan akun Pelanggan terpisah.');
+        return $next($request);
     }
 }

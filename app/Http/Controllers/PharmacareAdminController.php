@@ -47,7 +47,7 @@ class PharmacareAdminController extends Controller
             $query->where('order_status', $request->status);
         }
 
-        $orders = $query->latest()->get();
+        $orders = $query->latest()->paginate(20);
             
         return view('backend.pharmacare.transaction_logs', compact('orders'));
     }
@@ -63,15 +63,24 @@ class PharmacareAdminController extends Controller
         $order->order_status = $request->order_status;
         $order->save();
         
+        // Trigger Notification
+        if (in_array($request->order_status, ['processing', 'completed'])) {
+            $user = $order->user;
+            if ($user) {
+                $user->notify(new \App\Notifications\OrderStatusNotification($order, $request->order_status));
+            }
+        }
+        
         return back()->with('success', 'Status pesanan berhasil diperbarui!');
     }
 
     public function customers()
     {
         $customers = User::where('store_role', 'customer')
-            ->with(['addresses', 'storeOrders'])
+            ->orWhere('role', 'pelanggan')
+            ->with(['addresses', 'storeOrders', 'subscriptions.item', 'walletTransactions'])
             ->latest()
-            ->get();
+            ->paginate(15);
         return view('backend.pharmacare.customers', compact('customers'));
     }
 
@@ -83,14 +92,20 @@ class PharmacareAdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|min:6',
-            'address' => 'nullable|string'
+            'address' => 'nullable|string',
+            'wallet_balance' => 'required|numeric|min:0',
+            'paylater_limit' => 'required|numeric|min:0',
+            'is_prescription_approved' => 'nullable|boolean'
         ]);
 
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->wallet_balance = $request->wallet_balance;
+        $user->paylater_limit = $request->paylater_limit;
+        $user->is_prescription_approved = $request->has('is_prescription_approved');
         
         if ($request->filled('password')) {
-            $user->password = $request->password; // Autohashed in model cast
+            $user->password = Hash::make($request->password);
         }
         
         $user->save();

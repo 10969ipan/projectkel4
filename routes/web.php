@@ -12,6 +12,7 @@ use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ConsultationController;
 
@@ -43,21 +44,35 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // ==========================================
 // PHARMACARE E-COMMERCE (STORE FRONT)
 // ==========================================
-Route::get('/store', [StoreController::class, 'index'])->name('store.index');
-Route::get('/store/item/{id}', [StoreController::class, 'show'])->name('store.show');
+Route::middleware(['customer'])->group(function () {
+    Route::get('/store', [StoreController::class, 'index'])->name('store.index');
+    Route::get('/store/item/{id}', [StoreController::class, 'show'])->name('store.show');
+    
+    // Store Auth (Login / Register Pharmacare)
+    Route::get('/store/login', [\App\Http\Controllers\StoreAuthController::class, 'showLogin'])->name('store.login');
+    Route::post('/store/login', [\App\Http\Controllers\StoreAuthController::class, 'login'])->name('store.login.post');
+    Route::get('/store/register', [\App\Http\Controllers\StoreAuthController::class, 'showRegister'])->name('store.register');
+    Route::post('/store/register', [\App\Http\Controllers\StoreAuthController::class, 'register'])->name('store.register.store');
+    Route::post('/store/logout', [\App\Http\Controllers\StoreAuthController::class, 'logout'])->name('store.logout');
 
-// Store Auth (Login / Register Pharmacare)
-Route::get('/store/login', [\App\Http\Controllers\StoreAuthController::class, 'showLogin'])->name('store.login');
-Route::post('/store/login', [\App\Http\Controllers\StoreAuthController::class, 'login'])->name('store.login.post');
-Route::get('/store/register', [\App\Http\Controllers\StoreAuthController::class, 'showRegister'])->name('store.register');
-Route::post('/store/register', [\App\Http\Controllers\StoreAuthController::class, 'register'])->name('store.register.store');
-Route::post('/store/logout', [\App\Http\Controllers\StoreAuthController::class, 'logout'])->name('store.logout');
+    // Telemedicine Directory & AI (Public access but role-checked)
+    Route::get('/telemedicine', [ConsultationController::class, 'index'])->name('telemedicine.index');
+    Route::post('/consultation/ai-reply', [ConsultationController::class, 'aiReply'])->name('telemedicine.ai-reply');
 
-// Telemedicine AI (Public)
-Route::post('/consultation/ai-reply', [ConsultationController::class, 'aiReply'])->name('telemedicine.ai-reply');
+    // AJAX Search for Autocomplete
+    Route::get('/store/search-ajax', [StoreController::class, 'searchAjax'])->name('store.search-ajax');
 
-// Telemedicine Directory (Guest Or Auth)
-Route::get('/telemedicine', [ConsultationController::class, 'index'])->name('telemedicine.index');
+    // Cart AJAX API
+    Route::get('/cart/summary', [CartController::class, 'summary'])->name('cart.summary');
+    Route::post('/cart/add-ajax/{itemId}', [CartController::class, 'add'])->name('cart.add-ajax');
+
+    // Quick View API
+    Route::get('/store/quick-view/{id}', [StoreController::class, 'quickView'])->name('store.quick-view');
+
+    // Notifications API
+    Route::get('/api/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/api/notifications/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+});
 
 Route::middleware(['auth', 'customer'])->group(function () {
     // Checkout Process
@@ -82,6 +97,10 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::get('/account/profile', [\App\Http\Controllers\AccountController::class, 'showProfile'])->name('account.profile');
     Route::put('/account/profile', [\App\Http\Controllers\AccountController::class, 'updateProfile'])->name('account.profile.update');
     Route::put('/account/password', [\App\Http\Controllers\AccountController::class, 'changePassword'])->name('account.password.update');
+
+    // Wallet & Subscriptions
+    Route::get('/account/wallet', [\App\Http\Controllers\AccountController::class, 'showWallet'])->name('account.wallet');
+    Route::post('/account/wallet/topup', [\App\Http\Controllers\AccountController::class, 'topUp'])->name('account.wallet.topup');
 
     // Order Payment & Cancellation
     Route::get('/account/orders/{id}/pay', [\App\Http\Controllers\AccountController::class, 'showPayment'])->name('account.orders.pay');

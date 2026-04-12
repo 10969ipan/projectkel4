@@ -14,6 +14,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        [x-cloak] { display: none !important; }
         body { background-color: var(--bg-color); color: var(--text-main); }
         
         .container { max-width: 1200px; margin: 0 auto; padding: 40px; }
@@ -66,16 +67,51 @@
         @media (max-width: 600px) { .pay-modal-grid { grid-template-columns: 1fr; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
     </style>
+
+    <!-- Essential Dependencies -->
+    <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('assets/vendor/sweetalert2/sweetalert2.min.css') }}">
+    <script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
 </head>
 <body>
 
-<div class="container">
+    <div class="container" x-data='{
+        shippingCost: {{ $shippingCost }},
+        subTotalGross: {{ $subTotalGross }},
+        selectedIds: [
+            @foreach($cartItems as $ci)
+                @if(($ci["type"] ?? "once") === "subscription") "{{ $ci["id"] }}", @endif
+            @endforeach
+        ],
+        items: @json(array_values($cartItems)),
+        
+        get totalDiscount() {
+            let discount = 0;
+            this.selectedIds.forEach(id => {
+                const item = this.items.find(i => i.id == id);
+                if (item) {
+                    // Logic: Discount 10% based on original item price
+                    let originalPrice = item.type === "subscription" ? (item.price / 0.9) : item.price;
+                    discount += (originalPrice * item.qty * 0.1);
+                }
+            });
+            return discount;
+        },
+
+        get grandTotal() {
+            return this.subTotalGross - this.totalDiscount + this.shippingCost;
+        },
+
+        isSubscribed(id) {
+            return this.selectedIds.includes(id.toString());
+        }
+    }'>
     <div class="top-bar">
         <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 5px; font-weight: 700; color: var(--text-main); text-decoration: none;">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Kembali
         </a>
-        <h1 style="font-size: 1.2rem; font-weight: 700; color: var(--text-muted); opacity: 0.8;">Checkout Aman</h1>
+        <h1 style="font-size: 1.2rem; font-weight: 700; color: var(--text-muted); opacity: 0.8;">Checkout Pesanan</h1>
         <div style="width: 100px;"></div> <!-- Spacer -->
     </div>
 
@@ -99,12 +135,12 @@
                             </div>
                         </label>
                         @endforeach
-                        <a href="{{ route('account.dashboard') }}" style="text-align: center; color: var(--primary-blue); font-size: 0.9rem; font-weight: 600; text-decoration: none; margin-top: 10px;">+ Kelola Alamat Lainnya</a>
+                        <a href="{{ route('account.profile', ['tab' => 'addresses', 'add_address' => 1]) }}" style="text-align: center; color: var(--primary-blue); font-size: 0.9rem; font-weight: 600; text-decoration: none; margin-top: 10px;">+ Kelola Alamat Lainnya</a>
                     </div>
                 @else
                     <div style="text-align: center; padding: 20px; background: #FFF9DB; border-radius: 12px; border: 1px solid #FFD43B;">
                         <p style="margin-bottom: 15px;">Anda belum menambahkan alamat pengiriman.</p>
-                        <a href="{{ route('account.dashboard') }}" class="btn-banner" style="display: inline-block; padding: 10px 20px; font-size: 0.9rem;">Tambah Alamat Sekarang</a>
+                        <a href="{{ route('account.profile', ['tab' => 'addresses', 'add_address' => 1]) }}" class="btn-banner" style="display: inline-block; padding: 10px 20px; font-size: 0.9rem;">Tambah Alamat Sekarang</a>
                     </div>
                 @endif
             </div>
@@ -123,26 +159,85 @@
                 }
             </script>
 
-            {{-- Pindah ke menu pembayaran selanjutnya --}}
-
             <div class="section">
-                <h2 class="section-title" style="color: #d32f2f;">Validasi Resep Manual (Opsional)</h2>
-                <div class="form-group">
-                    <label class="form-label">Upload Surat Dokter Fisik (PDF/JPG/PNG)</label>
-                    <input type="file" id="prescriptionInput" name="prescription" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">* Wajib jika Anda membeli obat berlogo merah (K) dan belum divalidasi dokter.</p>
+                <h2 class="section-title">Ringkasan Order</h2>
+                <div style="margin-bottom: 25px;">
+                    @foreach($cartItems as $ci)
+                    <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f8fafc;">
+                        <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 15px;">
+                            <div style="width: 70px; height: 70px; background: #F0F4F8; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid #edf2f7;">
+                                @if(!empty($ci['image_path']))
+                                    <img src="{{ asset($ci['image_path']) }}" alt="{{ $ci['name'] }}" style="width:100%; height:100%; object-fit:contain;">
+                                @else
+                                    <span style="font-size: 1.5rem; opacity: 0.5;">💊</span>
+                                @endif
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-main);">{{ $ci['name'] }}</div>
+                                <div style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">
+                                    <span id="item-qty-{{ $ci['id'] }}" style="font-weight: 700; color: var(--text-main);">{{ $ci['qty'] }}</span> x 
+                                    <span id="item-sub-{{ $ci['id'] }}" data-price="{{ $ci['price'] }}">Rp {{ number_format($ci['price'], 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div :style="isSubscribed({{ $ci['id'] }}) ? 'text-decoration: line-through; color: #94a3b8; font-size: 0.85rem;' : 'font-weight: 800; font-size: 1.1rem; color: var(--text-main);'">
+                                    Rp {{ number_format($ci['subtotal'], 0, ',', '.') }}
+                                </div>
+                                <div x-show="isSubscribed({{ $ci['id'] }})" style="color: #059669; font-weight: 800; font-size: 1.1rem;" x-cloak>
+                                    Rp <span x-text="new Intl.NumberFormat('id-ID').format({{ $ci['subtotal'] }} * 0.9)"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subscription Toggle in Checkout -->
+                        <div style="background: #f8fafc; border-radius: 12px; padding: 15px; border: 1px solid #edf2f7;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 700; color: #475569;">
+                                <input type="checkbox" name="is_subscription[{{ $ci['id'] }}]" x-model="selectedIds" value="{{ $ci['id'] }}" style="width: 18px; height: 18px; accent-color: var(--primary-blue);">
+                                📦 Jadikan Langganan & Hemat 10%
+                            </label>
+                            <div x-show="isSubscribed({{ $ci['id'] }})" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1; display: flex; align-items: center; gap: 15px;" x-cloak>
+                                <span style="font-size: 0.8rem; color: #64748b; font-weight: 500;">Frekuensi Pengiriman:</span>
+                                <select name="subscription_interval[{{ $ci['id'] }}]" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; font-weight: 700; background: white; cursor: pointer;">
+                                    <option value="7">Setiap 7 Hari</option>
+                                    <option value="14">Setiap 14 Hari</option>
+                                    <option value="30" selected>Setiap 30 Hari</option>
+                                    <option value="60">Setiap 60 Hari</option>
+                                    <option value="90">Setiap 90 Hari</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
             </div>
 
-            @php
-                $hasPrescriptionItem = false;
-                foreach($cartItems as $ci) {
-                    if(isset($ci['requires_prescription']) && $ci['requires_prescription']) {
-                        $hasPrescriptionItem = true;
-                        break;
-                    }
-                }
-            @endphp
+            {{-- Pindah ke menu pembayaran selanjutnya --}}
+
+            @if($hasPrescriptionItem)
+            <div class="section" style="border: 2px solid #EF5350; background: #FFF5F5;">
+                <h2 class="section-title" style="color: #D32F2F; border-bottom-color: #FEB2B2;">🚨 Verifikasi Resep Dokter (Wajib)</h2>
+                <div class="form-group">
+                    <p style="margin-bottom: 15px; color: #742A2A; font-size: 0.95rem; line-height: 1.5;">
+                        Pesanan Anda mengandung <strong>Obat Keras</strong>. Berdasarkan regulasi farmasi, Anda wajib mengunggah foto resep dokter yang asli untuk melanjutkan ke tahap pembayaran.
+                    </p>
+                    <label class="form-label" style="color: #D32F2F;">Upload Foto Resep (PDF/JPG/PNG)</label>
+                    <input type="file" id="prescriptionInput" name="prescription" class="form-control" accept=".pdf,.jpg,.jpeg,.png" style="border-color: #FEB2B2;">
+                    <div style="margin-top: 10px; font-size: 0.85rem; color: #C53030; font-weight: 600;">
+                        <i class="fas fa-info-circle"></i> Pastikan nama pasien dan nama obat terlihat jelas.
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="section">
+                <h2 class="section-title">Validasi Resep Manual (Opsional)</h2>
+                <div class="form-group">
+                    <label class="form-label">Upload Surat Dokter Fisik (Jika Ada)</label>
+                    <input type="file" id="prescriptionInput" name="prescription" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Unggah jika Anda memiliki resep untuk obat yang Anda beli.</p>
+                </div>
+            </div>
+            @endif
+
 
             {{-- Pindah ke menu pembayaran selanjutnya --}}
         </div>
@@ -150,43 +245,37 @@
         <!-- Right Side Summary Box -->
         <div class="right-col">
             <div class="summary-box">
-                <h2>Ringkasan Order</h2>
-                <div style="margin-bottom: 25px; border-bottom: 1px dashed #E0E0E0; padding-bottom: 20px;">
-                    @foreach($cartItems as $ci)
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center;">
-                        <div style="width: 50px; height: 50px; background: #F0F4F8; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;">
-                            @if(!empty($ci['image_path']))
-                                <img src="{{ asset($ci['image_path']) }}" alt="{{ $ci['name'] }}" style="width:100%; height:100%; object-fit:contain;">
-                            @else
-                                <span style="font-size: 1.2rem; opacity: 0.5;">?</span>
-                            @endif
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-weight: 600; font-size: 0.95rem;">{{ $ci['name'] }}</div>
-                            <div style="color: var(--text-muted); font-size: 0.85rem;">{{ $ci['qty'] }} x Rp {{ number_format($ci['price'], 0, ',', '.') }}</div>
-                        </div>
-                        <div style="font-weight: 700; font-size: 0.95rem;">Rp {{ number_format($ci['subtotal'], 0, ',', '.') }}</div>
-                    </div>
-                    @endforeach
-                </div>
+                <h2>Ringkasan Pembayaran</h2>
 
                 <div class="summary-row">
                     <span>Subtotal Produk</span>
-                    <span>Rp {{ number_format($subTotal, 0, ',', '.') }}</span>
+                    <span x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(subTotalGross)">Rp {{ number_format($subTotalGross, 0, ',', '.') }}</span>
                 </div>
-                <div class="summary-row" style="color: var(--text-muted); font-style: italic; font-size: 0.85rem; margin-top: -10px; margin-bottom: 20px;">
-                    <span>* Ongkos kirim dihitung di halaman selanjutnya</span>
+                <div x-show="totalDiscount > 0" class="summary-row" style="color: #059669; font-weight: 700;" x-cloak>
+                    <span>Diskon Langganan (10%)</span>
+                    <span x-text="'- Rp ' + new Intl.NumberFormat('id-ID').format(totalDiscount)">- Rp 0</span>
+                </div>
+                <div class="summary-row" style="color: var(--text-muted); font-style: italic; font-size: 0.85rem; margin-top: 5px; margin-bottom: 20px;">
+                    <span>* Ongkos kirim dihitung di tahap selanjutnya</span>
                 </div>
                 
                 <div class="summary-row total">
-                    <span>Subtotal</span>
-                    <span>Rp {{ number_format($subTotal, 0, ',', '.') }}</span>
+                    <span>Total Bayar</span>
+                    <span x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(subTotalGross - totalDiscount)">Rp {{ number_format($subTotal + $shippingCost, 0, ',', '.') }}</span>
+                    <input type="hidden" id="pay-total-hidden" :value="subTotalGross - totalDiscount">
                 </div>
 
                 @if($user)
                 <div style="background: #E6F3FF; border-radius: 12px; padding: 15px; margin-bottom: 20px; font-size: 0.95rem;">
-                    <div style="font-weight: 700;">{{ $user->name }}</div>
-                    <div style="color: #555; margin-top: 5px;">Limit Paylater: <strong>Rp {{ number_format($user->paylater_limit ?? 0, 0, ',', '.') }}</strong></div>
+                    <div style="font-weight: 700; color: var(--primary-blue); margin-bottom: 8px;"><i class="fas fa-user-circle"></i> {{ $user->name }}</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #475569;">
+                        <span>Limit Paylater:</span>
+                        <strong style="color: #1e293b;">Rp {{ number_format($user->paylater_limit ?? 0, 0, ',', '.') }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: #475569;">
+                        <span>Saldo Dompet:</span>
+                        <strong style="color: #059669;">Rp {{ number_format($user->wallet_balance ?? 0, 0, ',', '.') }}</strong>
+                    </div>
                 </div>
                 @endif
 
@@ -244,19 +333,24 @@
                                 <div class="pay-title">🏦 Metode Pembayaran</div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <label><input type="radio" name="payment_method" value="qris" checked onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong>QRIS</strong></div>
+                                        <div class="pay-method-card"><strong><i class="fas fa-qrcode"></i> QRIS</strong></div>
+                                    </label>
+                                    <label><input type="radio" name="payment_method" value="wallet" onchange="calcTotal()">
+                                        <div class="pay-method-card">
+                                            <strong><i class="fas fa-wallet"></i> Saldo Dompet</strong>
+                                        </div>
                                     </label>
                                     <label><input type="radio" name="payment_method" value="paylater" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong>Paylater</strong></div>
+                                        <div class="pay-method-card"><strong><i class="fas fa-clock"></i> Paylater</strong></div>
                                     </label>
                                     <label><input type="radio" name="payment_method" value="bank" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong>Transfer Bank</strong></div>
+                                        <div class="pay-method-card"><strong><i class="fas fa-university"></i> Transfer Bank</strong></div>
                                     </label>
                                     <label><input type="radio" name="payment_method" value="ewallet" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong>E-Wallet</strong></div>
+                                        <div class="pay-method-card"><strong><i class="fas fa-mobile-alt"></i> E-Wallet</strong></div>
                                     </label>
                                     <label style="grid-column: span 2;"><input type="radio" name="payment_method" value="cod" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong>Bayar di Tempat (COD)</strong></div>
+                                        <div class="pay-method-card"><strong><i class="fas fa-hand-holding-usd"></i> Bayar di Tempat (COD)</strong></div>
                                     </label>
                                 </div>
 
@@ -278,8 +372,8 @@
     <!-- MODAL PEMBAYARAN (STEP 2) -->
     <div id="simPaymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999999; align-items:center; justify-content:center; padding: 20px;">
         <div style="background:white; border-radius:24px; width:100%; max-width:480px; overflow:hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative;">
-            <button onclick="backToSelection()" style="position: absolute; right: 15px; top: 15px; border: none; background: rgba(255,255,255,0.2); color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; z-index: 10; font-weight: bold;">✕</button>
-            <div id="sim-header" style="padding: 20px; text-align:center; color:white; font-weight:800; font-size:1.1rem;">
+            <button onclick="backToSelection()" style="position: absolute; right: 20px; top: 20px; border: none; background: #f1f5f9; color: #64748b; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 10; font-weight: bold; transition: all 0.2s;">✕</button>
+            <div id="sim-header" style="padding: 25px 30px; text-align:center; color:#1e293b; font-weight:800; font-size:1.2rem; border-bottom: 1px solid #f1f5f9;">
                 KONFIRMASI PEMBAYARAN
             </div>
             
@@ -288,7 +382,7 @@
             </div>
             
             <div style="padding: 0 30px 30px;">
-                <button onclick="finalizePayment()" style="width:100%; padding:15px; background:#2F9E44; color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:1rem; transition: background 0.2s;">
+                <button id="sim-footer-btn" onclick="finalizePayment()" style="width:100%; padding:15px; background:#2F9E44; color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:1rem; transition: background 0.2s;">
                     Selesaikan & Bayar Sekarang
                 </button>
             </div>
@@ -302,6 +396,7 @@
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
+            iconColor: '#0076D6',
             didOpen: (toast) => {
                 toast.addEventListener('mouseenter', Swal.stopTimer)
                 toast.addEventListener('mouseleave', Swal.resumeTimer)
@@ -325,6 +420,14 @@
                 return false;
             }
 
+            // OPTIMISTIC LOADING: Open modal immediately with "Preparing" state
+            const modalData = {
+                number: 'ORD-PROSES...',
+                subtotal: parseFloat(document.getElementById('pay-total-hidden')?.value || 0), // Use subtotal from Alpine if possible
+                loading: true
+            };
+            openPaymentModal(modalData);
+
             btn.innerText = 'Memproses...';
             btn.disabled = true;
 
@@ -344,51 +447,69 @@
                 btn.disabled = false;
 
                 if (data.success) {
+                    // Update the already open modal with real data
                     openPaymentModal(data.order);
                 } else {
+                    toggleModal('paymentModal'); // Hide modal on error
                     Toast.fire({ icon: 'error', title: data.error || 'Terjadi kesalahan.' });
                 }
             })
             .catch(error => {
                 btn.innerText = originalText;
                 btn.disabled = false;
+                toggleModal('paymentModal');
                 Toast.fire({ icon: 'error', title: 'Terjadi kesalahan sistem.' });
             });
         });
 
         let currentSubtotal = 0;
         function openPaymentModal(data) {
-            currentSubtotal = data.subtotal;
+            const modal = document.getElementById('paymentModal');
+            const confirmBtn = document.getElementById('pay-confirm-btn');
+            const warnBox = document.getElementById('pres-warning-box');
+            const successBox = document.getElementById('pres-success-box');
+            
+            // Show modal if not already visible
+            if (modal.style.display !== 'flex') {
+                toggleModal('paymentModal');
+            }
+
+            if (data.loading) {
+                // Skeleton/Loading State
+                confirmBtn.innerText = 'Menyiapkan Data...';
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = '0.7';
+                document.getElementById('order-number').innerText = 'DIPROSES...';
+                document.getElementById('payment-subtotal').innerText = '...';
+                return;
+            }
+
+            // Real Data State
+            currentSubtotal = data.subtotal; 
             document.getElementById('order-number').innerText = data.number;
             document.getElementById('payment-subtotal').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(data.subtotal);
             document.getElementById('paymentForm').action = data.url;
             calcTotal();
 
-            const warnBox = document.getElementById('pres-warning-box');
-            const successBox = document.getElementById('pres-success-box');
-            const btn = document.getElementById('pay-confirm-btn');
-
             warnBox.style.display = 'none';
             successBox.style.display = 'none';
-            btn.disabled = false;
-            btn.style.opacity = '1';
+            confirmBtn.disabled = false;
+            confirmBtn.style.opacity = '1';
 
             if (data.reqPres) {
                 if (data.hasFile) {
                     successBox.style.display = 'block';
                     successBox.innerHTML = '✅ <strong>Resep Terverifikasi:</strong> Resep manual telah terlampir.';
-                    btn.innerText = 'Konfirmasi & Bayar';
+                    confirmBtn.innerText = 'Konfirmasi & Bayar';
                 } else {
                     warnBox.style.display = 'block';
-                    btn.disabled = true;
-                    btn.style.opacity = '0.5';
-                    btn.innerText = 'Resep Diperlukan';
+                    confirmBtn.disabled = true;
+                    confirmBtn.style.opacity = '0.5';
+                    confirmBtn.innerText = 'Resep Diperlukan';
                 }
             } else {
-                btn.innerText = 'Konfirmasi & Bayar';
+                confirmBtn.innerText = 'Konfirmasi & Bayar';
             }
-
-            toggleModal('paymentModal');
         }
 
         document.getElementById('paymentForm').addEventListener('submit', function(e) {
@@ -422,33 +543,131 @@
             `;
 
             if (method === 'qris') {
-                header.style.background = '#e91e63';
                 header.innerText = 'PEMBAYARAN QRIS';
                 html += `
-                    <div style="background: #f8fafc; padding: 20px; border-radius: 16px; margin-bottom: 20px;">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=SIMULASI-PEMBAYARAN-${data.order_number}" style="width: 200px; height: 200px; margin: 0 auto; display: block; border: 4px solid white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <div style="background: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #eee;">
+                        <img src="{{ asset('assets/images/payments/qris_prototype.png') }}" 
+                             style="width: 250px; height: auto; margin: 0 auto; display: block; border-radius: 8px;">
                         <div style="margin-top: 15px; font-weight: 700; color: #475569;">Pindai kode QR untuk membayar</div>
                     </div>
                 `;
-            } else if (method === 'paylater') {
-                header.style.background = '#0ea5e9';
-                header.innerText = 'PEMBAYARAN PAYLATER';
-                const nextLimit = data.paylater_limit - data.grand_total;
+            } else if (method === 'wallet') {
+                header.innerText = 'BAYAR DENGAN SALDO DOMPET';
+                const nextWallet = {{ Auth::user()->wallet_balance ?? 0 }} - data.grand_total;
+                const isEnough = nextWallet >= 0;
+                
                 html += `
-                    <div style="background: #f0f9ff; padding: 20px; border-radius: 16px; margin-bottom: 20px; text-align: left;">
-                        <div style="margin-bottom: 10px; color: #0369a1; font-weight: 600;">Ringkasan Limit:</div>
+                    <div style="background: #ecfdf5; padding: 20px; border-radius: 16px; margin-bottom: 20px; text-align: left; border: 1px solid #10b981;">
+                        <div style="margin-bottom: 10px; color: #065f46; font-weight: 700; font-size: 0.9rem;">Status Dompet:</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #64748b;">Saldo Saat Ini</span>
+                            <span style="font-weight: 700; color: #1e293b;">Rp {{ number_format(Auth::user()->wallet_balance ?? 0, 0, ',', '.') }}</span>
+                        </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                             <span style="color: #64748b;">Tagihan Pesanan</span>
                             <span style="font-weight: 700; color: #ef4444;">- ${totalStr}</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; border-top: 1px solid #bae6fd; padding-top: 8px;">
-                            <span style="color: #64748b;">Estimasi Sisa Limit</span>
-                            <span style="font-weight: 700; color: #10b981;">Rp ${new Intl.NumberFormat('id-ID').format(nextLimit)}</span>
+                        <div style="display: flex; justify-content: space-between; border-top: 1px solid #a7f3d0; padding-top: 8px; margin-top: 5px;">
+                            <span style="color: #64748b;">Sisa Saldo</span>
+                            <span style="font-weight: 700; color: ${isEnough ? '#10b981' : '#ef4444'};">Rp ${new Intl.NumberFormat('id-ID').format(nextWallet)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                if (!isEnough) {
+                    html += `
+                        <div style="background: #fff1f2; color: #be123c; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 20px; font-weight: 600;">
+                            ⚠️ Saldo dompet Anda tidak cukup untuk melakukan transaksi ini.
+                        </div>
+                    `;
+                    document.getElementById('sim-footer-btn').disabled = true;
+                    document.getElementById('sim-footer-btn').style.opacity = '0.5';
+                    document.getElementById('sim-footer-btn').innerText = 'Saldo Tidak Cukup';
+                } else {
+                    document.getElementById('sim-footer-btn').disabled = false;
+                    document.getElementById('sim-footer-btn').style.opacity = '1';
+                    document.getElementById('sim-footer-btn').innerText = 'Selesaikan & Bayar Sekarang';
+                }
+            } else if (method === 'paylater') {
+                header.innerText = 'PEMBAYARAN PAYLATER';
+                
+                // Add selectTenor helper to the global scope once
+                window.selectPaylaterTenor = function(btn, tenor, principal, currentLimit) {
+                    // Reset styling
+                    const grid = btn.parentElement;
+                    grid.querySelectorAll('.tenor-card').forEach(c => {
+                        c.style.borderColor = '#e2e8f0';
+                        c.style.background = 'white';
+                        c.querySelector('.check-mark').style.display = 'none';
+                    });
+
+                    // Set active
+                    btn.style.borderColor = 'var(--primary-blue)';
+                    btn.style.background = '#f0f9ff';
+                    btn.querySelector('.check-mark').style.display = 'block';
+
+                    // Math
+                    const interestRate = tenor === 1 ? 0 : 0.03;
+                    const taxPerMonth = principal * interestRate;
+                    const totalTax = taxPerMonth * tenor;
+                    const totalBill = principal + totalTax;
+                    const monthly = totalBill / tenor;
+                    const nextLimit = currentLimit - totalBill;
+
+                    // Update UI
+                    document.getElementById('pl-bill').innerText = '- Rp ' + new Intl.NumberFormat('id-ID').format(totalBill);
+                    document.getElementById('pl-limit').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(nextLimit);
+                    document.getElementById('pl-tax').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalTax);
+                    document.getElementById('pl-per-month').innerText = 'Rp ' + new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(monthly) + ' x ' + tenor + ' Bln';
+                    
+                    // Show/Hide Tax row
+                    document.getElementById('pl-tax-row').style.display = tenor > 1 ? 'flex' : 'none';
+                };
+
+                html += `
+                    <p style="color: #64748b; margin-bottom: 12px; text-align: left; font-size: 0.9rem; font-weight: 600;">Pilih Tenor Cicilan:</p>
+                    <div class="tenor-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <div class="tenor-card" onclick="selectPaylaterTenor(this, 1, ${data.grand_total}, ${data.paylater_limit})" 
+                             style="border: 2px solid var(--primary-blue); background: #f0f9ff; padding: 15px; border-radius: 12px; cursor: pointer; position: relative; transition: 0.2s;">
+                            <div style="font-weight: 800; font-size: 0.95rem;">1x Bln</div>
+                            <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">Bunga 0%</div>
+                            <div class="check-mark" style="position: absolute; top: 5px; right: 5px; color: var(--primary-blue); font-size: 0.8rem;">●</div>
+                        </div>
+                        <div class="tenor-card" onclick="selectPaylaterTenor(this, 3, ${data.grand_total}, ${data.paylater_limit})" 
+                             style="border: 2px solid #e2e8f0; background: white; padding: 15px; border-radius: 12px; cursor: pointer; position: relative; transition: 0.2s;">
+                            <div style="font-weight: 800; font-size: 0.95rem;">3x Bln</div>
+                            <div style="font-size: 0.7rem; color: #ef4444; margin-top: 4px;">+3% Pajak</div>
+                            <div class="check-mark" style="position: absolute; top: 5px; right: 5px; color: var(--primary-blue); font-size: 0.8rem; display: none;">●</div>
+                        </div>
+                        <div class="tenor-card" onclick="selectPaylaterTenor(this, 6, ${data.grand_total}, ${data.paylater_limit})" 
+                             style="border: 2px solid #e2e8f0; background: white; padding: 15px; border-radius: 12px; cursor: pointer; position: relative; transition: 0.2s;">
+                            <div style="font-weight: 800; font-size: 0.95rem;">6x Bln</div>
+                            <div style="font-size: 0.7rem; color: #ef4444; margin-top: 4px;">+3% Pajak</div>
+                            <div class="check-mark" style="position: absolute; top: 5px; right: 5px; color: var(--primary-blue); font-size: 0.8rem; display: none;">●</div>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; padding: 20px; border-radius: 16px; margin-bottom: 20px; text-align: left; border: 1px solid #e2e8f0;">
+                        <div style="margin-bottom: 12px; color: #1e293b; font-weight: 700; font-size: 0.9rem;">Ringkasan Tagihan:</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #64748b; font-size: 0.85rem;">Cicilan per Bulan</span>
+                            <span id="pl-per-month" style="font-weight: 700; color: #1e293b;">${totalStr} x 1 Bln</span>
+                        </div>
+                        <div id="pl-tax-row" style="display: none; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #64748b; font-size: 0.85rem;">Pajak Layanan (3%/Bln)</span>
+                            <span id="pl-tax" style="font-weight: 700; color: #ef4444;">Rp 0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #64748b; font-size: 0.85rem;">Total Tagihan Paylater</span>
+                            <span id="pl-bill" style="font-weight: 700; color: #ef4444;">- ${totalStr}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px;">
+                            <span style="color: #64748b; font-size: 0.85rem;">Estimasi Sisa Limit</span>
+                            <span id="pl-limit" style="font-weight: 700; color: #10b981;">Rp ${new Intl.NumberFormat('id-ID').format(data.paylater_limit - data.grand_total)}</span>
                         </div>
                     </div>
                 `;
             } else if (method === 'bank') {
-                header.style.background = '#4338ca';
                 header.innerText = 'TRANSFER BANK';
                 html += `
                     <p style="color: #64748b; margin-bottom: 15px;">Pilih Bank Tujuan:</p>
@@ -462,7 +681,6 @@
                     </div>
                 `;
             } else if (method === 'ewallet') {
-                header.style.background = '#6366f1';
                 header.innerText = 'PEMBAYARAN E-WALLET';
                 html += `
                     <p style="color: #64748b; margin-bottom: 15px;">Pilih Dompet Digital:</p>
@@ -475,7 +693,6 @@
                     </div>
                 `;
             } else {
-                header.style.background = '#64748b';
                 header.innerText = 'BAYAR DI TEMPAT (COD)';
                 html += `
                     <div style="background: #f1f5f9; padding: 20px; border-radius: 16px; margin-bottom: 20px;">

@@ -140,6 +140,7 @@
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
+            iconColor: '#0076D6',
             didOpen: (toast) => {
                 toast.addEventListener('mouseenter', Swal.stopTimer)
                 toast.addEventListener('mouseleave', Swal.resumeTimer)

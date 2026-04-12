@@ -10,12 +10,14 @@ use App\Models\StoreOrderItem;
 use App\Models\Item;
 use App\Models\Address;
 use App\Models\ItemSize;
+use App\Models\Subscription;
+use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
 {
     /**
-     * Tampilkan dashboard pesanan pelanggan
+     * Dashboard Pelanggan
      */
     public function index()
     {
@@ -23,172 +25,73 @@ class AccountController extends Controller
         $orders = StoreOrder::where('user_id', $user->id)
             ->with(['items.item', 'address'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'orders_page');
         $addresses = Address::where('user_id', $user->id)->orderBy('is_primary', 'desc')->get();
-        return view('frontend.account.dashboard', compact('user', 'orders', 'addresses'));
+        
+        // Data Langganan Aktif
+        $subscriptions = Subscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->with('item')
+            ->get();
+
+        return view('frontend.account.dashboard', compact('user', 'orders', 'addresses', 'subscriptions'));
     }
 
     /**
-     * Tampilkan halaman Akun Saya (profil, alamat, password)
+     * Wallet / Dompet Saya
+     */
+    public function showWallet()
+    {
+        $user = Auth::user();
+        $transactions = WalletTransaction::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('frontend.account.wallet', compact('user', 'transactions'));
+    }
+
+    /**
+     * Simulation Top Up (Untuk Prototipe)
+     */
+    public function topUp(Request $request)
+    {
+        $user = Auth::user();
+        $amount = (float) $request->input('amount', 100000);
+
+        DB::transaction(function() use ($user, $amount) {
+            $user->increment('wallet_balance', $amount);
+            WalletTransaction::create([
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'type' => 'topup',
+                'description' => 'Top up saldo dompet (Simulasi)',
+            ]);
+        });
+
+        return back()->with('success', 'Top up berhasil! Saldo Anda bertambah Rp ' . number_format($amount, 0, ',', '.'));
+    }
+
+    /**
+     * Tampilkan profil
      */
     public function showProfile()
     {
         $user = Auth::user();
         $addresses = Address::where('user_id', $user->id)->orderBy('is_primary', 'desc')->get();
-        return view('frontend.account.profile', compact('user', 'addresses'));
+        $transactions = \App\Models\WalletTransaction::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('frontend.account.profile', compact('user', 'addresses', 'transactions'));
     }
 
     /**
-     * Simpan alamat baru
-     */
-    public function storeAddress(Request $request)
-    {
-        $user = Auth::user();
-
-        $request->validate([
-            'label' => 'required|string|max:100',
-            'full_address' => 'required|string',
-        ]);
-
-        // Jika alamat pertama, jadikan primary
-        $isFirst = Address::where('user_id', $user->id)->count() === 0;
-
-        Address::create([
-            'user_id' => $user->id,
-            'label' => $request->label,
-            'full_address' => $request->full_address,
-            'is_primary' => $isFirst,
-        ]);
-
-        return back()->with('success', 'Alamat baru berhasil ditambahkan! 🏠');
-    }
-
-    /**
-     * Update alamat yang ada
-     */
-    public function updateAddress(Request $request, $id)
-    {
-        $address = Address::where('user_id', Auth::id())->findOrFail($id);
-        
-        $request->validate([
-            'label' => 'required|string|max:100',
-            'full_address' => 'required|string',
-        ]);
-
-        $address->update([
-            'label' => $request->label,
-            'full_address' => $request->full_address,
-        ]);
-
-        return back()->with('success', 'Alamat berhasil diperbarui!');
-    }
-
-    /**
-     * Hapus alamat
-     */
-    public function deleteAddress($id)
-    {
-        $address = Address::where('user_id', Auth::id())->findOrFail($id);
-        
-        // Jangan hapus jika primary dan masih ada alamat lain (opsional)
-        $address->delete();
-
-        return back()->with('success', 'Alamat berhasil dihapus.');
-    }
-
-    /**
-     * Set alamat sebagai utama
-     */
-    public function setPrimaryAddress($id)
-    {
-        $user_id = Auth::id();
-        
-        // Reset all to false
-        Address::where('user_id', $user_id)->update(['is_primary' => false]);
-        
-        // Set target to true
-        $address = Address::where('user_id', $user_id)->findOrFail($id);
-        $address->update(['is_primary' => true]);
-
-        return back()->with('success', 'Alamat utama berhasil diubah!');
-    }
-
-    /**
-     * Update profil dasar (Nama & Email)
-     */
-    public function updateProfile(Request $request)
-    {
-        $user = Auth::user();
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-        ], [
-            'email.unique' => 'Email ini sudah digunakan oleh akun lain.',
-        ]);
-
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
-
-        return back()->with('success', 'Profil Anda berhasil diperbarui! ✨');
-    }
-
-    /**
-     * Ganti Password
-     */
-    public function changePassword(Request $request)
-    {
-        $user = Auth::user();
-
-        $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
-        ], [
-            'new_password.min' => 'Password baru minimal 8 karakter.',
-            'new_password.confirmed' => 'Konfirmasi password baru tidak cocok.',
-        ]);
-
-        // Cek password lama
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->with('error', 'Password lama yang Anda masukkan salah.');
-        }
-
-        $user->update([
-            'password' => Hash::make($request->new_password),
-        ]);
-
-        return back()->with('success', 'Password berhasil diganti! Jaga keamanan akun Anda. 🔐');
-    }
-
-    /**
-     * Tampilkan halaman pembayaran untuk order yang sudah ada
-     */
-    public function showPayment($orderId)
-    {
-        $user = Auth::user();
-        $order = StoreOrder::where('user_id', $user->id)
-            ->with(['items.item', 'address'])
-            ->findOrFail($orderId);
-
-        // Hanya boleh bayar jika masih pending
-        if ($order->payment_status !== 'pending') {
-            return redirect()->route('account.orders')->with('error', 'Pesanan ini sudah dibayar atau tidak bisa diproses.');
-        }
-
-        return view('frontend.account.payment', compact('user', 'order'));
-    }
-
-    /**
-     * Proses pembayaran (Handle Checkout Baru & Order Dashboard)
+     * Proses pembayaran (Handle Wallet & Subscription Creation)
      */
     public function processPayment(Request $request, $orderId = null)
     {
         $user = Auth::user();
         
         $request->validate([
-            'payment_method' => 'required|in:qris,paylater,bank,ewallet,cod',
+            'payment_method' => 'required|in:qris,paylater,bank,ewallet,cod,wallet',
             'shipping_method' => 'required|in:instant,regular'
         ]);
 
@@ -196,73 +99,72 @@ class AccountController extends Controller
         $prescriptionPath = null;
         $subTotal = 0;
         $addressId = null;
+        $cart = session()->get('cart', []);
 
         if ($orderId) {
-            // FLOW LAMA (Dari Dashboard)
             $order = StoreOrder::where('user_id', $user->id)->findOrFail($orderId);
             if ($order->payment_status !== 'pending') {
-                return redirect()->route('account.orders')->with('error', 'Pesanan ini sudah diproses sebelumnya.');
+                return redirect()->route('account.orders')->with('error', 'Pesanan ini sudah diproses.');
             }
             $subTotal = $order->sub_total;
             $prescriptionPath = $order->prescription_path;
-            
-            // Verifikasi Resep Dasar
-            $requiresPrescription = false;
-            foreach ($order->items as $oi) {
-                if ($oi->item && $oi->item->requires_prescription) {
-                    $requiresPrescription = true;
-                    break;
-                }
-            }
-            if ($requiresPrescription && empty($order->prescription_path)) {
-                return back()->with('error', 'Pesanan ini mengandung obat keras dan wajib melampirkan foto resep dokter.');
-            }
         } else {
-            // FLOW BARU (Atomic Checkout)
             $pendingData = session()->get('pending_checkout');
-            if (!$pendingData) {
-                return redirect()->route('store.index')->with('error', 'Sesi checkout berakhir. Silakan ulangi.');
+            if (!$pendingData || empty($cart)) {
+                return redirect()->route('store.index')->with('error', 'Sesi checkout berakhir.');
             }
-
-            $cart = session()->get('cart', []);
-            if (empty($cart)) {
-                return redirect()->route('store.index')->with('error', 'Keranjang kosong.');
-            }
-
             $subTotal = $pendingData['sub_total'];
             $prescriptionPath = $pendingData['prescription_path'];
             $addressId = $pendingData['address_id'];
         }
 
-        // Kalkulasi biaya kirim & total
         $shippingCost = $request->shipping_method === 'instant' ? 15000 : 10000;
         $grandTotal = $subTotal + $shippingCost;
+
+        // Validasi Saldo Wallet
+        if ($request->payment_method === 'wallet') {
+            if ($user->wallet_balance < $grandTotal) {
+                $msg = 'Saldo dompet tidak mencukupi. Sisa saldo: Rp ' . number_format($user->wallet_balance, 0, ',', '.');
+                if ($request->ajax()) return response()->json(['success' => false, 'error' => $msg], 422);
+                return back()->with('error', $msg);
+            }
+        }
 
         // Validasi Paylater
         if ($request->payment_method === 'paylater') {
             if ($user->paylater_limit < $grandTotal) {
-                return back()->with('error', 'Limit Paylater tidak mencukupi. Limit Anda: Rp ' . number_format($user->paylater_limit, 0, ',', '.'));
+                if ($request->ajax()) return response()->json(['success' => false, 'error' => 'Limit Paylater tidak mencukupi.'], 422);
+                return back()->with('error', 'Limit Paylater tidak mencukupi.');
             }
-            $user->paylater_limit -= $grandTotal;
-            $user->save();
         }
 
-        $status = ($request->payment_method === 'cod') ? 'pending' : 'paid';
-
-            // --- VALIDASI STOK AKHIR ---
-            $cart = session()->get('cart', []);
-            foreach ($cart as $itemId => $qty) {
-                $item = Item::find($itemId);
-                if (!$item || $item->stock < $qty) {
-                    $name = $item->name ?? 'Item';
-                    return back()->with('error', "Maaf, stok $name tidak mencukupi (Sisa: " . ($item->stock ?? 0) . ").");
-                }
+        // Validasi Stok
+        foreach ($cart as $key => $details) {
+            $item = Item::find($details['id']);
+            if (!$item || $item->stock < $details['qty']) {
+                $msg = "Stok " . ($item->name ?? 'Item') . " tidak mencukupi.";
+                if ($request->ajax()) return response()->json(['success' => false, 'error' => $msg], 422);
+                return back()->with('error', $msg);
             }
+        }
 
         try {
-            $result = DB::transaction(function() use ($request, $user, $orderId, $pendingData, $subTotal, $prescriptionPath, $addressId, $grandTotal, $shippingCost, $status, $cart) {
+            DB::transaction(function() use ($request, $user, $orderId, $subTotal, $prescriptionPath, $addressId, $grandTotal, $shippingCost, $cart) {
+                $status = ($request->payment_method === 'cod') ? 'pending' : 'paid';
+
+                if ($request->payment_method === 'wallet') {
+                    $user->decrement('wallet_balance', $grandTotal);
+                    WalletTransaction::create([
+                        'user_id' => $user->id,
+                        'amount' => -$grandTotal,
+                        'type' => 'payment',
+                        'description' => 'Pembayaran pesanan Pharmacare',
+                    ]);
+                } elseif ($request->payment_method === 'paylater') {
+                    $user->decrement('paylater_limit', $grandTotal);
+                }
+
                 if ($orderId) {
-                    // Update exist
                     $order = StoreOrder::where('user_id', $user->id)->findOrFail($orderId);
                     $order->update([
                         'shipping_method' => $request->shipping_method,
@@ -273,7 +175,7 @@ class AccountController extends Controller
                         'order_status'    => ($status === 'paid' ? 'paid' : 'ordered'),
                     ]);
                 } else {
-                    // CREATE BARU
+                    $pendingData = session()->get('pending_checkout');
                     $order = StoreOrder::create([
                         'user_id'        => $user->id,
                         'order_number'   => $pendingData['order_number'] ?? ('ORD-' . strtoupper(uniqid())),
@@ -288,84 +190,176 @@ class AccountController extends Controller
                         'prescription_path' => $prescriptionPath,
                     ]);
 
-                    // Save Items & SUBTRACT STOCK
-                    foreach ($cart as $itemId => $qty) {
-                        $item = Item::find($itemId);
+                    $overrides = $pendingData['items_override'] ?? [];
+
+                    foreach ($cart as $key => $details) {
+                        $item = Item::find($details['id']);
                         if ($item) {
+                            // Determine subscription status from override or fallback
+                            $override = $overrides[$item->id] ?? null;
+                            $type = $override ? $override['type'] : $details['type'];
+                            $interval = $override ? $override['interval'] : ($details['interval'] ?? 30);
+                            $unitPrice = $override ? $override['price'] : ($type === 'subscription' ? $item->price * 0.9 : $item->price);
+
+                            if ($type === 'subscription') {
+                                // Create Subscription Record
+                                Subscription::create([
+                                    'user_id' => $user->id,
+                                    'item_id' => $item->id,
+                                    'quantity' => $details['qty'],
+                                    'interval_days' => $interval,
+                                    'discount_percentage' => 10.00,
+                                    'next_delivery_date' => now()->addDays($interval),
+                                    'status' => 'active'
+                                ]);
+                            }
+
                             StoreOrderItem::create([
                                 'store_order_id' => $order->id,
                                 'item_id'        => $item->id,
-                                'quantity'       => $qty,
-                                'price'          => $item->price,
-                                'sub_total'      => $item->price * $qty,
+                                'quantity'       => $details['qty'],
+                                'price'          => $unitPrice,
+                                'sub_total'      => $unitPrice * $details['qty'],
                             ]);
 
-                            // 1. Kurangi stok total di tabel items
-                            $item->decrement('stock', $qty);
-
-                            // 2. Kurangi stok di Batch (FIFO - Expire terdekat duluan)
-                            $remainingToReduce = $qty;
-                            $batches = ItemSize::where('item_id', $item->id)
-                                ->where('stock', '>', 0)
-                                ->orderBy('expiry_date', 'asc')
-                                ->get();
-
+                            $item->decrement('stock', $details['qty']);
+                            
+                            // Batch handling
+                            $remaining = $details['qty'];
+                            $batches = ItemSize::where('item_id', $item->id)->where('stock', '>', 0)->orderBy('expiry_date', 'asc')->get();
                             foreach ($batches as $batch) {
-                                if ($remainingToReduce <= 0) break;
-
-                                $reduction = min($batch->stock, $remainingToReduce);
-                                $batch->decrement('stock', $reduction);
-                                $remainingToReduce -= $reduction;
+                                if ($remaining <= 0) break;
+                                $red = min($batch->stock, $remaining);
+                                $batch->decrement('stock', $red);
+                                $remaining -= $red;
                             }
                         }
                     }
-
                     session()->forget('pending_checkout');
                 }
-
-                // Kosongkan keranjang hanya setelah pembayaran sukses
                 session()->forget('cart');
-
-                // Return data untuk response di luar closure
-                return [
-                    'order_number' => $order->order_number,
-                    'grand_total' => $order->grand_total,
-                    'payment_method' => $order->payment_method,
-                    'paylater_limit' => $user->paylater_limit,
-                ];
             });
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'order_number' => $result['order_number'],
-                    'grand_total' => $result['grand_total'],
-                    'payment_method' => $result['payment_method'],
-                    'paylater_limit' => $result['paylater_limit'],
+                    'message' => 'Transaksi berhasil diselesaikan! 🎉',
                     'redirect_url' => route('account.orders')
                 ]);
             }
-
-            return redirect()->route('account.orders')->with('success', 'Pembayaran pesanan #' . $result['order_number'] . ' berhasil dikonfirmasi! 🎉');
+            return redirect()->route('account.orders')->with('success', 'Transaksi berhasil diselesaikan! 🎉');
 
         } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'error' => 'Gagal memproses: ' . $e->getMessage()], 500);
+            }
             return back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
         }
     }
 
     /**
-     * Batalkan & hapus pesanan yang belum dibayar
+     * Store a new address
      */
+    public function storeAddress(Request $request)
+    {
+        $request->validate([
+            'label' => 'required|string|max:50',
+            'full_address' => 'required|string|max:500',
+        ]);
+
+        $user = Auth::user();
+        
+        // Check if user already has addresses
+        $isFirst = Address::where('user_id', $user->id)->count() === 0;
+
+        Address::create([
+            'user_id' => $user->id,
+            'label' => $request->label,
+            'full_address' => $request->full_address,
+            'is_primary' => $isFirst
+        ]);
+
+        return back()->with('success', 'Alamat berhasil ditambahkan!');
+    }
+
+    /**
+     * Set address as primary
+     */
+    public function setPrimaryAddress($id)
+    {
+        $user = Auth::user();
+        
+        // Reset all primary flags
+        Address::where('user_id', $user->id)->update(['is_primary' => false]);
+        
+        // Set new primary
+        $address = Address::where('user_id', $user->id)->findOrFail($id);
+        $address->update(['is_primary' => true]);
+
+        return back()->with('success', 'Alamat utama berhasil diperbarui!');
+    }
+
+    /**
+     * Delete an address
+     */
+    public function deleteAddress($id)
+    {
+        $address = Address::where('user_id', Auth::id())->findOrFail($id);
+        $address->delete();
+
+        return back()->with('success', 'Alamat berhasil dihapus!');
+    }
+
+    /**
+     * Update User Profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email
+        ]);
+
+        return back()->with('success', 'Profil berhasil diperbarui!');
+    }
+
+    /**
+     * Change Password
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->with('error', 'Password saat ini salah.');
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return back()->with('success', 'Password berhasil diganti!');
+    }
+
     public function cancelOrder($orderId)
     {
         $order = StoreOrder::where('user_id', Auth::id())
             ->where('payment_status', 'pending')
-            ->where('order_status', 'ordered')
             ->findOrFail($orderId);
-
         $order->items()->delete();
         $order->delete();
-
-        return redirect()->route('account.orders')->with('success', 'Pesanan berhasil dibatalkan dan dihapus.');
+        return redirect()->route('account.orders')->with('success', 'Pesanan dibatalkan.');
     }
 }
