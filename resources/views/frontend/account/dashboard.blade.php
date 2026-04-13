@@ -248,7 +248,7 @@
                         <div style="background: #fdfdfd; border: 1px solid #edf2f7; border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 20px;">
                             <div style="width: 80px; height: 80px; background: white; border: 1px solid #eee; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
                                 @if($sub->item->image_path)
-                                    <img src="{{ asset($sub->item->image_path) }}" style="width: 100%; height: 100%; object-fit: contain;">
+                                    <img src="{{ asset($sub->item->image_path) }}" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy">
                                 @else
                                     <span style="font-size: 2rem;">💊</span>
                                 @endif

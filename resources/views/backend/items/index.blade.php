@@ -60,7 +60,7 @@
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200 overflow-hidden">
                                         @if($item->image_path)
-                                            <img src="{{ asset($item->image_path) }}" alt="{{ $item->name }}" class="h-full w-full object-cover">
+                                            <img src="{{ asset($item->image_path) }}" alt="{{ $item->name }}" class="h-full w-full object-cover" loading="lazy">
                                         @else
                                             <i class="fas fa-prescription-bottle-alt text-gray-400"></i>
                                         @endif

@@ -79,8 +79,8 @@ class StoreController extends Controller
             return response()->json([]);
         }
 
-        $items = Item::where('name', 'LIKE', "%{$query}%")
-            ->select('id', 'name', 'price', 'image_path')
+        $items = Item::with('category')->where('name', 'LIKE', "%{$query}%")
+            ->select('id', 'name', 'price', 'image_path', 'category_id', 'requires_prescription')
             ->limit(10)
             ->get();
 

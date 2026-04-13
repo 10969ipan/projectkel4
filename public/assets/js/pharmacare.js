@@ -115,7 +115,7 @@ function initSearch() {
                             const price = 'Rp ' + new Intl.NumberFormat('id-ID').format(item.price);
                             const cat   = item.category?.name || 'Obat';
                             const thumb = item.image_path
-                                ? `<img src="${window.PharmacareConfig.assetBase}/${item.image_path}" style="width:40px;height:40px;object-fit:contain;display:block;">`
+                                ? `<img src="${window.PharmacareConfig.assetBase}${item.image_path}" style="width:40px;height:40px;object-fit:contain;display:block;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=random'">`
                                 : '<span style="font-size:1.1rem;">💊</span>';
 
                             html += `

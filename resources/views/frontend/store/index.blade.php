@@ -241,7 +241,7 @@
             <!-- Review 1 -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-                    <img src="{{ asset('assets/images/reviews/user1.png') }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ asset('assets/images/reviews/user1.png') }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
                 </div>
                 <div>
                     <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Sangat membantu.. malam-malam butuh obat, tidak perlu keluar rumah. Layanan cepat dan terpercaya."</p>
@@ -252,7 +252,7 @@
             <!-- Review 2 -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-                    <img src="{{ asset('assets/images/reviews/user2.png') }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ asset('assets/images/reviews/user2.png') }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
                 </div>
                 <div>
                     <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Sangat Helpful!!! Terima kasih yaa, sangat menghemat waktu dan respon dokternya juga baik. Rekep obatnya juga manjur sekali!"</p>
@@ -263,7 +263,7 @@
             <!-- Review 2 -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-                    <img src="{{ asset('assets/images/reviews/user3.png') }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ asset('assets/images/reviews/user3.png') }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
                 </div>
                 <div>
                     <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Menggunakan Pharmacare untuk layanan kesehatan keluarga sangat memuaskan. Proses cepat, refund mudah & transparan."</p>

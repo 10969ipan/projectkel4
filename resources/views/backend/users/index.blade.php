@@ -38,7 +38,8 @@
                                         <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border border-white" 
                                             src="{{ asset('storage/' . $user->profile_photo) }}" 
                                             alt="{{ $user->name }}"
-                                            onerror="this.style.display='none'">
+                                            onerror="this.style.display='none'"
+                                            loading="lazy">
                                     @endif
                                 </div>
                             </td>

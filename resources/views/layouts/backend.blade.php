@@ -150,7 +150,7 @@
             <div class="flex flex-col w-64 bg-white border-r border-gray-200">
                 <div class="flex items-center justify-center h-16 px-4 bg-white border-b border-gray-100">
                     <div class="flex items-center">
-                        <img src="{{ asset('image/sima1.png') }}" alt="SIMA-APOTEK" class="h-8 w-8 mr-2" />
+                        <img src="{{ asset('image/sima1.png') }}" alt="SIMA-APOTEK" class="h-8 w-8 mr-2" loading="lazy" />
                         <span class="text-base font-black text-gray-800 tracking-tighter uppercase">SIMA-<span class="text-primary-600">APOTEK</span></span>
                     </div>
                 </div>
@@ -166,7 +166,8 @@
                                     <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
                                         src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                         alt="{{ auth()->user()->name }}"
-                                        onerror="this.style.display='none'">
+                                        onerror="this.style.display='none'"
+                                        loading="lazy">
                                 @endif
                             </div>
                             <div class="ml-3 overflow-hidden">

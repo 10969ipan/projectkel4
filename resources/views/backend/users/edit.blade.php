@@ -62,7 +62,8 @@
                                 <img class="absolute inset-0 h-20 w-20 rounded-full object-cover border-2 border-white shadow-sm" 
                                     src="{{ asset('storage/' . $user->profile_photo) }}" 
                                     alt="Foto Profil"
-                                    onerror="this.style.display='none'">
+                                    onerror="this.style.display='none'"
+                                    loading="lazy">
                             @endif
                         </div>
                         <input type="file" name="profile_photo" id="profile_photo" accept="image/*"
