@@ -29,27 +29,12 @@
                             @foreach ($items as $item)
                                 <option value="{{ $item->id }}" 
                                     data-total-stock="{{ $item->stock }}"
-                                    data-has-sizes="{{ $item->sizes->count() > 0 }}"
-                                    data-sizes='@json($item->sizes)'
                                     {{ old('item_id') == $item->id ? 'selected' : '' }}>
-                                    {{ $item->name }}
+                                    {{ $item->name }} (Stok: {{ $item->stock }})
                                 </option>
                             @endforeach
                         </select>
                         @error('item_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Pilih Ukuran (Dinamis) --}}
-                    <div id="size-container" class="hidden">
-                        <label for="size" class="block text-sm font-medium text-gray-700 mb-1">Ukuran</label>
-                        <select name="size" id="size" 
-                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                            <option value="">Pilih Ukuran</option>
-                            {{-- Option diisi via JS --}}
-                        </select>
-                        @error('size')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -93,67 +78,26 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const itemSelect = document.getElementById('item_id');
-            const sizeSelect = document.getElementById('size');
-            const sizeContainer = document.getElementById('size-container');
             const quantityInput = document.getElementById('quantity');
             const stockDisplay = document.getElementById('available-stock');
             const submitBtn = document.getElementById('submit-btn');
 
             let currentMaxStock = 0;
 
-            // Reset saat halaman dimuat
             handleItemChange();
 
-            // Event Listeners
             itemSelect.addEventListener('change', handleItemChange);
-            sizeSelect.addEventListener('change', handleSizeChange);
             quantityInput.addEventListener('input', validateQuantity);
 
             function handleItemChange() {
                 const selectedOption = itemSelect.options[itemSelect.selectedIndex];
                 
-                // Reset Size Dropdown
-                sizeSelect.innerHTML = '<option value="">Pilih Ukuran</option>';
-                sizeContainer.classList.add('hidden');
-                sizeSelect.removeAttribute('required');
                 currentMaxStock = 0;
                 stockDisplay.innerText = '0';
 
                 if (selectedOption && selectedOption.value) {
-                    const hasSizes = selectedOption.getAttribute('data-has-sizes') == '1';
-                    
-                    if (hasSizes) {
-                        // Jika barang punya varian ukuran
-                        sizeContainer.classList.remove('hidden');
-                        sizeSelect.setAttribute('required', 'required');
-                        
-                        const sizes = JSON.parse(selectedOption.getAttribute('data-sizes'));
-                        sizes.forEach(variant => {
-                            const opt = document.createElement('option');
-                            opt.value = variant.size;
-                            opt.text = `${variant.size} (Stok: ${variant.stock})`;
-                            opt.setAttribute('data-stock', variant.stock);
-                            sizeSelect.appendChild(opt);
-                        });
-                        
-                        stockDisplay.innerText = '- (Pilih Ukuran)';
-                    } else {
-                        // Jika barang simple (tanpa varian)
-                        currentMaxStock = parseInt(selectedOption.getAttribute('data-total-stock'));
-                        stockDisplay.innerText = currentMaxStock;
-                    }
-                }
-                validateQuantity();
-            }
-
-            function handleSizeChange() {
-                const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-                if (selectedOption && selectedOption.value) {
-                    currentMaxStock = parseInt(selectedOption.getAttribute('data-stock'));
+                    currentMaxStock = parseInt(selectedOption.getAttribute('data-total-stock'));
                     stockDisplay.innerText = currentMaxStock;
-                } else {
-                    currentMaxStock = 0;
-                    stockDisplay.innerText = '-';
                 }
                 validateQuantity();
             }

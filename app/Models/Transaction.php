@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Kolom:
  * - id: Primary key
  * - item_id: Foreign key ke tabel items (barang yang ditransaksikan)
- * - item_size_id: Foreign key ke tabel item_sizes (ukuran yang ditransaksikan)
+ * - item_id: Foreign key ke tabel items (barang yang ditransaksikan)
  * - user_id: Foreign key ke tabel users (user yang membuat transaksi)
  * - type: Tipe transaksi ('in' = masuk, 'out' = keluar)
  * - quantity: Jumlah barang yang ditransaksikan
@@ -34,14 +34,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * 
  * Konsep Penting:
  * - Setiap transaksi harus update stok di 2 tempat:
- *   1. item_sizes.stock (stok per ukuran)
+ *   1. items.stock (stok total obat)
  *   2. items.stock (total stok)
  * - Transaksi bersifat immutable (tidak bisa diedit, hanya bisa dibuat baru)
  * - Untuk koreksi, buat transaksi baru dengan tipe berlawanan
  * 
  * Relasi:
  * - item: Transaksi belongs to satu barang
- * - itemSize: Transaksi belongs to satu varian ukuran
  * - user: Transaksi belongs to satu user (yang membuat)
  */
 class Transaction extends Model
@@ -53,7 +52,6 @@ class Transaction extends Model
      */
     protected $fillable = [
         'item_id',      // ID barang yang ditransaksikan
-        'item_size_id', // ID varian ukuran yang ditransaksikan (PENTING untuk tracking per ukuran)
         'user_id',      // ID user yang membuat transaksi
         'type',         // Tipe: 'in' (masuk) atau 'out' (keluar)
         'quantity',     // Jumlah barang
@@ -110,26 +108,5 @@ class Transaction extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * RELASI: Transaksi belongs to satu varian ukuran
-     * 
-     * Setiap transaksi harus terkait dengan satu varian ukuran
-     * Ini SANGAT PENTING untuk tracking stok per ukuran
-     * 
-     * Contoh: Transaksi keluar 5 pcs Kaos Polos Size M
-     * - item_id: ID Kaos Polos
-     * - item_size_id: ID Size M dari Kaos Polos
-     * - quantity: 5
-     * 
-     * Contoh penggunaan:
-     * $transaction->itemSize // Varian ukuran yang ditransaksikan
-     * $transaction->itemSize->size // Nama ukuran (S, M, L, dll)
-     * $transaction->itemSize->stock // Stok saat ini untuk ukuran tersebut
-     * 
-     * @return BelongsTo
-     */
-    public function itemSize(): BelongsTo
-    {
-        return $this->belongsTo(ItemSize::class);
-    }
+
 }

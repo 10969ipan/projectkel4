@@ -22,6 +22,8 @@ class StoreAddressRequest extends FormRequest
         return [
             'label' => 'required|string|max:50',
             'full_address' => 'required|string|max:500',
+            'province_id' => 'required|string',
+            'city_id' => 'required|string',
         ];
     }
 }

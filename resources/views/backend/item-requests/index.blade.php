@@ -89,7 +89,6 @@
                                         onclick="openDetailModal(this)"
                                         data-id="{{ $request->id }}"
                                         data-item-name="{{ $request->item->name }}"
-                                        data-size="{{ $request->size ?? '-' }}"
                                         data-quantity="{{ $request->quantity }}"
                                         data-unit="{{ $request->item->unit->symbol }}"
                                         data-requester="{{ $request->user->name }}"
@@ -198,10 +197,7 @@
                                     <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Obat</label>
                                     <p class="text-sm font-semibold text-gray-900" id="detail-item-name">-</p>
                                 </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Ukuran</label>
-                                    <p class="text-sm text-gray-900" id="detail-size">-</p>
-                                </div>
+
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Jumlah</label>
                                     <p class="text-sm font-semibold text-gray-900" id="detail-quantity">-</p>
@@ -277,7 +273,6 @@
             // Ambil data dari button attributes
             const data = {
                 itemName: button.dataset.itemName,
-                size: button.dataset.size,
                 quantity: button.dataset.quantity,
                 unit: button.dataset.unit,
                 requester: button.dataset.requester,
@@ -292,13 +287,7 @@
             // Isi data ke modal
             document.getElementById('detail-item-name').textContent = data.itemName;
             
-            // Ukuran dengan badge jika ada
-            const sizeElement = document.getElementById('detail-size');
-            if (data.size && data.size !== '-') {
-                sizeElement.innerHTML = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">${data.size}</span>`;
-            } else {
-                sizeElement.textContent = '-';
-            }
+
             
             document.getElementById('detail-quantity').textContent = `${data.quantity} ${data.unit}`;
             document.getElementById('detail-requester').textContent = data.requester;

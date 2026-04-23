@@ -3,19 +3,17 @@
 @section('title', 'Daftar Obat')
 
 @section('header')
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Inventaris Obat</h1>
-            <p class="text-sm text-gray-500 mt-1">Kelola stok obat, nomor batch, dan pantau tanggal kadaluwarsa.</p>
-        </div>
-
-        @if(auth()->user()->isAdmin())
-            <a href="{{ route('items.create') }}"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 mt-4 md:mt-0 transition-all duration-200">
-                <i class="fas fa-pills mr-2"></i> Tambah Obat Baru
-            </a>
-        @endif
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Inventaris Obat</h1>
+        <p class="text-sm text-gray-500 mt-1">Kelola stok obat dan pantau persediaan barang secara real-time.</p>
     </div>
+
+    @if(auth()->user()->isAdmin())
+        <a href="{{ route('items.create') }}"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 self-start sm:self-center">
+            <i class="fas fa-pills mr-2"></i> Tambah Obat Baru
+        </a>
+    @endif
 @endsection
 
 @section('content')
@@ -44,7 +42,6 @@
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Informasi Obat</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Produsen</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Deskripsi Medis</th>
-                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Batch & Kadaluwarsa</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stok Total</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategori</th>
                         @if(auth()->user()->isAdmin())
@@ -94,30 +91,6 @@
                                 @endif
                             </td>
 
-                            {{-- Batch & Kadaluwarsa --}}
-                            <td class="px-6 py-4">
-                                @if($item->sizes->isNotEmpty())
-                                    <div class="space-y-1.5">
-                                        @foreach($item->sizes as $batch)
-                                            @php
-                                                $isExpired = \Illuminate\Support\Carbon::parse($batch->expiry_date)->isPast();
-                                                $isSoon = \Illuminate\Support\Carbon::parse($batch->expiry_date)->diffInDays(now()) <= 30;
-                                            @endphp
-                                            <div class="flex items-center text-xs font-medium">
-                                                <span class="w-20 truncate text-gray-600">{{ $batch->batch_number }}</span>
-                                                <span class="mx-2 text-gray-300">|</span>
-                                                <span class="flex items-center {{ $isExpired ? 'text-red-600' : ($isSoon ? 'text-orange-500' : 'text-emerald-600') }}">
-                                                    <i class="fas {{ $isExpired ? 'fa-calendar-times' : 'fa-calendar-check' }} mr-1 text-[10px]"></i>
-                                                    {{ \Illuminate\Support\Carbon::parse($batch->expiry_date)->format('M Y') }}
-                                                    <span class="ml-1 text-gray-500">({{ $batch->stock }})</span>
-                                                </span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="text-gray-400 italic text-xs">Belum ada batch</span>
-                                @endif
-                            </td>
 
                             {{-- Total Stok --}}
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -199,7 +172,7 @@
                         const form = this.closest('form');
                         Swal.fire({
                             title: 'Hapus Obat?',
-                            text: "Semua riwayat batch dan transaksi akan ikut terhapus secara permanen.",
+                            text: "Semua riwayat transaksi terkait obat ini akan ikut terhapus secara permanen.",
                             icon: 'warning',
                             showCancelButton: true,
                             confirmButtonColor: '#e11d48',

@@ -9,10 +9,10 @@
     <link rel="icon" href="{{ asset('image/sima1.png') }}" type="image/png">
     
     <!-- Offline Assets -->
-    <script src="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}">
-    <script defer src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}">
+    <script src="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}"></script>
+    <script defer src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}"></script>
     
     <script>
         tailwind.config = {
@@ -55,6 +55,9 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
 
         .sidebar-item.active {
@@ -72,7 +75,7 @@
         }
 
         .card {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
@@ -139,11 +142,112 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             outline: none;
         }
+
+        /* Page Transitions - Option 1: Premium Fade & Slide (Smoothed) */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-page-content {
+            animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            will-change: transform, opacity;
+        }
+
+        /* Sidebar Item Enhancements (Smoothed & Staggered) */
+        @keyframes sidebarSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: sidebarSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+
+        /* Staggered delays for sidebar items */
+        .sidebar-item:nth-child(1) { animation-delay: 0.05s; }
+        .sidebar-item:nth-child(2) { animation-delay: 0.10s; }
+        .sidebar-item:nth-child(3) { animation-delay: 0.15s; }
+        .sidebar-item:nth-child(4) { animation-delay: 0.20s; }
+        .sidebar-item:nth-child(5) { animation-delay: 0.25s; }
+        .sidebar-item:nth-child(n+6) { animation-delay: 0.30s; }
+
+        .sidebar-item:hover:not(.active) {
+            transform: translateX(6px);
+            color: #0284c7;
+            background-color: rgba(14, 165, 233, 0.05);
+        }
+
+        .sidebar-item i {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+            -webkit-font-smoothing: subpixel-antialiased;
+        }
+
+        .sidebar-item:hover i {
+            transform: scale(1.2) rotate(5deg);
+            color: #0284c7;
+        }
+
+        /* Icon-specific smoothness for the entire page */
+        i.fas, i.fab, i.far, i.fal, i.fad {
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            display: inline-block;
+            min-width: 1.25rem; /* Pre-allocate space for icons */
+            text-align: center;
+        }
+
+        /* Ensure x-cloak works for SVG and nested elements */
+        [x-cloak] { display: none !important; }
+
+        .loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(to right, #0ea5e9, #6366f1, #0ea5e9);
+            background-size: 200% 100%;
+            z-index: 9999;
+            width: 0;
+            animation: progress 0.8s ease-out forwards, gradientMove 2s linear infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0; opacity: 1; }
+            80% { width: 100%; opacity: 1; }
+            100% { width: 100%; opacity: 0; }
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        [x-cloak] { display: none !important; }
     </style>
     @stack('styles')
 </head>
 
 <body class="h-full" x-data="{ mobileMenuOpen: false, profileMenuOpen: false }">
+    <div class="loading-bar"></div>
     <div class="min-h-screen flex flex-col md:flex-row">
         <!-- Sidebar -->
         <div class="hidden md:flex md:flex-shrink-0">
@@ -162,7 +266,7 @@
                                 <div class="absolute inset-0 rounded-full bg-primary-600 flex items-center justify-center text-white font-black shadow-sm">
                                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                 </div>
-                                @if(auth()->user()->profile_photo)
+                                @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
                                     <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
                                         src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                         alt="{{ auth()->user()->name }}"
@@ -252,7 +356,7 @@
                                                 clip-rule="evenodd" />
                                         </svg>
                                     </button>
-                                    <div x-show="open" x-transition class="pl-4 space-y-1">
+                                    <div x-show="open" x-transition x-cloak class="pl-4 space-y-1">
                                         <a href="{{ route('reports.stock') }}"
                                             class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
                                             <i class="fas fa-boxes mr-3 text-[10px]"></i>
@@ -295,13 +399,20 @@
                     <h1 class="ml-4 text-gray-800 font-bold tracking-tight">@yield('title')</h1>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="flex items-center focus:outline-none">
-                            <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200">
+                    <div class="relative">
+                        <button @click="profileMenuOpen = !profileMenuOpen" class="flex items-center focus:outline-none">
+                            <div class="relative h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200 overflow-hidden">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
+                                    <img class="absolute inset-0 h-full w-full object-cover"
+                                        src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                        alt="{{ auth()->user()->name }}"
+                                        onerror="this.style.display='none'"
+                                        loading="lazy">
+                                @endif
                             </div>
                         </button>
-                        <div x-show="open" @click.away="open = false" x-transition class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-xl py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
+                        <div x-show="profileMenuOpen" @click.away="profileMenuOpen = false" x-transition x-cloak class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-xl py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
                             <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-bold">Profil Saya</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -313,10 +424,12 @@
             </header>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto p-4 sm:px-6 lg:px-8">
-                <div class="mb-6">
+            <main class="flex-1 overflow-y-auto p-4 sm:px-6 lg:px-8 animate-page-content">
+                @if(View::hasSection('header'))
+                <div class="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-gray-100">
                     @yield('header')
                 </div>
+                @endif
                 @yield('content')
             </main>
         </div>

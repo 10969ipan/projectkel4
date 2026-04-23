@@ -71,11 +71,11 @@
     <div class="w-full max-w-md">
         <div class="login-card bg-white">
             <!-- Header -->
-            <div class="bg-indigo-600 py-6 px-8 text-center">
+            <div class="bg-blue-600 py-6 px-8 text-center">
                 <div class="flex flex-col items-center justify-center space-y-2">
                     <img src="{{ asset('image/sima1.png') }}" alt="SIMA-APOTEK" class="h-20 w-20" />
                     <h1 class="text-2xl font-black text-white tracking-widest">SIMA-APOTEK</h1>
-                    <p class="text-indigo-100 text-xs font-bold uppercase tracking-tighter">Pharmacy Management System</p>
+                    <p class="text-blue-100 text-xs font-bold uppercase tracking-tighter">Pharmacy Management System</p>
                 </div>
             </div>
             <!-- Form -->

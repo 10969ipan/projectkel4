@@ -39,14 +39,11 @@ class DashboardController extends Controller
         // Metrik ini penting untuk admin agar tahu ada berapa permintaan yang perlu ditindaklanjuti
         $pendingRequests = ItemRequest::where('status', 'pending')->count();
 
-        // METRIK 3: Produk Kadaluwarsa (EWS)
-        // Menghitung batch obat yang akan kadaluwarsa dalam 30 hari ke depan
-        $expiringSoonCount = \App\Models\ItemSize::where('expiry_date', '>', now())
-            ->where('expiry_date', '<=', now()->addDays(30))
-            ->count();
+        // METRIK 3: Produk Kadaluwarsa (EWS) - [DEACTIVATED]
+        $expiringSoonCount = 0;
 
-        // METRIK 4: Produk Sudah Kadaluwarsa
-        $expiredCount = \App\Models\ItemSize::where('expiry_date', '<=', now())->count();
+        // METRIK 4: Produk Sudah Kadaluwarsa - [DEACTIVATED]
+        $expiredCount = 0;
 
         // PENDAPATAN 30 HARI TERAKHIR
         $thirtyDaysAgo = Carbon::now()->subDays(30);

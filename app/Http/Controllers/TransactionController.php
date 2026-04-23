@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
-use App\Models\ItemSize;
+
 use App\Models\Transaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,7 +41,7 @@ class TransactionController extends Controller
     {
         // EAGER LOADING: Muat data item beserta unit dan sizes (varian ukuran)
         // Ini penting agar data stok per ukuran tersedia untuk validasi di frontend
-        $items = Item::with('unit', 'sizes')->get();
+        $items = Item::with('unit')->get();
 
         return view('backend.transactions.create', compact('items'));
     }
@@ -64,32 +64,24 @@ class TransactionController extends Controller
         // VALIDASI INPUT: Pastikan semua data yang diperlukan valid
         $request->validate([
             'item_id' => 'required|exists:items,id',              // Barang harus ada di database
-            'item_size_id' => 'required|exists:item_sizes,id',    // Ukuran harus ada di database
             'type' => 'required|in:in,out',                        // Tipe hanya boleh 'in' atau 'out'
             'quantity' => 'required|integer|min:1',                // Jumlah minimal 1
             'date' => 'required|date',                             // Tanggal harus format date yang valid
             'note' => 'nullable|string',                           // Catatan opsional
         ]);
 
-        // LANGKAH 1: Cari data varian ukuran yang dipilih
-        // Contoh: Jika user pilih "Kaos Polos - Size M", maka cari data size M
-        $itemSize = ItemSize::findOrFail($request->item_size_id);
-
-        // LANGKAH 2: Ambil data item utama dari varian ukuran
-        $item = $itemSize->item;
+        $item = Item::findOrFail($request->item_id);
 
         // VALIDASI STOK: Khusus untuk transaksi KELUAR (out)
-        // Pastikan stok ukuran yang dipilih mencukupi
-        if ($request->type === 'out' && $itemSize->stock < $request->quantity) {
+        if ($request->type === 'out' && $item->stock < $request->quantity) {
             return back()
                 ->withInput()
-                ->with('error', 'Stok ukuran ' . $itemSize->size . ' tidak mencukupi. Stok tersedia: ' . $itemSize->stock);
+                ->with('error', 'Stok tidak mencukupi. Stok tersedia: ' . $item->stock);
         }
 
         // LANGKAH 3: Simpan transaksi ke database
         $transaction = Transaction::create([
             'item_id' => $request->item_id,              // ID barang
-            'item_size_id' => $request->item_size_id,    // ID varian ukuran (PENTING untuk tracking)
             'user_id' => auth()->id(),                    // ID user yang membuat transaksi
             'type' => $request->type,                     // Tipe: 'in' (masuk) atau 'out' (keluar)
             'quantity' => $request->quantity,             // Jumlah barang
@@ -97,29 +89,13 @@ class TransactionController extends Controller
             'note' => $request->note,                     // Catatan tambahan
         ]);
 
-        // LANGKAH 4: Update stok barang
-        // Update dilakukan di 2 tempat: ItemSize (stok per ukuran) dan Item (stok total)
+        // LANGKAH 4: Update stok barang langsung pada model Item
 
         if ($request->type === 'in') {
-            // TRANSAKSI MASUK: Tambah stok
-
-            // Tambah stok pada varian ukuran spesifik
-            // Contoh: Size M bertambah dari 10 menjadi 15
-            $itemSize->increment('stock', $request->quantity);
-
-            // Tambah stok total item
-            // Contoh: Total stok bertambah dari 50 menjadi 55
+            // TRANSAKSI MASUK: Tambah stok total item
             $item->increment('stock', $request->quantity);
-
         } else {
-            // TRANSAKSI KELUAR: Kurangi stok
-
-            // Kurangi stok pada varian ukuran spesifik
-            // Contoh: Size M berkurang dari 10 menjadi 5
-            $itemSize->decrement('stock', $request->quantity);
-
-            // Kurangi stok total item
-            // Contoh: Total stok berkurang dari 50 menjadi 45
+            // TRANSAKSI KELUAR: Kurangi stok total item
             $item->decrement('stock', $request->quantity);
         }
 

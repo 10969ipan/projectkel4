@@ -75,7 +75,7 @@
                                 id="user-menu-button" aria-expanded="false" aria-haspopup="true">
                                 <span class="sr-only">Open user menu</span>
                                 {{-- FOTO PROFIL --}}
-                                @if(auth()->user()->profile_photo)
+                                @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
                                     <img class="h-8 w-8 rounded-full object-cover" src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="{{ auth()->user()->name }}">
                                 @else
                                     <div class="h-8 w-8 rounded-full bg-blue-300 flex items-center justify-center text-blue-800 font-bold">
@@ -167,7 +167,7 @@
                     <div class="flex-shrink-0">
                         {{-- LINK PROFILE MOBILE (Bisa diklik) --}}
                         <a href="{{ route('profile') }}">
-                            @if(auth()->user()->profile_photo)
+                            @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
                                 <img class="h-10 w-10 rounded-full object-cover border-2 border-white" src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="{{ auth()->user()->name }}">
                             @else
                                 <div class="h-10 w-10 rounded-full bg-blue-300 flex items-center justify-center text-blue-800 font-bold border-2 border-white">

@@ -58,7 +58,7 @@
                             <div class="absolute inset-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-2xl font-bold border-2 border-indigo-200">
                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                             </div>
-                            @if($user->profile_photo)
+                            @if($user->profile_photo && ($user->isAdmin() || $user->isStaff()))
                                 <img class="absolute inset-0 h-20 w-20 rounded-full object-cover border-2 border-white shadow-sm" 
                                     src="{{ asset('storage/' . $user->profile_photo) }}" 
                                     alt="Foto Profil"

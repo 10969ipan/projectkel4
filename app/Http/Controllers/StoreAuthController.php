@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class StoreAuthController extends Controller
 {
@@ -73,5 +75,68 @@ class StoreAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('store.index')->with('success', 'Anda berhasil keluar dari Pharmacare.');
+    }
+
+    // =========================================================================
+    // GOOGLE OAUTH
+    // =========================================================================
+
+    /** Redirect ke halaman login Google */
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    /** Handle callback dari Google setelah user login */
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+        } catch (\Exception $e) {
+            \Log::error('Google OAuth Error: ' . $e->getMessage());
+            return redirect()->route('store.login')
+                ->with('error', 'Login Google gagal: ' . $e->getMessage());
+        }
+
+        // Cari user berdasarkan google_id terlebih dahulu
+        $user = User::where('google_id', $googleUser->getId())->first();
+
+        if (!$user) {
+            // Coba cari berdasarkan email (user mungkin sudah daftar manual)
+            $user = User::where('email', $googleUser->getEmail())->first();
+
+            if ($user) {
+                // Link akun manual ke Google
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'avatar'    => $googleUser->getAvatar(),
+                ]);
+            } else {
+                // Buat akun baru sebagai customer
+                $user = User::create([
+                    'name'       => $googleUser->getName(),
+                    'email'      => $googleUser->getEmail(),
+                    'google_id'  => $googleUser->getId(),
+                    'avatar'     => $googleUser->getAvatar(),
+                    'password'   => Hash::make(Str::random(32)),
+                    'role'       => null,
+                    'store_role' => 'customer',
+                    'paylater_limit' => 0,
+                ]);
+            }
+        } else {
+            // Selalu update avatar & nama agar sinkron dengan Google
+            $user->update([
+                'avatar' => $googleUser->getAvatar(),
+                'name'   => $googleUser->getName(),
+            ]);
+        }
+
+        // Login user
+        Auth::login($user, true);
+        request()->session()->regenerate();
+
+        return redirect()->route('store.index')
+            ->with('success', 'Selamat datang, ' . $user->name . '! Login Google berhasil 🎉');
     }
 }

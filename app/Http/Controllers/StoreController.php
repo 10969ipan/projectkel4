@@ -40,7 +40,7 @@ class StoreController extends Controller
     public function show($id)
     {
         $item = Cache::remember('store_item_' . $id, 3600, function() use ($id) {
-            return Item::with(['category:id,name', 'unit:id,name', 'sizes'])
+            return Item::with(['category:id,name', 'unit:id,name'])
                 ->select('id', 'name', 'price', 'description', 'unit_id', 'image_path', 'requires_prescription', 'category_id', 'stock')
                 ->findOrFail($id);
         });

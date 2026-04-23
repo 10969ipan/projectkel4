@@ -14,6 +14,7 @@ class StoreOrder extends Model
         'order_number',
         'address_id',
         'shipping_method',
+        'tracking_number',
         'payment_method',
         'payment_status',
         'order_status',

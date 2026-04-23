@@ -540,6 +540,48 @@
         }
         .btn-auth-submit:hover { background: #0066BA; transform: translateY(-1px); box-shadow: 0 10px 20px rgba(0, 118, 214, 0.2); }
 
+        /* Google Button in Modal */
+        .modal-google-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 18px 0;
+            color: #94a3b8;
+            font-size: 0.82rem;
+        }
+        .modal-google-divider::before,
+        .modal-google-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        .modal-btn-google {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 20px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fff;
+            color: #334155;
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.25s;
+            cursor: pointer;
+        }
+        .modal-btn-google:hover {
+            border-color: #4285F4;
+            background: #F0F6FF;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.15);
+            transform: translateY(-1px);
+        }
+        .modal-btn-google:active { transform: translateY(0); }
+
         /* Footer Styles */
         .site-footer {
             background: #1e293b;
@@ -1173,9 +1215,15 @@
 
                     <div class="user-dropdown" x-data="{ open: false }">
                         <button type="button" class="user-trigger" @click.stop="open = !open">
-                            <div
-                                style="width: 30px; height: 30px; background: var(--primary-blue); border-radius: 50%; color: white; display:flex; align-items:center; justify-content:center;">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
+                            @if(Auth::user()->avatar)
+                                <img src="{{ Auth::user()->avatar }}"
+                                     alt="{{ Auth::user()->name }}"
+                                     style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-blue);">
+                            @else
+                                <div style="width: 32px; height: 32px; background: var(--primary-blue); border-radius: 50%; color: white; display:flex; align-items:center; justify-content:center; font-weight: 800; font-size: 0.9rem;">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </div>
+                            @endif
                             {{ Auth::user()->name }}
                         </button>
                         <div class="dropdown-menu" x-show="open" x-cloak @click.away="open = false"
@@ -1275,6 +1323,7 @@
                     <h4>Layanan</h4>
                     <ul class="footer-links">
                         <li><a href="{{ route('store.index') }}">Beranda Toko</a></li>
+                        <li><a href="{{ route('ongkir.index') }}">Cek Ongkir</a></li>
                         <li><a href="javascript:void(0)" onclick="toggleChat()">Konsultasi AI</a></li>
                         <li><a href="{{ route('cart.index') }}">Keranjang</a></li>
                         <li><a href="{{ route('account.dashboard') }}">Akun Saya</a></li>
@@ -1350,7 +1399,24 @@
                         </div>
                         <button type="submit" class="btn-auth-submit">Masuk ke Akun</button>
                     </form>
-                    <div style="margin-top: 25px; text-align: center; font-size: 0.9rem; color: #64748b;">
+
+                    <!-- Divider Google -->
+                    <div class="modal-google-divider">
+                        <span>atau</span>
+                    </div>
+
+                    <!-- Tombol Google Login -->
+                    <a href="{{ route('auth.google') }}" class="modal-btn-google">
+                        <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M47.532 24.552c0-1.636-.132-3.196-.388-4.692H24.48v8.875h12.971c-.56 3.013-2.245 5.565-4.78 7.278v6.048h7.74c4.527-4.168 7.121-10.31 7.121-17.509z" fill="#4285F4"/>
+                            <path d="M24.48 48c6.51 0 11.969-2.158 15.957-5.839l-7.74-6.048c-2.15 1.44-4.898 2.29-8.217 2.29-6.316 0-11.665-4.266-13.578-10.001H2.89v6.248C6.862 42.591 15.068 48 24.48 48z" fill="#34A853"/>
+                            <path d="M10.902 28.402A14.63 14.63 0 0 1 10.08 24c0-1.529.262-3.015.822-4.402v-6.248H2.89A23.985 23.985 0 0 0 .48 24c0 3.875.92 7.544 2.41 10.65l8.012-6.248z" fill="#FBBC05"/>
+                            <path d="M24.48 9.597c3.558 0 6.748 1.223 9.26 3.627l6.942-6.942C36.44 2.445 30.99 0 24.48 0 15.068 0 6.862 5.41 2.89 13.35l8.012 6.248C12.815 13.863 18.164 9.597 24.48 9.597z" fill="#EA4335"/>
+                        </svg>
+                        Masuk dengan Google
+                    </a>
+
+                    <div style="margin-top: 20px; text-align: center; font-size: 0.9rem; color: #64748b;">
                         Belum punya akun? <a href="javascript:void(0)" @click="authTab = 'register'" style="color: var(--primary-blue); font-weight: 800; text-decoration: none;">Daftar Sekarang</a>
                     </div>
                 </div>
@@ -1365,7 +1431,7 @@
                         @csrf
                         <div class="form-group">
                             <label class="form-label">Nama Lengkap</label>
-                            <input type="text" name="name" class="form-input" placeholder="John Doe" required>
+                            <input type="text" name="name" class="form-input" placeholder="Irfan Arfian" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Alamat Email</label>
@@ -1383,7 +1449,24 @@
                         </div>
                         <button type="submit" class="btn-auth-submit">Buat Akun Sekarang</button>
                     </form>
-                    <div style="margin-top: 25px; text-align: center; font-size: 0.9rem; color: #64748b;">
+
+                    <!-- Divider Google -->
+                    <div class="modal-google-divider">
+                        <span>atau daftar dengan</span>
+                    </div>
+
+                    <!-- Tombol Google Register -->
+                    <a href="{{ route('auth.google') }}" class="modal-btn-google">
+                        <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M47.532 24.552c0-1.636-.132-3.196-.388-4.692H24.48v8.875h12.971c-.56 3.013-2.245 5.565-4.78 7.278v6.048h7.74c4.527-4.168 7.121-10.31 7.121-17.509z" fill="#4285F4"/>
+                            <path d="M24.48 48c6.51 0 11.969-2.158 15.957-5.839l-7.74-6.048c-2.15 1.44-4.898 2.29-8.217 2.29-6.316 0-11.665-4.266-13.578-10.001H2.89v6.248C6.862 42.591 15.068 48 24.48 48z" fill="#34A853"/>
+                            <path d="M10.902 28.402A14.63 14.63 0 0 1 10.08 24c0-1.529.262-3.015.822-4.402v-6.248H2.89A23.985 23.985 0 0 0 .48 24c0 3.875.92 7.544 2.41 10.65l8.012-6.248z" fill="#FBBC05"/>
+                            <path d="M24.48 9.597c3.558 0 6.748 1.223 9.26 3.627l6.942-6.942C36.44 2.445 30.99 0 24.48 0 15.068 0 6.862 5.41 2.89 13.35l8.012 6.248C12.815 13.863 18.164 9.597 24.48 9.597z" fill="#EA4335"/>
+                        </svg>
+                        Daftar dengan Google
+                    </a>
+
+                    <div style="margin-top: 20px; text-align: center; font-size: 0.9rem; color: #64748b;">
                         Sudah punya akun? <a href="javascript:void(0)" @click="authTab = 'login'" style="color: var(--primary-blue); font-weight: 800; text-decoration: none;">Login Disini</a>
                     </div>
                 </div>
@@ -1562,6 +1645,7 @@
     <style>@keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }</style>
     @if (session('success')) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('success', '{{ session('success') }}'));</script> @endif
     @if (session('warning')) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('warning', '{{ session('warning') }}'));</script> @endif
+    @if (session('error')) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('error', '{{ session('error') }}'));</script> @endif
     @if ($errors->any()) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('error', '{{ $errors->first() }}'));</script> @endif
 </body>
 

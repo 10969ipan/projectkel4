@@ -80,6 +80,51 @@
         @media (max-width: 480px) {
             .auth-card { padding: 40px 25px; border-radius: 0; border: none; box-shadow: none; background: transparent; }
         }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #EAEAEA;
+        }
+
+        /* Tombol Google */
+        .btn-google {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 14px 20px;
+            border: 1.5px solid #EAEAEA;
+            border-radius: 14px;
+            background: #fff;
+            color: #333;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .btn-google:hover {
+            border-color: #4285F4;
+            background: #F8F9FF;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.12);
+            transform: translateY(-1px);
+        }
+        .btn-google:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -120,6 +165,22 @@
             <button type="submit" class="btn-auth">Masuk ke Akun</button>
         </form>
 
+        <!-- Divider -->
+        <div class="divider">
+            <span>atau</span>
+        </div>
+
+        <!-- Tombol Login Google -->
+        <a href="{{ route('auth.google') }}" class="btn-google">
+            <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M47.532 24.552c0-1.636-.132-3.196-.388-4.692H24.48v8.875h12.971c-.56 3.013-2.245 5.565-4.78 7.278v6.048h7.74c4.527-4.168 7.121-10.31 7.121-17.509z" fill="#4285F4"/>
+                <path d="M24.48 48c6.51 0 11.969-2.158 15.957-5.839l-7.74-6.048c-2.15 1.44-4.898 2.29-8.217 2.29-6.316 0-11.665-4.266-13.578-10.001H2.89v6.248C6.862 42.591 15.068 48 24.48 48z" fill="#34A853"/>
+                <path d="M10.902 28.402A14.63 14.63 0 0 1 10.08 24c0-1.529.262-3.015.822-4.402v-6.248H2.89A23.985 23.985 0 0 0 .48 24c0 3.875.92 7.544 2.41 10.65l8.012-6.248z" fill="#FBBC05"/>
+                <path d="M24.48 9.597c3.558 0 6.748 1.223 9.26 3.627l6.942-6.942C36.44 2.445 30.99 0 24.48 0 15.068 0 6.862 5.41 2.89 13.35l8.012 6.248C12.815 13.863 18.164 9.597 24.48 9.597z" fill="#EA4335"/>
+            </svg>
+            Masuk dengan Google
+        </a>
+
         <div class="auth-footer">
             Belum punya akun? <a href="{{ route('store.register') }}">Daftar Gratis</a>
         </div>
@@ -159,6 +220,13 @@
             Toast.fire({
                 icon: 'error',
                 title: '{{ $errors->first() }}'
+            });
+        @endif
+
+        @if (session('error'))
+            Toast.fire({
+                icon: 'error',
+                title: '{{ session('error') }}'
             });
         @endif
     </script>

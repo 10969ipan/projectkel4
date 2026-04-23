@@ -15,6 +15,10 @@ use App\Http\Controllers\NotificationController;
 |--------------------------------------------------------------------------
 */
 
+// Google OAuth — HARUS di luar semua middleware agar tidak terhalang session/auth check
+Route::get('/auth/google', [StoreAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [StoreAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
 Route::middleware(['customer'])->group(function () {
     Route::get('/store', [StoreController::class, 'index'])->name('store.index');
     Route::get('/store/item/{id}', [StoreController::class, 'show'])->name('store.show');
@@ -43,6 +47,11 @@ Route::middleware(['customer'])->group(function () {
     // Notifications API
     Route::get('/api/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/api/notifications/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    // RajaOngkir API Integration (Minggu Ke-7)
+    Route::get('/cek-ongkir', [\App\Http\Controllers\RajaOngkirController::class, 'index'])->name('ongkir.index');
+    Route::get('/provinces', [\App\Http\Controllers\RajaOngkirController::class, 'getProvinces'])->name('ongkir.provinces');
+    Route::get('/cities', [\App\Http\Controllers\RajaOngkirController::class, 'getCities'])->name('ongkir.cities');
+    Route::post('/cost', [\App\Http\Controllers\RajaOngkirController::class, 'getCost'])->name('ongkir.cost');
 });
 
 Route::middleware(['auth', 'customer'])->group(function () {
@@ -84,4 +93,5 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::put('/account/address/{id}', [AccountController::class, 'updateAddress'])->name('account.address.update');
     Route::delete('/account/address/{id}', [AccountController::class, 'deleteAddress'])->name('account.address.delete');
     Route::post('/account/address/{id}/primary', [AccountController::class, 'setPrimaryAddress'])->name('account.address.primary');
+    Route::get('/account/orders/{id}/invoice', [AccountController::class, 'showInvoice'])->name('account.orders.invoice');
 });

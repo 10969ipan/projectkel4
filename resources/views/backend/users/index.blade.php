@@ -3,13 +3,14 @@
 @section('title', 'Manajemen Pengguna')
 
 @section('header')
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+    <div>
         <h1 class="text-2xl font-bold text-gray-900">Manajemen Pengguna</h1>
-        <a href="{{ route('users.create') }}"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 mt-4 md:mt-0">
-            <i class="fas fa-plus mr-2"></i> Tambah Pengguna
-        </a>
+        <p class="text-sm text-gray-500 mt-1">Kelola data staff farmasi dan hak akses administrator.</p>
     </div>
+    <a href="{{ route('users.create') }}"
+        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 self-start sm:self-center transition-all duration-200">
+        <i class="fas fa-plus mr-2"></i> Tambah Pengguna
+    </a>
 @endsection
 
 @section('content')
@@ -34,7 +35,7 @@
                                     <div class="absolute inset-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold border border-primary-200">
                                         {{ strtoupper(substr($user->name, 0, 1)) }}
                                     </div>
-                                    @if($user->profile_photo)
+                                    @if($user->profile_photo && ($user->isAdmin() || $user->isStaff()))
                                         <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border border-white" 
                                             src="{{ asset('storage/' . $user->profile_photo) }}" 
                                             alt="{{ $user->name }}"

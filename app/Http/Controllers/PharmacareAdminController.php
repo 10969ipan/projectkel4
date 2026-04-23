@@ -57,10 +57,14 @@ class PharmacareAdminController extends Controller
         $order = StoreOrder::findOrFail($id);
         
         $request->validate([
-            'order_status' => 'required|in:ordered,paid,processing,completed,cancelled'
+            'order_status' => 'required|in:ordered,paid,processing,completed,cancelled',
+            'tracking_number' => 'nullable|string|max:50'
         ]);
         
         $order->order_status = $request->order_status;
+        if ($request->filled('tracking_number')) {
+            $order->tracking_number = $request->tracking_number;
+        }
         $order->save();
         
         // Trigger Notification
@@ -136,5 +140,13 @@ class PharmacareAdminController extends Controller
         $user->save();
 
         return back()->with('success', 'Limit Paylater berhasil diperbarui.');
+    }
+
+    public function showInvoice($id)
+    {
+        $order = StoreOrder::with(['user', 'address', 'items.item.category'])
+            ->findOrFail($id);
+
+        return view('frontend.account.invoice', compact('order'));
     }
 }

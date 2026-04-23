@@ -94,9 +94,15 @@
         <!-- Sidebar Nav -->
         <div class="sidebar">
             <div style="text-align: center; margin-bottom: 30px;">
-                <div style="width: 70px; height: 70px; background: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 800; margin: 0 auto 15px;">
-                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                </div>
+                @if($user->avatar)
+                    <img src="{{ $user->avatar }}"
+                         alt="{{ $user->name }}"
+                         style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-blue); margin: 0 auto 15px; display: block; box-shadow: 0 4px 15px rgba(0,118,214,0.2);">
+                @else
+                    <div style="width: 70px; height: 70px; background: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 800; margin: 0 auto 15px;">
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                    </div>
+                @endif
                 <div style="font-weight: 700; font-size: 1.1rem;">{{ $user->name }}</div>
                 <div style="font-size: 0.85rem; color: var(--text-muted);">{{ $user->email }}</div>
             </div>
@@ -479,10 +485,10 @@
                 'address'         => $order->address->full_address ?? 'Alamat belum diisi',
                 'address_label'   => $order->address->label ?? '-',
                 'payment_method'  => strtoupper($order->payment_method ?? '-'),
-                'shipping_method' => ($order->shipping_method === 'instant' ? 'Instant Delivery (2 Jam)' : 'JNE / J&T Reguler'),
+                'shipping_method' => $order->shipping_method,
                 'shipping_cost'   => $order->shipping_cost ?? 0,
-                'sub_total'       => $order->sub_total,
                 'grand_total'     => $order->grand_total,
+                'tracking_number' => $order->tracking_number,
                 'status'          => $order->order_status,
                 'items'           => $mapItems,
             ];
@@ -500,10 +506,10 @@
             'address'         => $justPaidOrder->address->full_address ?? 'Alamat belum diisi',
             'address_label'   => $justPaidOrder->address->label ?? '-',
             'payment_method'  => strtoupper($justPaidOrder->payment_method ?? '-'),
-            'shipping_method' => ($justPaidOrder->shipping_method === 'instant' ? 'Instant Delivery (2 Jam)' : 'JNE / J&T Reguler'),
+            'shipping_method' => $justPaidOrder->shipping_method,
             'shipping_cost'   => $justPaidOrder->shipping_cost ?? 0,
-            'sub_total'       => $justPaidOrder->sub_total,
             'grand_total'     => $justPaidOrder->grand_total,
+            'tracking_number' => $justPaidOrder->tracking_number,
             'status'          => $justPaidOrder->order_status,
             'items'           => collect($justPaidOrder->items)->map(fn($oi) => [
                 'name'     => $oi->item->name ?? 'Item Dihapus',
@@ -541,6 +547,7 @@
                     <div style="background:#f8fafc; border-radius:14px; padding:18px;">
                         <div style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:#94a3b8; letter-spacing:1px; margin-bottom:8px;">Pelanggan</div>
                         <div id="od-customer" style="font-weight:700; font-size:0.95rem; color:#1e293b;"></div>
+                        <div id="od-tracking-number" style="font-size:0.75rem; color:#059669; font-weight:700; margin-top:5px; display:none;"></div>
                     </div>
                     <div style="background:#f8fafc; border-radius:14px; padding:18px;">
                         <div style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:#94a3b8; letter-spacing:1px; margin-bottom:8px;">Metode & Pengiriman</div>
@@ -569,6 +576,13 @@
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem; color:#64748b;"><span>Subtotal Produk</span><span id="od-subtotal" style="font-weight:600; color:#1e293b;"></span></div>
                     <div style="display:flex; justify-content:space-between; margin-bottom:14px; font-size:0.9rem; color:#64748b;"><span>Ongkos Kirim</span><span id="od-ship-cost" style="font-weight:600; color:#1e293b;"></span></div>
                     <div style="display:flex; justify-content:space-between; padding-top:14px; border-top:2px solid #e2e8f0; font-size:1.1rem; font-weight:800; color:var(--primary-blue);"><span>Total Bayar</span><span id="od-grand-total"></span></div>
+                </div>
+
+                <!-- Action Button: Invoice -->
+                <div style="margin-top: 20px;">
+                    <a id="od-invoice-btn" href="#" target="_blank" style="display: block; text-align: center; padding: 14px; background: #f1f5f9; color: #1e293b; border-radius: 12px; font-weight: 700; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                        <i class="fas fa-file-invoice mr-1"></i> Lihat & Cetak Invoice
+                    </a>
                 </div>
             </div>
         </div>
@@ -696,7 +710,10 @@
 
             <div style="display:flex; flex-direction:column; gap:12px;">
                 <button onclick="document.getElementById('successModal').style.display='none'; openOrderDetail({{ $justPaidOrder->id }})" style="width:100%; padding:16px; background:#0076D6; color:white; border:none; border-radius:16px; font-weight:800; font-size:1rem; cursor:pointer; transition:0.2s; box-shadow:0 10px 15px -3px rgba(0,118,214,0.3);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Lihat Detail Pesanan</button>
-                <button onclick="document.getElementById('successModal').style.display='none'" style="width:100%; padding:14px; background:white; color:#64748b; border:2px solid #e2e8f0; border-radius:16px; font-weight:700; font-size:0.95rem; cursor:pointer;">{{ $justPaidOrder->payment_status === 'paid' ? 'Tutup' : 'Selesai' }}</button>
+                <a href="{{ route('account.orders.invoice', $justPaidOrder->id) }}" target="_blank" style="display: block; text-align: center; width:100%; padding:14px; background:white; color:#0076D6; border:2px solid #0076D6; border-radius:16px; font-weight:800; font-size:0.95rem; cursor:pointer; text-decoration: none;">
+                    <i class="fas fa-file-invoice mr-1"></i> Cetak Invoice
+                </a>
+                <button onclick="document.getElementById('successModal').style.display='none'" style="width:100%; padding:12px; background:white; color:#64748b; border:none; border-radius:16px; font-weight:700; font-size:0.9rem; cursor:pointer;">{{ $justPaidOrder->payment_status === 'paid' ? 'Tutup' : 'Selesai' }}</button>
             </div>
         </div>
     </div>
@@ -779,8 +796,20 @@
             document.getElementById('od-customer').innerText = data.customer;
             document.getElementById('od-payment').innerText = data.payment_method;
             document.getElementById('od-shipping-method').innerText = data.shipping_method;
+            
+            const trackingEl = document.getElementById('od-tracking-number');
+            if (data.tracking_number) {
+                trackingEl.innerText = 'No. Resi: ' + data.tracking_number;
+                trackingEl.style.display = 'block';
+            } else {
+                trackingEl.style.display = 'none';
+            }
+
             document.getElementById('od-addr-label').innerText = data.address_label;
             document.getElementById('od-address').innerText = data.address;
+            
+            // Invoice Link
+            document.getElementById('od-invoice-btn').href = `/account/orders/${orderId}/invoice`;
 
             // Items
             const itemsContainer = document.getElementById('od-items');

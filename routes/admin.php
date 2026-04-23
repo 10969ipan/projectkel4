@@ -60,6 +60,7 @@ Route::middleware(['auth', 'backoffice'])->group(function () {
         Route::put('/pharmacare/customers/{id}', [PharmacareAdminController::class, 'updateCustomer'])->name('admin.pharmacare.customers.update');
         Route::post('/pharmacare/approve/{userId}', [PharmacareAdminController::class, 'approvePrescription'])->name('admin.pharmacare.approve');
         Route::post('/pharmacare/paylater/{userId}', [PharmacareAdminController::class, 'updatePaylater'])->name('admin.pharmacare.paylater');
+        Route::get('/pharmacare/transactions/{id}/invoice', [PharmacareAdminController::class, 'showInvoice'])->name('admin.pharmacare.invoice');
     });
 
     // Items (Accessible by Staff & Admin)

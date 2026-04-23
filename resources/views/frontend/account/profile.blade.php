@@ -92,9 +92,15 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div style="text-align: center; margin-bottom: 30px;">
-                <div style="width: 70px; height: 70px; background: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 800; margin: 0 auto 12px;">
-                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                </div>
+                @if($user->avatar)
+                    <img src="{{ $user->avatar }}"
+                         alt="{{ $user->name }}"
+                         style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-blue); margin: 0 auto 12px; display: block; box-shadow: 0 4px 15px rgba(0,118,214,0.2);">
+                @else
+                    <div style="width: 70px; height: 70px; background: var(--primary-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 800; margin: 0 auto 12px;">
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                    </div>
+                @endif
                 <div style="font-weight: 700; font-size: 1.1rem;">{{ $user->name }}</div>
                 <div style="font-size: 0.85rem; color: var(--text-muted);">{{ $user->email }}</div>
             </div>
@@ -214,8 +220,20 @@
                 <input type="text" name="label" class="form-control" placeholder="Cth: Rumah, Kantor, Kos..." required>
             </div>
             <div class="form-group">
+                <label class="form-label">Provinsi</label>
+                <select name="province_id" id="modal-province" class="form-control" onchange="loadCitiesProfile()" required>
+                    <option value="">Pilih Provinsi</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Kota / Kabupaten</label>
+                <select name="city_id" id="modal-city" class="form-control" required disabled>
+                    <option value="">Pilih Kota</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label class="form-label">Alamat Lengkap</label>
-                <textarea name="full_address" class="form-control" rows="3" placeholder="Jalan, No. Rumah, Kelurahan, Kecamatan, Kota..." required></textarea>
+                <textarea name="full_address" class="form-control" rows="3" placeholder="Jalan, No. Rumah, Kelurahan, Kecamatan..." required></textarea>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="toggleModal('addressModal')">Batal</button>
@@ -301,7 +319,49 @@
             newUrl.searchParams.delete('add_address');
             window.history.replaceState({}, '', newUrl);
         }
+
+        // RajaOngkir Logic for Profile
+        loadProvincesProfile();
     });
+
+    async function loadProvincesProfile() {
+        try {
+            const response = await fetch('/provinces');
+            const data = await response.json();
+            if (data.rajaongkir && data.rajaongkir.status.code === 200) {
+                const select = document.getElementById('modal-province');
+                data.rajaongkir.results.forEach(prov => {
+                    const option = document.createElement('option');
+                    option.value = prov.province_id;
+                    option.textContent = prov.province;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) { console.error('Error:', error); }
+    }
+
+    async function loadCitiesProfile() {
+        const provId = document.getElementById('modal-province').value;
+        const citySelect = document.getElementById('modal-city');
+        if (!provId) { citySelect.disabled = true; return; }
+        
+        citySelect.innerHTML = '<option value="">Memuat...</option>';
+        citySelect.disabled = true;
+        try {
+            const response = await fetch(`/cities?province_id=${provId}`);
+            const data = await response.json();
+            if (data.rajaongkir && data.rajaongkir.status.code === 200) {
+                citySelect.innerHTML = '<option value="">Pilih Kota</option>';
+                data.rajaongkir.results.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.city_id;
+                    option.textContent = city.city_name;
+                    citySelect.appendChild(option);
+                });
+                citySelect.disabled = false;
+            }
+        } catch (error) { console.error('Error:', error); }
+    }
 
     const Toast = Swal.mixin({
         toast: true, position: 'top-end',

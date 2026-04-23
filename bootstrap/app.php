@@ -28,13 +28,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Exclude AI Reply from CSRF to prevent 419 on stale sessions
         $middleware->validateCsrfTokens(except: [
             'consultation/ai-reply',
-            'chatbot/*'
+            'chatbot/*',
+            'auth/google/callback',
         ]);
 
         // Redireksi dinamis untuk tamu (Guest)
         $middleware->redirectTo(function (\Illuminate\Http\Request $request) {
-            // Bypass redirect for AI Reply
-            if ($request->is('consultation/ai-reply') || $request->is('chatbot/*')) {
+            // Bypass redirect for AI Reply & Google OAuth callback
+            if ($request->is('consultation/ai-reply') || $request->is('chatbot/*') || $request->is('auth/google*')) {
                 return null;
             }
 

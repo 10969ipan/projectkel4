@@ -3,16 +3,14 @@
 @section('title', 'Dashboard')
 
 @section('header')
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p class="text-sm text-gray-500 mt-1">Ringkasan inventaris obat dan pemantauan masa kadaluwarsa.</p>
-        </div>
-        <div class="flex items-center space-x-4 mt-2 md:mt-0 px-4 py-2 bg-primary-50 rounded-lg border border-primary-100 shadow-sm">
-            <span class="text-xs font-bold text-primary-600 flex items-center uppercase tracking-wider">
-                <i class="far fa-calendar-alt mr-2 text-sm text-primary-500"></i> {{ now()->format('l, d F Y') }}
-            </span>
-        </div>
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">Ringkasan inventaris obat dan pemantauan stok secara real-time.</p>
+    </div>
+    <div class="flex items-center space-x-4 px-4 py-2 bg-primary-50 rounded-lg border border-primary-100 shadow-sm self-start sm:self-center">
+        <span class="text-xs font-bold text-primary-600 flex items-center uppercase tracking-wider">
+            <i class="far fa-calendar-alt mr-2 text-sm text-primary-500"></i> {{ now()->format('l, d F Y') }}
+        </span>
     </div>
 @endsection
 

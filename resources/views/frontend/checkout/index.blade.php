@@ -125,7 +125,7 @@
                     <div style="display: flex; flex-direction: column; gap: 15px;">
                         @foreach($addresses as $addr)
                         <label style="display: block; cursor: pointer;">
-                            <input type="radio" name="address_id" value="{{ $addr->id }}" {{ $addr->is_primary ? 'checked' : '' }} required style="display:none;" onchange="updateAddressStyle(this)">
+                            <input type="radio" name="address_id" value="{{ $addr->id }}" data-city="{{ $addr->city_id }}" {{ $addr->is_primary ? 'checked' : '' }} required style="display:none;" onchange="updateAddressStyle(this)">
                             <div class="address-card {{ $addr->is_primary ? 'active' : '' }}" style="padding: 20px; background: {{ $addr->is_primary ? '#E6F3FF' : '#FAFAFA' }}; border-radius: 12px; border: 2px solid {{ $addr->is_primary ? 'var(--primary-blue)' : '#eee' }}; transition: all 0.2s;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                                     <strong>{{ $addr->label }}</strong>
@@ -169,7 +169,7 @@
                                 @if(!empty($ci['image_path']))
                                     <img src="{{ asset($ci['image_path']) }}" alt="{{ $ci['name'] }}" style="width:100%; height:100%; object-fit:contain;">
                                 @else
-                                    <span style="font-size: 1.5rem; opacity: 0.5;">💊</span>
+                                    <span style="font-size: 1.5rem; opacity: 0.5;">Image</span>
                                 @endif
                             </div>
                             <div style="flex:1;">
@@ -193,7 +193,7 @@
                         <div style="background: #f8fafc; border-radius: 12px; padding: 15px; border: 1px solid #edf2f7;">
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 700; color: #475569;">
                                 <input type="checkbox" name="is_subscription[{{ $ci['id'] }}]" x-model="selectedIds" value="{{ $ci['id'] }}" style="width: 18px; height: 18px; accent-color: var(--primary-blue);">
-                                📦 Jadikan Langganan & Hemat 10%
+                                Jadikan Langganan & Hemat 10%
                             </label>
                             <div x-show="isSubscribed({{ $ci['id'] }})" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1; display: flex; align-items: center; gap: 15px;" x-cloak>
                                 <span style="font-size: 0.8rem; color: #64748b; font-weight: 500;">Frekuensi Pengiriman:</span>
@@ -215,7 +215,7 @@
 
             @if($hasPrescriptionItem)
             <div class="section" style="border: 2px solid #EF5350; background: #FFF5F5;">
-                <h2 class="section-title" style="color: #D32F2F; border-bottom-color: #FEB2B2;">🚨 Verifikasi Resep Dokter (Wajib)</h2>
+                <h2 class="section-title" style="color: #D32F2F; border-bottom-color: #FEB2B2;">Verifikasi Resep Dokter (Wajib)</h2>
                 <div class="form-group">
                     <p style="margin-bottom: 15px; color: #742A2A; font-size: 0.95rem; line-height: 1.5;">
                         Pesanan Anda mengandung <strong>Obat Keras</strong>. Berdasarkan regulasi farmasi, Anda wajib mengunggah foto resep dokter yang asli untuk melanjutkan ke tahap pembayaran.
@@ -315,22 +315,38 @@
 
                 <form id="paymentForm" method="POST">
                     @csrf
+                    <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="0">
                     <div class="pay-modal-grid">
                         <div class="left-col">
                             <div class="pay-section">
-                                <div class="pay-title">🚚 Pilih Durasi Pengiriman</div>
-                                <label><input type="radio" name="shipping_method" value="instant" checked onchange="calcTotal()">
-                                    <div class="pay-method-card"><strong>Instant Delivery</strong><br><span style="font-size:0.8rem; color:#666;">2 Jam Sampai (Rp 15.000)</span></div>
-                                </label>
-                                <label><input type="radio" name="shipping_method" value="regular" onchange="calcTotal()">
-                                    <div class="pay-method-card"><strong>JNE / J&T Reguler</strong><br><span style="font-size:0.8rem; color:#666;">2-3 Hari Kerja (Rp 10.000)</span></div>
-                                </label>
+                                <div class="pay-title">Hitung Ongkos Kirim</div>
+                                
+                                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0;">
+                                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Dikirim dari: <strong style="color: #1e293b;">Jakarta Pusat</strong></div>
+                                    <div style="font-size: 0.8rem; color: #64748b;">Tujuan: <strong id="ro-dest-label" style="color: #1e293b;">Mendeteksi Alamat...</strong></div>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                                    <select id="ro-courier" class="form-control" style="padding: 10px; font-size: 0.9rem;">
+                                        <option value="">-- Pilih Kurir --</option>
+                                        <option value="jne">JNE (Jalur Nugraha Ekakurir)</option>
+                                        <option value="pos">POS Indonesia</option>
+                                        <option value="tiki">TIKI (Citra Van Titipan Kilat)</option>
+                                    </select>
+                                    <button type="button" id="btn-cek-ongkir" onclick="cekOngkirCheckout()" style="padding: 12px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s;">
+                                        Cari Tarif Pengiriman
+                                    </button>
+                                </div>
+
+                                <div id="ro-results" style="margin-top: 15px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                                    <div style="text-align:center; font-size:0.85rem; color:#888; padding: 20px 0;">Silakan cek tarif pengiriman terlebih dahulu.</div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="right-col">
                             <div class="pay-section" style="background:#f8f9fa;">
-                                <div class="pay-title">🏦 Metode Pembayaran</div>
+                                <div class="pay-title">Metode Pembayaran</div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <label><input type="radio" name="payment_method" value="qris" checked onchange="calcTotal()">
                                         <div class="pay-method-card"><strong><i class="fas fa-qrcode"></i> QRIS</strong></div>
@@ -489,6 +505,23 @@
             document.getElementById('order-number').innerText = data.number;
             document.getElementById('payment-subtotal').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(data.subtotal);
             document.getElementById('paymentForm').action = data.url;
+            
+            // Reset RajaOngkir selection & cost
+            document.getElementById('ro-results').innerHTML = '<div style="text-align:center; font-size:0.85rem; color:#888; padding: 20px 0;">Silakan cek tarif pengiriman terlebih dahulu.</div>';
+            
+            // Detect City from selected address
+            const selectedAddress = document.querySelector('input[name="address_id"]:checked');
+            const cityId = selectedAddress ? selectedAddress.dataset.city : null;
+            const addressLabel = selectedAddress ? selectedAddress.closest('label').querySelector('strong').innerText : 'Alamat';
+            
+            if (cityId) {
+                document.getElementById('ro-dest-label').innerText = addressLabel;
+                document.getElementById('ro-dest-label').dataset.cityId = cityId;
+            } else {
+                document.getElementById('ro-dest-label').innerText = 'Alamat belum disetel (ID Kota Kosong)';
+                document.getElementById('ro-dest-label').dataset.cityId = '';
+            }
+
             calcTotal();
 
             warnBox.style.display = 'none';
@@ -499,7 +532,7 @@
             if (data.reqPres) {
                 if (data.hasFile) {
                     successBox.style.display = 'block';
-                    successBox.innerHTML = '✅ <strong>Resep Terverifikasi:</strong> Resep manual telah terlampir.';
+                    successBox.innerHTML = '<strong>Resep Terverifikasi:</strong> Resep manual telah terlampir.';
                     confirmBtn.innerText = 'Konfirmasi & Bayar';
                 } else {
                     warnBox.style.display = 'block';
@@ -577,7 +610,7 @@
                 if (!isEnough) {
                     html += `
                         <div style="background: #fff1f2; color: #be123c; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 20px; font-weight: 600;">
-                            ⚠️ Saldo dompet Anda tidak cukup untuk melakukan transaksi ini.
+                            Saldo dompet Anda tidak cukup untuk melakukan transaksi ini.
                         </div>
                     `;
                     document.getElementById('sim-footer-btn').disabled = true;
@@ -783,11 +816,101 @@
         }
 
         function calcTotal() {
-            const ship = document.querySelector('input[name="shipping_method"]:checked').value;
-            const cost = ship === 'instant' ? 15000 : 10000;
+            const selectedRadio = document.querySelector('input[name="shipping_method"]:checked');
+            const cost = selectedRadio ? parseInt(selectedRadio.dataset.cost) : 0;
+            
             const total = currentSubtotal + cost;
-            document.getElementById('pay-shipping').innerText = 'Rp ' + cost.toLocaleString('id-ID');
-            document.getElementById('pay-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('input-shipping-cost').value = cost;
+            document.getElementById('pay-shipping').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(cost);
+            document.getElementById('pay-total').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
+            
+            // Enable/disable confirm button based on shipping selection
+            const btn = document.getElementById('pay-confirm-btn');
+            if (!selectedRadio && !btn.innerText.includes('Memproses')) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.innerText = 'Pilih Pengiriman Dahulu';
+            } else if (selectedRadio && btn.innerText.includes('Pilih Pengiriman')) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.innerText = 'Konfirmasi & Bayar';
+            }
+        }
+
+        // ==========================================
+        // RAJAONGKIR INTEGRATION LOGIC
+        // ==========================================
+        async function cekOngkirCheckout() {
+            const city = document.getElementById('ro-dest-label').dataset.cityId;
+            const courier = document.getElementById('ro-courier').value;
+            const btn = document.getElementById('btn-cek-ongkir');
+            const resultsDiv = document.getElementById('ro-results');
+            
+            if (!city) {
+                Toast.fire({ icon: 'warning', title: 'Alamat Anda belum terhubung dengan data lokasi RajaOngkir. Silakan perbarui alamat di Profil.' });
+                return;
+            }
+
+            if (!courier) {
+                Toast.fire({ icon: 'warning', title: 'Silakan pilih Kurir.' });
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+            resultsDiv.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin text-primary-500 text-2xl"></i></div>';
+
+            try {
+                const response = await fetch('/cost', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify({
+                        origin: 6, // JAKARTA PUSAT
+                        destination: city,
+                        weight: 1000, // Fixed 1kg for now
+                        courier: courier
+                    })
+                });
+
+                const data = await response.json();
+                btn.disabled = false;
+                btn.innerHTML = 'Cari Tarif Pengiriman';
+
+                if (data.rajaongkir.status.code === 200) {
+                    const costs = data.rajaongkir.results[0].costs;
+                    if (costs.length === 0) {
+                        resultsDiv.innerHTML = '<div style="text-align:center; font-size:0.85rem; color:#ef4444; padding: 20px 0;">Kurir tidak tersedia untuk area ini.</div>';
+                        calcTotal();
+                        return;
+                    }
+
+                    let html = '';
+                    costs.forEach((c, i) => {
+                        const isChecked = i === 0 ? 'checked' : '';
+                        const serviceName = `${data.rajaongkir.results[0].code.toUpperCase()} - ${c.service}`;
+                        html += `
+                            <label style="display: block; margin-bottom: 10px;">
+                                <input type="radio" name="shipping_method" value="${serviceName}" data-cost="${c.cost[0].value}" ${isChecked} onchange="calcTotal()">
+                                <div class="pay-method-card">
+                                    <strong>${serviceName}</strong><br>
+                                    <span style="font-size:0.8rem; color:#666;">Estimasi ${c.cost[0].etd} Hari (Rp ${new Intl.NumberFormat('id-ID').format(c.cost[0].value)})</span>
+                                </div>
+                            </label>
+                        `;
+                    });
+                    resultsDiv.innerHTML = html;
+                    calcTotal(); // Update total specifically since we selected the first option
+                } else {
+                    resultsDiv.innerHTML = '<div style="text-align:center; font-size:0.85rem; color:#ef4444; padding: 20px 0;">Gagal mendapatkan tarif.</div>';
+                }
+            } catch (error) {
+                btn.disabled = false;
+                btn.innerHTML = 'Cari Tarif Pengiriman';
+                resultsDiv.innerHTML = '<div style="text-align:center; font-size:0.85rem; color:#ef4444; padding: 20px 0;">Koneksi terputus.</div>';
+            }
         }
 
         function toggleModal(modalId) {

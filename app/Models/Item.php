@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * MODEL ITEM (OBAT & ALKES) - SIMA-APOTEK
  * 
  * Model ini merepresentasikan obat atau alat kesehatan dalam sistem farmasi.
- * Setiap obat memiliki nama generik dan produsen, serta dapat memiliki banyak batch (ItemSize).
+ * Setiap obat memiliki nama generik dan produsen.
  * 
  * Tabel Database: items
  * 
@@ -30,14 +30,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * - updated_at: Waktu update terakhir
  * 
  * Konsep Penting:
- * - Kolom 'stock' adalah TOTAL dari semua batch (item_sizes)
+ * - Kolom 'stock' adalah total persediaan obat yang tersedia.
  * - Kolom 'size' dalam tabel items digunakan untuk menyimpan ringkasan nomor batch untuk tampilan cepat
  * - Relasi 'sizes' sebenarnya mengarah ke manajemen Batch sekarang
  * 
  * Relasi:
  * - category: Obat belongs to satu kategori
  * - unit: Obat belongs to satu satuan
- * - sizes: Obat memiliki banyak batch (One-to-Many ke ItemSize/Batch)
  * - transactions: Obat memiliki banyak riwayat transaksi
  * - itemRequests: Obat bisa diminta berkali-kali oleh staff
  */
@@ -91,15 +90,7 @@ class Item extends Model
     // ELOQUENT RELATIONSHIPS - HasMany (One-to-Many)
     // ========================================================================
 
-    /**
-     * RELASI: Obat memiliki banyak batch
-     * 
-     * @return HasMany
-     */
-    public function sizes(): HasMany
-    {
-        return $this->hasMany(ItemSize::class);
-    }
+
 
     /**
      * RELASI: Obat memiliki banyak riwayat transaksi

@@ -16,9 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Kolom:
  * - id: Primary key
  * - item_id: Foreign key ke tabel items (barang yang diminta)
- * - item_size_id: Foreign key ke tabel item_sizes (ukuran yang diminta)
  * - user_id: Foreign key ke tabel users (staff yang meminta)
- * - size: Nama ukuran (untuk display, data detail ada di item_size_id)
  * - quantity: Jumlah yang diminta
  * - reason: Alasan permintaan (wajib diisi oleh staff)
  * - status: Status permintaan ('pending', 'approved', 'rejected')
@@ -47,7 +45,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * 
  * Relasi:
  * - item: Permintaan belongs to satu barang
- * - itemSize: Permintaan belongs to satu varian ukuran
  * - user: Permintaan belongs to satu user (staff yang meminta)
  * - processedBy: Permintaan belongs to satu user (admin yang memproses)
  */
@@ -60,9 +57,7 @@ class ItemRequest extends Model
      */
     protected $fillable = [
         'item_id',          // ID barang yang diminta
-        'item_size_id',     // ID varian ukuran yang diminta (PENTING untuk tracking)
         'user_id',          // ID staff yang membuat permintaan
-        'size',             // Nama ukuran (untuk display, contoh: "M", "L", "39")
         'quantity',         // Jumlah yang diminta
         'reason',           // Alasan permintaan (wajib, contoh: "Untuk kebutuhan proyek X")
         'status',           // Status: 'pending', 'approved', 'rejected'
@@ -103,33 +98,7 @@ class ItemRequest extends Model
         return $this->belongsTo(Item::class);
     }
 
-    /**
-     * RELASI: Permintaan belongs to satu varian ukuran
-     * 
-     * Setiap permintaan harus terkait dengan satu varian ukuran
-     * Ini PENTING untuk validasi stok dan tracking per ukuran
-     * 
-     * Contoh: Staff minta 5 pcs Kaos Polos Size M
-     * - item_id: ID Kaos Polos
-     * - item_size_id: ID Size M dari Kaos Polos
-     * - quantity: 5
-     * 
-     * Saat approve, sistem akan:
-     * 1. Cek stok Size M (dari item_size_id)
-     * 2. Jika cukup, kurangi stok Size M
-     * 3. Kurangi total stok Kaos Polos
-     * 
-     * Contoh penggunaan:
-     * $request->itemSize // Varian ukuran yang diminta
-     * $request->itemSize->size // Nama ukuran
-     * $request->itemSize->stock // Stok tersedia untuk ukuran ini
-     * 
-     * @return BelongsTo
-     */
-    public function itemSize(): BelongsTo
-    {
-        return $this->belongsTo(ItemSize::class);
-    }
+
 
     /**
      * RELASI: Permintaan belongs to satu user (staff yang meminta)

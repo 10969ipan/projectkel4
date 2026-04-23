@@ -39,38 +39,18 @@ class ItemRequestController extends Controller
             'item_id' => 'required|exists:items,id',
             'quantity' => 'required|integer|min:1',
             'reason' => 'required|string',
-            'size' => 'nullable|string',
         ]);
 
         $item = Item::findOrFail($request->item_id);
-        $sizeId = null; // Default null (jika barang tidak punya ukuran)
 
-        // LOGIKA BARU: Cari & Simpan ID Ukuran
-        if ($request->filled('size')) {
-            $itemSize = $item->sizes()->where('size', $request->size)->first();
-
-            if (!$itemSize) {
-                return back()->withInput()->with('error', "Ukuran '{$request->size}' tidak ditemukan.");
-            }
-
-            // Simpan ID ukuran ke variabel
-            $sizeId = $itemSize->id;
-
-            if ($request->quantity > $itemSize->stock) {
-                return back()->withInput()->with('error', "Stok ukuran {$request->size} tidak cukup (Sisa: {$itemSize->stock})");
-            }
-        } else {
-            if ($request->quantity > $item->stock) {
-                return back()->withInput()->with('error', 'Jumlah permintaan melebihi stok tersedia.');
-            }
+        if ($request->quantity > $item->stock) {
+            return back()->withInput()->with('error', 'Jumlah permintaan melebihi stok tersedia.');
         }
 
-        // Simpan ke Database (Pastikan kolom item_size_id terisi)
+        // Simpan ke Database
         ItemRequest::create([
             'item_id' => $request->item_id,
             'user_id' => auth()->id(),
-            'item_size_id' => $sizeId, // <--- INI YANG PENTING
-            'size' => $request->size,
             'quantity' => $request->quantity,
             'reason' => $request->reason,
             'status' => 'pending',
@@ -104,59 +84,30 @@ class ItemRequestController extends Controller
         $item = $itemRequest->item;
 
         // VALIDASI 2: Cek ketersediaan stok sebelum approve
-        // Validasi berbeda tergantung apakah barang memiliki varian ukuran atau tidak
-        if ($itemRequest->item_size_id) {
-            // KASUS A: Barang memiliki varian ukuran (contoh: baju, celana, sepatu)
-            // Cek stok pada ukuran spesifik yang diminta
-            $itemSize = \App\Models\ItemSize::find($itemRequest->item_size_id);
-
-            // Validasi: Pastikan ukuran masih ada dan stoknya mencukupi
-            if (!$itemSize || $itemSize->stock < $itemRequest->quantity) {
-                return back()->with('error', 'Stok ukuran ini sudah habis, tidak bisa di-approve.');
-            }
-        } else {
-            // KASUS B: Barang tidak memiliki varian ukuran (contoh: alat tulis, aksesoris)
-            // Cek stok total barang
-            if ($item->stock < $itemRequest->quantity) {
-                return back()->with('error', 'Stok total tidak mencukupi.');
-            }
+        if ($item->stock < $itemRequest->quantity) {
+            return back()->with('error', 'Stok total tidak mencukupi.');
         }
 
         // PROSES APPROVAL: Gunakan database transaction untuk memastikan semua operasi berhasil
-        // Jika salah satu gagal, semua akan di-rollback (dibatalkan)
         DB::transaction(function () use ($itemRequest, $item) {
 
             // LANGKAH 1: Update status permintaan menjadi 'approved'
-            // Simpan juga siapa yang memproses dan kapan diproses
             $itemRequest->update([
                 'status' => 'approved',
-                'processed_by' => auth()->id(),  // ID admin yang menyetujui
-                'processed_at' => now(),          // Waktu persetujuan
+                'processed_by' => auth()->id(),
+                'processed_at' => now(),
             ]);
 
             // LANGKAH 2: Buat transaksi keluar otomatis
-            // Transaksi ini merekam bahwa barang telah keluar dari gudang
             $item->transactions()->create([
-                'user_id' => $itemRequest->user_id,              // Staff yang meminta
-                'item_size_id' => $itemRequest->item_size_id,    // Ukuran yang diminta (jika ada)
-                'type' => 'out',                                  // Tipe: keluar dari gudang
-                'quantity' => $itemRequest->quantity,             // Jumlah yang keluar
-                'date' => now(),                                  // Tanggal transaksi
-                'note' => 'Approved request #' . $itemRequest->id . ($itemRequest->size ? " (Size: {$itemRequest->size})" : ""),
+                'user_id' => $itemRequest->user_id,
+                'type' => 'out',
+                'quantity' => $itemRequest->quantity,
+                'date' => now(),
+                'note' => 'Approved request #' . $itemRequest->id,
             ]);
 
-            // LANGKAH 3: Kurangi stok pada tabel varian ukuran (ItemSize)
-            // Hanya dilakukan jika barang memiliki varian ukuran
-            if ($itemRequest->item_size_id) {
-                $itemSize = \App\Models\ItemSize::find($itemRequest->item_size_id);
-                if ($itemSize) {
-                    // Kurangi stok ukuran spesifik
-                    $itemSize->decrement('stock', $itemRequest->quantity);
-                }
-            }
-
-            // LANGKAH 4: Kurangi stok total barang di tabel items
-            // Ini dilakukan untuk semua jenis barang (dengan atau tanpa varian)
+            // LANGKAH 3: Kurangi stok total barang di tabel items
             $item->decrement('stock', $itemRequest->quantity);
         });
 

@@ -21,7 +21,8 @@ class ProcessPaymentRequest extends FormRequest
     {
         return [
             'payment_method' => 'required|in:qris,paylater,bank,ewallet,cod,wallet',
-            'shipping_method' => 'required|in:instant,regular'
+            'shipping_method' => 'required|string',
+            'shipping_cost' => 'required|numeric|min:0'
         ];
     }
 }

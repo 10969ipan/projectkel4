@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Item;
-use App\Models\ItemSize;
+
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,9 +31,8 @@ class ItemController extends Controller
      */
     public function index(Request $request): View
     {
-        // EAGER LOADING: Muat relasi category, unit, dan sizes sekaligus
-        // Ini mencegah N+1 query problem dan meningkatkan performa
-        $query = Item::with(['category', 'unit', 'sizes']);
+        // EAGER LOADING: Muat relasi category dan unit
+        $query = Item::with(['category', 'unit']);
 
         // FITUR PENCARIAN: Jika ada parameter search
         if ($request->has('search')) {
@@ -88,7 +87,6 @@ class ItemController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // VALIDASI INPUT PHARMACY
         $request->validate([
             'code' => 'required|string|max:50|unique:items',
             'name' => 'required|string|max:255',
@@ -98,51 +96,20 @@ class ItemController extends Controller
             'unit_id' => 'required|exists:units,id',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'batch_numbers' => 'nullable|array',
-            'batch_numbers.*' => 'required|string',
-            'expiry_dates' => 'nullable|array',
-            'expiry_dates.*' => 'required|date',
-            'stocks' => 'nullable|array',
-            'stocks.*' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:0',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $totalStock = 0;
-            $batchSummary = null;
-
-            if ($request->has('batch_numbers') && is_array($request->batch_numbers)) {
-                $totalStock = array_sum($request->stocks ?? []);
-                $batchSummary = implode(', ', $request->batch_numbers);
-            }
-
-            // SIMPAN DATA OBAT UTAMA
-            $item = Item::create([
-                'code' => $request->code,
-                'name' => $request->name,
-                'generic_name' => $request->generic_name,
-                'manufacturer' => $request->manufacturer,
-                'category_id' => $request->category_id,
-                'unit_id' => $request->unit_id,
-                'price' => $request->price,
-                'description' => $request->description,
-                'stock' => $totalStock,
-                'size' => $batchSummary,
-            ]);
-
-            // SIMPAN DATA BATCH
-            if ($request->has('batch_numbers')) {
-                foreach ($request->batch_numbers as $index => $batchNum) {
-                    if (!empty($batchNum)) {
-                        ItemSize::create([
-                            'item_id' => $item->id,
-                            'batch_number' => $batchNum,
-                            'expiry_date' => $request->expiry_dates[$index],
-                            'stock' => $request->stocks[$index] ?? 0,
-                        ]);
-                    }
-                }
-            }
-        });
+        Item::create([
+            'code' => $request->code,
+            'name' => $request->name,
+            'generic_name' => $request->generic_name,
+            'manufacturer' => $request->manufacturer,
+            'category_id' => $request->category_id,
+            'unit_id' => $request->unit_id,
+            'price' => $request->price,
+            'description' => $request->description,
+            'stock' => $request->stock,
+        ]);
 
         // Clear Store Cache for all pages
         for ($i = 1; $i <= 5; $i++) {
@@ -162,8 +129,7 @@ class ItemController extends Controller
      */
     public function show(Item $item): View
     {
-        // Load relasi sizes untuk menampilkan detail setiap ukuran
-        $item->load('sizes');
+
 
         return view('backend.items.show', compact('item'));
     }
@@ -180,8 +146,7 @@ class ItemController extends Controller
         $categories = Category::all();
         $units = Unit::all();
 
-        // Load varian ukuran yang sudah ada
-        $item->load('sizes');
+
 
         return view('backend.items.edit', compact('item', 'categories', 'units'));
     }
@@ -202,7 +167,6 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item): RedirectResponse
     {
-        // VALIDASI UPDATE PHARMACY
         $request->validate([
             'code' => 'required|string|max:50|unique:items,code,' . $item->id,
             'name' => 'required|string|max:255',
@@ -212,50 +176,20 @@ class ItemController extends Controller
             'unit_id' => 'required|exists:units,id',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'batch_numbers' => 'nullable|array',
-            'expiry_dates' => 'nullable|array',
-            'stocks' => 'nullable|array',
+            'stock' => 'required|integer|min:0',
         ]);
 
-        DB::transaction(function () use ($request, $item) {
-            $totalStock = 0;
-            $batchSummary = null;
-
-            if ($request->has('batch_numbers') && is_array($request->batch_numbers)) {
-                $totalStock = array_sum($request->stocks ?? []);
-                $batchSummary = implode(', ', $request->batch_numbers);
-            }
-
-            // UPDATE DATA OBAT UTAMA
-            $item->update([
-                'code' => $request->code,
-                'name' => $request->name,
-                'generic_name' => $request->generic_name,
-                'manufacturer' => $request->manufacturer,
-                'category_id' => $request->category_id,
-                'unit_id' => $request->unit_id,
-                'price' => $request->price,
-                'description' => $request->description,
-                'stock' => $totalStock,
-                'size' => $batchSummary,
-            ]);
-
-            // RESET DAN SIMPAN ULANG BATCH
-            $item->sizes()->delete();
-
-            if ($request->has('batch_numbers')) {
-                foreach ($request->batch_numbers as $index => $batchNum) {
-                    if (!empty($batchNum)) {
-                        ItemSize::create([
-                            'item_id' => $item->id,
-                            'batch_number' => $batchNum,
-                            'expiry_date' => $request->expiry_dates[$index],
-                            'stock' => $request->stocks[$index] ?? 0,
-                        ]);
-                    }
-                }
-            }
-        });
+        $item->update([
+            'code' => $request->code,
+            'name' => $request->name,
+            'generic_name' => $request->generic_name,
+            'manufacturer' => $request->manufacturer,
+            'category_id' => $request->category_id,
+            'unit_id' => $request->unit_id,
+            'price' => $request->price,
+            'description' => $request->description,
+            'stock' => $request->stock,
+        ]);
 
         // Clear Store Cache for all pages and this specific item
         for ($i = 1; $i <= 5; $i++) {

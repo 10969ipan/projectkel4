@@ -72,6 +72,8 @@ class User extends Authenticatable
         'wallet_balance',
         'is_prescription_approved',
         'store_role',
+        'google_id',        // Google OAuth ID
+        'avatar',           // URL foto profil dari Google
     ];
 
     /**

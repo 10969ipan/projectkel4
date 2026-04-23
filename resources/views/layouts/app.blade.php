@@ -156,7 +156,7 @@
                                         <div class="absolute inset-0 rounded-full bg-primary-600 flex items-center justify-center text-white font-black shadow-sm">
                                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                         </div>
-                                        @if(auth()->user()->profile_photo)
+                                        @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
                                             <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
                                                 src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                                 alt="{{ auth()->user()->name }}"
@@ -461,7 +461,7 @@
                                         <div class="absolute inset-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200">
                                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                         </div>
-                                        @if(auth()->user()->profile_photo)
+                                        @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
                                             <img class="absolute inset-0 h-8 w-8 rounded-full object-cover border-2 border-white"
                                                 src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                                 alt="{{ auth()->user()->name }}"

@@ -10,7 +10,7 @@ use App\Models\StoreOrder;
 use App\Models\StoreOrderItem;
 use App\Models\Item;
 use App\Models\Address;
-use App\Models\ItemSize;
+
 use App\Models\Subscription;
 use App\Models\WalletTransaction;
 use App\Http\Requests\UpdateProfileRequest;
@@ -168,7 +168,13 @@ class AccountController extends Controller
             $addressId = $pendingData['address_id'];
         }
 
-        $shippingCost = (int)($request->shipping_method === 'instant' ? 15000 : 10000);
+        $shippingCost = (int)$request->input('shipping_cost', 0);
+        
+        // Fallback for safety if somehow missing
+        if ($shippingCost <= 0) {
+            $shippingCost = 10000;
+        }
+
         $grandTotal = (float)($subTotal + $shippingCost);
 
         // Validasi Saldo Wallet
@@ -287,15 +293,7 @@ class AccountController extends Controller
 
                             $item->decrement('stock', $details['qty']);
                             
-                            // Batch handling
-                            $remaining = $details['qty'];
-                            $batches = ItemSize::where('item_id', $item->id)->where('stock', '>', 0)->orderBy('expiry_date', 'asc')->get();
-                            foreach ($batches as $batch) {
-                                if ($remaining <= 0) break;
-                                $red = min($batch->stock, $remaining);
-                                $batch->decrement('stock', $red);
-                                $remaining -= $red;
-                            }
+
                         }
                     }
                     session()->forget('pending_checkout');
@@ -355,6 +353,8 @@ class AccountController extends Controller
             'user_id' => $user->id,
             'label' => $request->label,
             'full_address' => $request->full_address,
+            'province_id' => $request->province_id,
+            'city_id' => $request->city_id,
             'is_primary' => $isFirst
         ]);
 
@@ -430,5 +430,17 @@ class AccountController extends Controller
         $order->items()->delete();
         $order->delete();
         return redirect()->route('account.orders')->with('success', 'Pesanan dibatalkan.');
+    }
+
+    /**
+     * Show order invoice
+     */
+    public function showInvoice($id)
+    {
+        $order = StoreOrder::where('user_id', Auth::id())
+            ->with(['user', 'address', 'items.item.category'])
+            ->findOrFail($id);
+
+        return view('frontend.account.invoice', compact('order'));
     }
 }

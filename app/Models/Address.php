@@ -13,6 +13,8 @@ class Address extends Model
         'user_id',
         'label',
         'full_address',
+        'province_id',
+        'city_id',
         'latitude',
         'longitude',
         'is_primary',
