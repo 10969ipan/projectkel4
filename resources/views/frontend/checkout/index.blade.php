@@ -65,6 +65,10 @@
         input[type="radio"]:checked + .pay-method-card { border-color: var(--primary-blue); background: #E6F3FF; }
         input[type="radio"] { display: none; }
         @media (max-width: 600px) { .pay-modal-grid { grid-template-columns: 1fr; } }
+        
+        /* Ensure SweetAlert appears above modals */
+        .swal2-container { z-index: 1000000 !important; }
+        
         @keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
     </style>
 
@@ -72,6 +76,13 @@
     <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>
     <link rel="stylesheet" href="{{ asset('assets/vendor/sweetalert2/sweetalert2.min.css') }}">
     <script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
+
+    <!-- Midtrans Snap JS -->
+    @if(config('services.midtrans.is_production'))
+        <script src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    @else
+        <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    @endif
 </head>
 <body>
 
@@ -292,7 +303,7 @@
     <script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
 
     <!-- PAYMENT MODAL -->
-    <div id="paymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; align-items:flex-start; justify-content:center; overflow-y:auto; padding: 40px 20px;">
+    <div id="paymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:flex-start; justify-content:center; overflow-y:auto; padding: 40px 20px;">
         <div style="background:white; border-radius:24px; width:100%; max-width:800px; position:relative; animation: slideUp 0.3s ease-out;">
             <button onclick="toggleModal('paymentModal')" style="position: absolute; right: 20px; top: 20px; border: none; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">✕</button>
             <div style="padding: 30px;">
@@ -348,7 +359,13 @@
                             <div class="pay-section" style="background:#f8f9fa;">
                                 <div class="pay-title">Metode Pembayaran</div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <label><input type="radio" name="payment_method" value="qris" checked onchange="calcTotal()">
+                                    <label><input type="radio" name="payment_method" value="midtrans" checked onchange="calcTotal()">
+                                        <div class="pay-method-card" style="border-color: var(--primary-blue); background: #E6F3FF;">
+                                            <strong><i class="fas fa-credit-card"></i> Bayar Online (Midtrans)</strong>
+                                            <div style="font-size: 0.6rem; color: #64748b; margin-top: 2px;">CC, GoPay, ShopeePay, VA</div>
+                                        </div>
+                                    </label>
+                                    <label><input type="radio" name="payment_method" value="qris" onchange="calcTotal()">
                                         <div class="pay-method-card"><strong><i class="fas fa-qrcode"></i> QRIS</strong></div>
                                     </label>
                                     <label><input type="radio" name="payment_method" value="wallet" onchange="calcTotal()">
@@ -801,11 +818,33 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    window.location.href = data.redirect_url;
+                    if (data.snap_token) {
+                        window.snap.pay(data.snap_token, {
+                            onSuccess: function(result) {
+                                window.location.href = "{{ route('account.orders') }}?just_paid=" + data.order_id;
+                            },
+                            onPending: function(result) {
+                                window.location.href = "{{ route('account.orders') }}";
+                            },
+                            onError: function(result) {
+                                Toast.fire({ icon: 'error', title: 'Pembayaran gagal.' });
+                            },
+                            onClose: function() {
+                                Toast.fire({ icon: 'info', title: 'Anda menutup popup pembayaran sebelum selesai.' });
+                                btn.innerText = originalText;
+                                btn.disabled = false;
+                            }
+                        });
+                    } else {
+                        window.location.href = data.redirect_url;
+                    }
                 } else {
                     btn.innerText = originalText;
                     btn.disabled = false;
-                    Toast.fire({ icon: 'error', title: data.error || 'Terjadi kesalahan.' });
+                    Toast.fire({ 
+                        icon: 'error', 
+                        title: data.error || data.message || 'Terjadi kesalahan.' 
+                    });
                 }
             })
             .catch(error => {

@@ -31,7 +31,10 @@ class StoreController extends Controller
             return \App\Models\HealthArticle::where('is_active', true)->latest()->get();
         });
 
-        return view('frontend.store.index', compact('items', 'wellnessArticles'));
+        // Fetch latest reviews
+        $reviews = \App\Http\Controllers\ReviewController::getLatestReviews(6);
+
+        return view('frontend.store.index', compact('items', 'wellnessArticles', 'reviews'));
     }
 
     /**

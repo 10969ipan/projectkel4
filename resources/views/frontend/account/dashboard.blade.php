@@ -80,9 +80,34 @@
         input[type="radio"]:checked + .pay-method-card { border-color: var(--primary-blue); background: #E6F3FF; }
         input[type="radio"] { display: none; }
         @media (max-width: 600px) { .pay-modal-grid { grid-template-columns: 1fr; } }
+        
+        /* Ensure SweetAlert appears above modals */
+        .swal2-container { z-index: 1000000 !important; }
+
+        /* Skeleton Animation */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite linear;
+            border-radius: 8px;
+        }
+
+        [x-cloak] { display: none !important; }
     </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
+    <!-- Midtrans Snap JS -->
+    @if(config('services.midtrans.is_production'))
+        <script src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    @else
+        <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    @endif
 </head>
-<body>
+<body x-data="{ pageLoading: true }" x-init="window.onload = () => { setTimeout(() => { pageLoading = false }, 500) }">
 
 <div class="container">
     <div class="header">
@@ -136,7 +161,31 @@
             @endif
 
 
-            <div class="content-card" style="min-height: 600px;">
+            <div class="content-card" style="min-height: 600px; position: relative;">
+                
+                <!-- Skeleton Loader -->
+                <div x-show="pageLoading" class="space-y-6">
+                    <div class="h-8 w-48 skeleton mb-8"></div>
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <template x-for="i in 3">
+                            <div style="border: 1px solid #eee; border-radius: 16px; padding: 25px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <div class="space-y-2">
+                                        <div class="h-4 w-32 skeleton"></div>
+                                        <div class="h-6 w-48 skeleton"></div>
+                                    </div>
+                                    <div class="text-right space-y-2">
+                                        <div class="h-4 w-20 skeleton ml-auto"></div>
+                                        <div class="h-6 w-32 skeleton ml-auto"></div>
+                                    </div>
+                                </div>
+                                <div class="h-12 w-full skeleton"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="!pageLoading" x-cloak>
             
             <!-- SECTION: ORDERS -->
             <div id="section-orders" class="content-section">
@@ -217,10 +266,19 @@
                                             id: {{ $order->id }},
                                             number: '{{ $order->order_number }}',
                                             subtotal: {{ $order->sub_total }},
+                                            shipping_method: '{{ $order->shipping_method }}',
+                                            shipping_cost: {{ $order->shipping_cost ?? 0 }},
                                             reqPres: {{ $reqPres ? 'true' : 'false' }},
                                             hasPres: {{ $hasPrescription ? 'true' : 'false' }},
                                             url: '{{ route('account.orders.pay.post', $order->id) }}'
                                         })" style="background: #2F9E44; color: white; padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; border:none; cursor:pointer;">Bayar Sekarang</button>
+                                        
+                                        @if($order->payment_method === 'midtrans')
+                                            <button onclick="checkMidtransStatus({{ $order->id }}, this)" 
+                                                    style="background: #E7F5FF; color: #1971C2; border: 1px solid #1971C2; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                                <i class="fas fa-sync-alt"></i> Cek Status
+                                            </button>
+                                        @endif
                                         <form action="{{ route('account.orders.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Yakin ingin membatalkan dan menghapus pesanan ini?')">
                                             @csrf
                                             @method('DELETE')
@@ -392,9 +450,10 @@
                     <button type="submit" class="btn-update">Update Password</button>
                 </form>
             </div>
-
         </div>
     </div>
+</div>
+</div>
 </div>
 
 <!-- SweetAlert2 -->
@@ -589,7 +648,7 @@
     </div>
 
     <!-- PAYMENT MODAL -->
-    <div id="paymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; align-items:flex-start; justify-content:center; overflow-y:auto; padding: 40px 20px;">
+    <div id="paymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:flex-start; justify-content:center; overflow-y:auto; padding: 40px 20px;">
         <div style="background:white; border-radius:24px; width:100%; max-width:800px; position:relative; animation: slideUp 0.3s ease-out;">
             <button onclick="toggleModal('paymentModal')" style="position: absolute; right: 20px; top: 20px; border: none; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">✕</button>
             <div style="padding: 30px;">
@@ -597,6 +656,7 @@
                 
                 <form id="paymentForm" method="POST">
                     @csrf
+                    <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="15000">
                     <div class="pay-modal-grid">
                         <div class="left-col">
                             <div class="pay-section">
@@ -612,12 +672,17 @@
 
                             <div class="pay-section">
                                 <div class="pay-title">Pilih Durasi Pengiriman</div>
-                                <label><input type="radio" name="shipping_method" value="instant" checked onchange="calcTotal()">
-                                    <div class="pay-method-card"><strong>Instant Delivery</strong><br><span style="font-size:0.8rem; color:#666;">2 Jam Sampai (Rp 15.000)</span></div>
-                                </label>
-                                <label><input type="radio" name="shipping_method" value="regular" onchange="calcTotal()">
-                                    <div class="pay-method-card"><strong>JNE / J&T Reguler</strong><br><span style="font-size:0.8rem; color:#666;">2-3 Hari Kerja (Rp 10.000)</span></div>
-                                </label>
+                                <div id="shipping-options-container">
+                                    <label><input type="radio" name="shipping_method" value="instant" onchange="calcTotal()">
+                                        <div class="pay-method-card"><strong>Instant Delivery</strong><br><span style="font-size:0.8rem; color:#666;">2 Jam Sampai (Rp 15.000)</span></div>
+                                    </label>
+                                    <label><input type="radio" name="shipping_method" value="regular" onchange="calcTotal()">
+                                        <div class="pay-method-card"><strong>JNE / J&T Reguler</strong><br><span style="font-size:0.8rem; color:#666;">2-3 Hari Kerja (Rp 10.000)</span></div>
+                                    </label>
+                                </div>
+                                <div id="order-shipping-option" style="display:none;">
+                                    <!-- Dynamic shipping from DB will go here -->
+                                </div>
                             </div>
                         </div>
 
@@ -625,19 +690,25 @@
                             <div class="pay-section" style="background:#f8f9fa;">
                                 <div class="pay-title">Metode Pembayaran</div>
                                 <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-                                    <label><input type="radio" name="payment_method" value="qris" checked>
-                                        <div class="pay-method-card"><strong>QRIS</strong></div>
+                                    <label><input type="radio" name="payment_method" value="midtrans" checked onchange="calcTotal()">
+                                        <div class="pay-method-card">
+                                            <strong><i class="fas fa-credit-card"></i> Bayar Online (Midtrans)</strong>
+                                            <div style="font-size: 0.6rem; color: #64748b; margin-top: 2px;">CC, GoPay, ShopeePay, VA</div>
+                                        </div>
                                     </label>
-                                    <label><input type="radio" name="payment_method" value="wallet">
-                                        <div class="pay-method-card" style="border-color: #059669; background: #ecfdf5;">
+                                    <label><input type="radio" name="payment_method" value="qris" onchange="calcTotal()">
+                                        <div class="pay-method-card"><strong><i class="fas fa-qrcode"></i> QRIS</strong></div>
+                                    </label>
+                                    <label><input type="radio" name="payment_method" value="wallet" onchange="calcTotal()">
+                                        <div class="pay-method-card">
                                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <strong style="color: #059669;"><i class="fas fa-wallet"></i> Saldo Dompet</strong>
+                                                <strong><i class="fas fa-wallet"></i> Saldo Dompet</strong>
                                                 <span style="font-size: 0.75rem; color: #065f46; font-weight: 800;">Rp {{ number_format($user->wallet_balance, 0, ',', '.') }}</span>
                                             </div>
                                         </div>
                                     </label>
-                                    <label><input type="radio" name="payment_method" value="paylater">
-                                        <div class="pay-method-card"><strong>Paylater</strong></div>
+                                    <label><input type="radio" name="payment_method" value="paylater" onchange="calcTotal()">
+                                        <div class="pay-method-card"><strong><i class="fas fa-clock"></i> Paylater</strong></div>
                                     </label>
                                 </div>
 
@@ -844,11 +915,94 @@
         }
 
         let currentSubtotal = 0;
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('pay-confirm-btn');
+            const originalText = btn.innerText;
+            const form = this;
+            const formData = new FormData(form);
+
+            btn.innerText = 'Memproses...';
+            btn.disabled = true;
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.snap_token) {
+                        window.snap.pay(data.snap_token, {
+                            onSuccess: function(result) {
+                                window.location.href = "{{ route('account.orders') }}?just_paid=" + data.order_id;
+                            },
+                            onPending: function(result) {
+                                window.location.href = "{{ route('account.orders') }}";
+                            },
+                            onError: function(result) {
+                                Toast.fire({ icon: 'error', title: 'Pembayaran gagal.' });
+                                btn.innerText = originalText;
+                                btn.disabled = false;
+                            },
+                            onClose: function() {
+                                Toast.fire({ icon: 'info', title: 'Anda menutup popup pembayaran sebelum selesai.' });
+                                btn.innerText = originalText;
+                                btn.disabled = false;
+                            }
+                        });
+                    } else {
+                        window.location.href = data.redirect_url || "{{ route('account.orders') }}";
+                    }
+                } else {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    Toast.fire({ 
+                        icon: 'error', 
+                        title: data.error || data.message || 'Terjadi kesalahan.' 
+                    });
+                }
+            })
+            .catch(error => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                Toast.fire({ icon: 'error', title: 'Terjadi kesalahan sistem.' });
+            });
+        });
+
         function openPaymentModal(data) {
             currentSubtotal = data.subtotal;
             document.getElementById('pay-order-number').innerText = data.number;
             document.getElementById('pay-subtotal').innerText = 'Rp ' + data.subtotal.toLocaleString('id-ID');
             document.getElementById('paymentForm').action = data.url;
+
+            // Sync shipping method from database
+            const container = document.getElementById('shipping-options-container');
+            const extraContainer = document.getElementById('order-shipping-option');
+            extraContainer.innerHTML = '';
+            extraContainer.style.display = 'none';
+
+            if (data.shipping_method) {
+                let radio = document.querySelector(`input[name="shipping_method"][value="${data.shipping_method}"]`);
+                if (radio) {
+                    radio.checked = true;
+                } else {
+                    // Create dynamic option for courier from checkout
+                    extraContainer.innerHTML = `
+                        <label><input type="radio" name="shipping_method" value="${data.shipping_method}" data-cost="${data.shipping_cost}" checked onchange="calcTotal()">
+                            <div class="pay-method-card" style="border-color:var(--primary-blue); background:#E6F3FF;">
+                                <strong>${data.shipping_method}</strong><br>
+                                <span style="font-size:0.8rem; color:#666;">Metode dari Checkout (Rp ${data.shipping_cost.toLocaleString('id-ID')})</span>
+                            </div>
+                        </label>
+                    `;
+                    extraContainer.style.display = 'block';
+                }
+            }
 
             // Prescription logic
             const warnBox = document.getElementById('pres-warning-box');
@@ -879,11 +1033,33 @@
         }
 
         function calcTotal() {
-            const ship = document.querySelector('input[name="shipping_method"]:checked').value;
-            const cost = ship === 'instant' ? 15000 : 10000;
+            const selectedRadio = document.querySelector('input[name="shipping_method"]:checked');
+            let cost = 0;
+            
+            if (selectedRadio) {
+                if (selectedRadio.dataset.cost) {
+                    cost = parseInt(selectedRadio.dataset.cost);
+                } else {
+                    cost = selectedRadio.value === 'instant' ? 15000 : 10000;
+                }
+            }
+            
             const total = currentSubtotal + cost;
             document.getElementById('pay-shipping').innerText = 'Rp ' + cost.toLocaleString('id-ID');
             document.getElementById('pay-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('input-shipping-cost').value = cost;
+
+            // Enable/disable confirm button based on shipping selection
+            const btn = document.getElementById('pay-confirm-btn');
+            if (!selectedRadio && !btn.innerText.includes('Memproses')) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.innerText = 'Pilih Pengiriman Dahulu';
+            } else if (selectedRadio && btn.innerText.includes('Pilih Pengiriman')) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.innerText = 'Konfirmasi & Bayar';
+            }
         }
 
         function showSection(section, btn) {
@@ -909,6 +1085,99 @@
         window.closeArticleModal = function() {
             document.getElementById('wellnessModal').style.display = 'none';
         };
+
+        function checkMidtransStatus(orderId, btn) {
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengecek...';
+
+            fetch(`/account/orders/${orderId}/check-status`)
+                .then(response => response.json())
+                .then(data => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+
+                    if (data.success) {
+                        if (data.status === 'paid') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Pembayaran Berhasil!',
+                                text: data.message,
+                                confirmButtonColor: '#0076D6'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Toast.fire({
+                                icon: 'info',
+                                title: data.message
+                            });
+                        }
+                    } else {
+                        // Special Handling for Sandbox Fallback
+                        if (data.can_force) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Data Tidak Ditemukan',
+                                html: `<p>${data.message}</p><p style="font-size:0.8rem; color:#666;">ID yang dicek: ${data.debug_ids.join(', ')}</p><p>Karena ini mode <b>Sandbox</b>, apakah Anda ingin mengonfirmasi secara manual bahwa Anda sudah membayar?</p>`,
+                                showCancelButton: true,
+                                confirmButtonText: 'Ya, Konfirmasi Manual',
+                                cancelButtonText: 'Nanti Saja',
+                                confirmButtonColor: '#2F9E44'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    forceConfirmPayment(orderId, btn);
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Status Belum Berubah',
+                                text: data.message,
+                                confirmButtonColor: '#0076D6'
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Terjadi kesalahan saat mengecek status.'
+                    });
+                });
+        }
+
+        function forceConfirmPayment(orderId, btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+            fetch(`/account/orders/${orderId}/force-success`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message,
+                        confirmButtonColor: '#0076D6'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Cek Status';
+                    Toast.fire({ icon: 'error', title: data.message });
+                }
+            });
+        }
     </script>
 
     <!-- WELLNESS MODAL HTML -->

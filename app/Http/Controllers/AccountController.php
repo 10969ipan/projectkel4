@@ -18,6 +18,8 @@ use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\StoreAddressRequest;
 use App\Http\Requests\ProcessPaymentRequest;
 use Illuminate\Support\Facades\DB;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class AccountController extends Controller
 {
@@ -144,35 +146,25 @@ class AccountController extends Controller
     public function processPayment(ProcessPaymentRequest $request, $orderId = null)
     {
         $user = Auth::user();
-
-        $order = null;
-        $prescriptionPath = null;
-        $subTotal = 0;
-        $addressId = null;
-        $cart = session()->get('cart', []);
-
-        if ($orderId) {
-            $order = StoreOrder::where('user_id', $user->id)->findOrFail($orderId);
-            if ($order->payment_status !== 'pending') {
-                return redirect()->route('account.orders')->with('error', 'Pesanan ini sudah diproses.');
-            }
-            $subTotal = $order->sub_total;
-            $prescriptionPath = $order->prescription_path;
-        } else {
-            $pendingData = session()->get('pending_checkout');
-            if (!$pendingData || empty($cart)) {
-                return redirect()->route('store.index')->with('error', 'Sesi checkout berakhir.');
-            }
-            $subTotal = $pendingData['sub_total'];
-            $prescriptionPath = $pendingData['prescription_path'];
-            $addressId = $pendingData['address_id'];
+        
+        if (!$orderId) {
+            if ($request->ajax()) return response()->json(['success' => false, 'error' => 'ID Pesanan tidak ditemukan.'], 422);
+            return redirect()->route('account.orders')->with('error', 'ID Pesanan tidak ditemukan.');
         }
 
+        $order = StoreOrder::where('user_id', $user->id)->findOrFail($orderId);
+        
+        if ($order->payment_status !== 'pending') {
+            if ($request->ajax()) return response()->json(['success' => false, 'error' => 'Pesanan ini sudah diproses.'], 422);
+            return redirect()->route('account.orders')->with('error', 'Pesanan ini sudah diproses.');
+        }
+
+        $subTotal = $order->sub_total;
         $shippingCost = (int)$request->input('shipping_cost', 0);
         
-        // Fallback for safety if somehow missing
+        // Use existing order shipping cost if not provided or invalid
         if ($shippingCost <= 0) {
-            $shippingCost = 10000;
+            $shippingCost = (int)$order->shipping_cost;
         }
 
         $grandTotal = (float)($subTotal + $shippingCost);
@@ -194,18 +186,8 @@ class AccountController extends Controller
             }
         }
 
-        // Validasi Stok
-        foreach ($cart as $key => $details) {
-            $item = Item::find($details['id']);
-            if (!$item || $item->stock < $details['qty']) {
-                $msg = "Stok " . ($item->name ?? 'Item') . " tidak mencukupi.";
-                if ($request->ajax()) return response()->json(['success' => false, 'error' => $msg], 422);
-                return back()->with('error', $msg);
-            }
-        }
-
         try {
-            $order = DB::transaction(function() use ($request, $user, $orderId, $subTotal, $prescriptionPath, $addressId, $grandTotal, $shippingCost, $cart) {
+            $order = DB::transaction(function() use ($request, $user, $order, $grandTotal, $shippingCost) {
                 $status = in_array($request->payment_method, ['cod', 'bank']) ? 'pending' : 'paid';
 
                 if ($request->payment_method === 'wallet') {
@@ -230,87 +212,62 @@ class AccountController extends Controller
                     }
                     $user->decrement('paylater_limit', $grandTotal);
                 }
-                // Other methods (QRIS, Bank, etc.) are "passed" as per user request for demo gateway
 
-                if ($orderId) {
-                    $order = StoreOrder::where('user_id', $user->id)->findOrFail($orderId);
-                    $order->update([
-                        'shipping_method' => $request->shipping_method,
-                        'shipping_cost'   => $shippingCost,
-                        'grand_total'     => $grandTotal,
-                        'payment_method'  => $request->payment_method,
-                        'payment_status'  => $status,
-                        'order_status'    => ($status === 'paid' ? 'paid' : 'ordered'),
-                    ]);
-                    return $order;
-                } else {
-                    $pendingData = session()->get('pending_checkout');
-                    $order = StoreOrder::create([
-                        'user_id'        => $user->id,
-                        'order_number'   => $pendingData['order_number'] ?? ('ORD-' . strtoupper(uniqid())),
-                        'address_id'     => $addressId,
-                        'shipping_method'=> $request->shipping_method,
-                        'payment_method' => $request->payment_method,
-                        'payment_status' => $status,
-                        'order_status'   => ($status === 'paid' ? 'paid' : 'ordered'),
-                        'sub_total'      => $subTotal,
-                        'shipping_cost'  => $shippingCost,
-                        'grand_total'    => $grandTotal,
-                        'prescription_path' => $prescriptionPath,
-                    ]);
-
-                    $overrides = $pendingData['items_override'] ?? [];
-
-                    foreach ($cart as $key => $details) {
-                        $item = Item::find($details['id']);
-                        if ($item) {
-                            // Determine subscription status from override or fallback
-                            $override = $overrides[$item->id] ?? null;
-                            $type = $override ? $override['type'] : $details['type'];
-                            $interval = $override ? $override['interval'] : ($details['interval'] ?? 30);
-                            $unitPrice = $override ? $override['price'] : ($type === 'subscription' ? $item->price * 0.9 : $item->price);
-
-                            if ($type === 'subscription') {
-                                // Create Subscription Record
-                                Subscription::create([
-                                    'user_id' => $user->id,
-                                    'item_id' => $item->id,
-                                    'quantity' => $details['qty'],
-                                    'interval_days' => (int)$interval,
-                                    'discount_percentage' => 10.00,
-                                    'next_delivery_date' => now()->addDays((int)$interval),
-                                    'status' => 'active'
-                                ]);
-                            }
-
-                            StoreOrderItem::create([
-                                'store_order_id' => $order->id,
-                                'item_id'        => $item->id,
-                                'quantity'       => $details['qty'],
-                                'price'          => $unitPrice,
-                                'sub_total'      => $unitPrice * $details['qty'],
-                            ]);
-
-                            $item->decrement('stock', $details['qty']);
-                            
-
-                        }
-                    }
-                    session()->forget('pending_checkout');
-                    session()->forget('cart');
-                    \App\Models\CartItem::where('user_id', $user->id)->delete();
-                    
-                    // Clear Store Cache for all pages and this specific item
-                    for ($i = 1; $i <= 5; $i++) {
-                        Cache::forget('store_catalog_page_' . $i);
-                    }
-                    foreach ($cart as $details) {
-                        Cache::forget('store_item_' . $details['id']);
-                    }
-                    
-                    return $order;
+                // MIDTRANS HANDLING
+                if ($request->payment_method === 'midtrans') {
+                    $status = 'pending'; // Midtrans starts as pending
                 }
+
+                $order->update([
+                    'shipping_method' => $request->shipping_method,
+                    'shipping_cost'   => $shippingCost,
+                    'grand_total'     => $grandTotal,
+                    'payment_method'  => $request->payment_method,
+                    'payment_status'  => $status,
+                    'order_status'    => ($status === 'paid' ? 'paid' : 'ordered'),
+                ]);
+
+                return $order;
             });
+
+                if ($request->payment_method === 'midtrans') {
+                    // Konfigurasi Midtrans
+                    Config::$serverKey = config('services.midtrans.server_key');
+                    Config::$isProduction = config('services.midtrans.is_production');
+                    Config::$isSanitized = config('services.midtrans.is_sanitized');
+                    Config::$is3ds = config('services.midtrans.is_3ds');
+
+                    $timestamp = time();
+                    $midtransOrderId = $order->order_number . '-' . $timestamp;
+                    
+                    // Save timestamp to unique_code for status checking later
+                    $order->update(['unique_code' => $timestamp]);
+
+                    $params = [
+                        'transaction_details' => [
+                            'order_id' => $midtransOrderId,
+                            'gross_amount' => (int) $order->grand_total,
+                        ],
+                        'customer_details' => [
+                            'first_name' => $user->name,
+                            'email' => $user->email,
+                        ],
+                        'enabled_payments' => [
+                            'credit_card', 'gopay', 'shopeepay', 'permata_va', 'bca_va', 'bni_va', 'bri_va', 'other_va'
+                        ],
+                    ];
+
+                    $snapToken = Snap::getSnapToken($params);
+
+                    if ($request->ajax()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Snap Token generated',
+                            'snap_token' => $snapToken,
+                            'order_id' => $order->id
+                        ]);
+                    }
+                }
 
             if ($request->ajax()) {
                 session()->flash('success', 'Pembayaran berhasil dikonfirmasi! 🎉');
@@ -326,13 +283,17 @@ class AccountController extends Controller
             \Illuminate\Support\Facades\Log::error('Payment Error: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'payment_method' => $request->payment_method,
-                'trace' => $e->getTraceAsString()
+                'order_id' => $order->id ?? 'N/A',
+                'order_number' => $order->order_number ?? 'N/A',
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => substr($e->getTraceAsString(), 0, 1000)
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'error' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                    'error' => 'Gagal memproses pembayaran: ' . $e->getMessage()
                 ], 500);
             }
             return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
@@ -442,5 +403,101 @@ class AccountController extends Controller
             ->findOrFail($id);
 
         return view('frontend.account.invoice', compact('order'));
+    }
+
+    /**
+     * Check payment status from Midtrans manually
+     */
+    public function checkPaymentStatus($id)
+    {
+        $user = Auth::user();
+        $order = StoreOrder::where('user_id', $user->id)->findOrFail($id);
+
+        if ($order->payment_method !== 'midtrans') {
+            return response()->json(['success' => false, 'message' => 'Hanya untuk pembayaran Midtrans.'], 400);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json(['success' => true, 'message' => 'Pembayaran sudah lunas.', 'status' => 'paid']);
+        }
+
+        // Set configuration
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$isProduction = config('services.midtrans.is_production');
+
+        try {
+            // Reconstruct the Order ID sent to Midtrans
+            $attempts = [];
+            
+            // Attempt 1: With saved unique_code (timestamp)
+            if ($order->unique_code) {
+                $attempts[] = $order->order_number . '-' . $order->unique_code;
+            }
+            
+            // Attempt 2: Without unique_code (just the order number)
+            $attempts[] = $order->order_number;
+
+            $lastError = '';
+            foreach ($attempts as $midtransOrderId) {
+                try {
+                    $status = \Midtrans\Transaction::status($midtransOrderId);
+                    
+                    $transaction = $status->transaction_status;
+                    $type = $status->payment_type;
+                    $fraud = $status->fraud_status;
+
+                    if ($transaction == 'settlement' || $transaction == 'capture') {
+                        if ($transaction == 'capture' && $type == 'credit_card' && $fraud == 'challenge') {
+                            // Still pending
+                        } else {
+                            $order->update(['payment_status' => 'paid', 'order_status' => 'paid']);
+                            return response()->json(['success' => true, 'message' => 'Pembayaran berhasil dikonfirmasi!', 'status' => 'paid']);
+                        }
+                    } else if (in_array($transaction, ['deny', 'expire', 'cancel'])) {
+                        $order->update(['payment_status' => 'cancelled', 'order_status' => 'cancelled']);
+                        return response()->json(['success' => true, 'message' => 'Pembayaran dibatalkan/kadaluarsa.', 'status' => 'cancelled']);
+                    }
+
+                    return response()->json(['success' => true, 'message' => 'Status di Midtrans: ' . $transaction, 'status' => 'pending']);
+                    
+                } catch (\Exception $e) {
+                    $lastError = $e->getMessage();
+                    continue; // Try next ID
+                }
+            }
+
+            // If we reached here, none of the IDs worked
+            // Special fallback for Sandbox testing
+            if (!config('services.midtrans.is_production')) {
+                return response()->json([
+                    'success' => false, 
+                    'can_force' => true, // Flag to show "Force Success" for demo
+                    'message' => 'Data transaksi tidak ditemukan di Midtrans API.',
+                    'debug_ids' => $attempts,
+                    'error' => $lastError
+                ], 404);
+            }
+
+            return response()->json(['success' => false, 'message' => 'Gagal mengecek status: ' . $lastError], 500);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Force success for Sandbox mode only (Demo Helper)
+     */
+    public function forcePaymentSuccess($id)
+    {
+        if (config('services.midtrans.is_production')) {
+            return response()->json(['success' => false, 'message' => 'Hanya diizinkan pada mode Sandbox.'], 403);
+        }
+
+        $user = Auth::user();
+        $order = StoreOrder::where('user_id', $user->id)->findOrFail($id);
+        $order->update(['payment_status' => 'paid', 'order_status' => 'paid']);
+
+        return response()->json(['success' => true, 'message' => 'Berhasil simulasi pembayaran lunas!']);
     }
 }

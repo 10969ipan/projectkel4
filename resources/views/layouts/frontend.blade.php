@@ -58,6 +58,11 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Global fix for SweetAlert z-index */
+        .swal2-container {
+            z-index: 1000000 !important;
+        }
+
         /* --- Chatbot Greeting Bubble Styling --- */
         #chat-greeting-bubble {
             position: fixed;
@@ -996,6 +1001,10 @@
             showNotifications: false,
             showWellnessModal: false,
             activeWellnessArticle: {},
+            showRatingModal: false,
+            ratingOrderId: null,
+            ratingValue: 5,
+            ratingComment: '',
 
             init() {
                 console.log('Alpine Storefront State Initialized.');
@@ -1128,6 +1137,47 @@
                         imgContainer.innerHTML = `<img src="${data.image_url}" style="width: 100%; height: 100%; object-fit: contain;">`;
                     }
                 });
+            },
+
+            openRatingModal(orderId) {
+                console.log('Alpine: Opening Rating Modal for Order', orderId);
+                this.ratingOrderId = orderId;
+                this.ratingValue = 5;
+                this.ratingComment = '';
+                this.showRatingModal = true;
+                this.showNotifications = false;
+            },
+
+            async submitRating() {
+                if (!this.ratingOrderId) return;
+                
+                try {
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+                    const res = await fetch('{{ route('reviews.store') }}', {
+                        method: 'POST',
+                        headers: { 
+                            'X-CSRF-TOKEN': csrf,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            store_order_id: this.ratingOrderId,
+                            rating: this.ratingValue,
+                            comment: this.ratingComment
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        window.showToast('success', data.message);
+                        this.showRatingModal = false;
+                    } else {
+                        window.showToast('error', data.message);
+                    }
+                } catch (e) {
+                    console.error('Rating error:', e);
+                    window.showToast('error', 'Gagal mengirim ulasan.');
+                }
             }
         };
     </script>
@@ -1195,8 +1245,9 @@
                                 </template>
 
                                 <template x-for="notif in notifications" :key="notif.id">
-                                    <div style="padding: 12px; border-radius: 12px; margin-bottom: 8px; transition: background 0.2s; border-bottom: 1px solid #f8fafc;" 
-                                         class="hover:bg-gray-50">
+                                    <div style="padding: 12px; border-radius: 12px; margin-bottom: 8px; transition: background 0.2s; border-bottom: 1px solid #f8fafc; cursor: pointer;" 
+                                         class="hover:bg-gray-50"
+                                         @click="if(notif.data.needs_rating) { openRatingModal(notif.data.order_id) }">
                                         <div style="display: flex; gap: 12px;">
                                             <div style="width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
                                                  :class="notif.data.status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'">
@@ -1525,6 +1576,46 @@
             </div>
         </div>
 
+        <!-- Rating Modal -->
+        <div class="qv-modal-overlay" x-show="showRatingModal" x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-250"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click.self="showRatingModal = false">
+            <div class="auth-modal-content" style="max-width: 450px; text-align: center; padding: 40px 30px;">
+                <button class="auth-modal-close" @click="showRatingModal = false">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <div style="width: 80px; height: 80px; background: #FFF9DB; color: #F59E0B; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+                    <i class="fas fa-star"></i>
+                </div>
+
+                <h2 style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 10px;">Berikan Penilaian</h2>
+                <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 25px;">Bagaimana pengalaman Anda belanja di Pharmacare?</p>
+
+                <!-- Stars -->
+                <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 30px;">
+                    <template x-for="i in 5">
+                        <button type="button" @click="ratingValue = i" 
+                                style="background: none; border: none; cursor: pointer; font-size: 2.2rem; transition: transform 0.2s;"
+                                :style="i <= ratingValue ? 'color: #F59E0B;' : 'color: #E2E8F0;'">
+                            <i class="fas fa-star" :class="i <= ratingValue ? 'fa-star' : 'fa-star'"></i>
+                        </button>
+                    </template>
+                </div>
+
+                <div class="form-group" style="text-align: left;">
+                    <label class="form-label">Tulis Ulasan (Opsional)</label>
+                    <textarea x-model="ratingComment" class="form-input" style="height: 100px; resize: none; padding-top: 12px;" placeholder="Ceritakan pengalaman Anda..."></textarea>
+                </div>
+
+                <button @click="submitRating()" class="btn-auth-submit" style="margin-top: 10px;">Kirim Ulasan</button>
+            </div>
+        </div>
 
     <!-- Floating AI Chatbot Widget -->
     <div id="chatbot-widget">

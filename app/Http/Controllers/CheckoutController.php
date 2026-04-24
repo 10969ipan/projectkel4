@@ -7,6 +7,8 @@ use App\Models\StoreOrder;
 use App\Models\StoreOrderItem;
 use App\Models\Item;
 use App\Models\Address;
+use App\Models\Subscription;
+use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
@@ -141,28 +143,84 @@ class CheckoutController extends Controller
             $prescriptionPath = 'prescriptions/' . $filename;
         }
 
-        $tempOrderNumber = 'ORD-' . strtoupper(uniqid());
+        $orderNumber = 'ORD-' . strtoupper(uniqid());
 
-        session()->put('pending_checkout', [
-            'order_number' => $tempOrderNumber,
-            'address_id' => $request->address_id,
-            'prescription_path' => $prescriptionPath,
-            'sub_total' => $subTotal,
-            'items_override' => $checkoutDetails // Carry these to the final payment
-        ]);
+        // CREATE REAL ORDER IN DATABASE (DRAFT/PENDING)
+        $order = \Illuminate\Support\Facades\DB::transaction(function() use ($user, $orderNumber, $request, $subTotal, $prescriptionPath, $cart, $itemsMap, $checkoutDetails) {
+            $newOrder = StoreOrder::create([
+                'user_id'        => $user->id,
+                'order_number'   => $orderNumber,
+                'address_id'     => $request->address_id,
+                'shipping_method'=> 'instant', // Default, will be updated in modal
+                'shipping_cost'  => 15000,     // Default, will be updated in modal
+                'payment_method' => 'midtrans', // Default, will be updated in modal
+                'payment_status' => 'pending',
+                'order_status'   => 'ordered',
+                'sub_total'      => $subTotal,
+                'grand_total'    => $subTotal + 15000,
+                'prescription_path' => $prescriptionPath,
+            ]);
+
+            foreach ($cart as $key => $details) {
+                $item = $itemsMap->get($details['id']);
+                if ($item) {
+                    $override = $checkoutDetails[$item->id] ?? null;
+                    $type = $override ? $override['type'] : $details['type'];
+                    $interval = $override ? $override['interval'] : ($details['interval'] ?? 30);
+                    $unitPrice = $override ? $override['price'] : ($type === 'subscription' ? $item->price * 0.9 : $item->price);
+
+                    if ($type === 'subscription') {
+                        // Create Subscription Record
+                        \App\Models\Subscription::create([
+                            'user_id' => $user->id,
+                            'item_id' => $item->id,
+                            'quantity' => $details['qty'],
+                            'interval_days' => (int)$interval,
+                            'discount_percentage' => 10.00,
+                            'next_delivery_date' => now()->addDays((int)$interval),
+                            'status' => 'active'
+                        ]);
+                    }
+
+                    StoreOrderItem::create([
+                        'store_order_id' => $newOrder->id,
+                        'item_id'        => $item->id,
+                        'quantity'       => $details['qty'],
+                        'price'          => $unitPrice,
+                        'sub_total'      => $unitPrice * $details['qty'],
+                    ]);
+
+                    // Decrement stock immediately to reserve items
+                    $item->decrement('stock', $details['qty']);
+                }
+            }
+            return $newOrder;
+        });
+
+        // Clear cart session and DB after order is successfully created in DB
+        session()->forget('cart');
+        \App\Models\CartItem::where('user_id', $user->id)->delete();
+        
+        // Clear Store Cache
+        for ($i = 1; $i <= 5; $i++) {
+            \Illuminate\Support\Facades\Cache::forget('store_catalog_page_' . $i);
+        }
+        foreach ($cart as $details) {
+            \Illuminate\Support\Facades\Cache::forget('store_item_' . $details['id']);
+        }
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'order' => [
-                    'id' => null,
-                    'number' => $tempOrderNumber,
-                    'subtotal' => $subTotal,
-                    'url' => route('account.orders.pay.new')
+                    'id' => $order->id,
+                    'number' => $order->order_number,
+                    'subtotal' => $order->sub_total,
+                    'url' => route('account.orders.pay.post', $order->id)
                 ]
             ]);
         }
 
-        return redirect()->route('account.dashboard')->with('info', 'Silakan selesaikan pembayaran.');
+        return redirect()->route('account.dashboard')->with('info', 'Silakan selesaikan pembayaran untuk pesanan Anda.');
     }
 }

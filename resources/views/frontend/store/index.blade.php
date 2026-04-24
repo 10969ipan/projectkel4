@@ -233,45 +233,35 @@
     </div>
     @endif
 
-    <!-- Customer Reviews Section: High Trust & Premium Social Proof -->
+    @if($reviews->count() > 0)
     <div style="margin-top: 80px; padding: 60px 0; border-top: 1px solid #f1f5f9;">
         <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.03em; margin-bottom: 50px;"><span style="color: var(--primary-blue);">Kata Mereka</span> tentang Pharmacare</h2>
         
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;">
-            <!-- Review 1 -->
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-                    <img src="{{ asset('assets/images/reviews/user1.png') }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px;">
+            @foreach($reviews as $review)
+            <div style="display: flex; flex-direction: column; gap: 20px; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); transition: transform 0.3s ease; border: 1px solid #f8fafc;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 54px; height: 54px; border-radius: 50%; overflow: hidden; background: #e0f2fe; display: flex; align-items: center; justify-content:center; font-weight: 800; color: var(--primary-blue); font-size: 1.2rem;">
+                        {{ strtoupper(substr($review->user->name, 0, 1)) }}
+                    </div>
+                    <div>
+                        <div style="font-weight: 800; color: #1e293b; font-size: 0.95rem;">{{ $review->user->name }}</div>
+                        <div style="display: flex; gap: 2px; margin-top: 4px;">
+                            @for($i = 1; $i <= 5; $i++)
+                                <i class="fas fa-star" style="color: {{ $i <= $review->rating ? '#f59e0b' : '#e2e8f0' }}; font-size: 0.75rem;"></i>
+                            @endfor
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Sangat membantu.. malam-malam butuh obat, tidak perlu keluar rumah. Layanan cepat dan terpercaya."</p>
-                    <div style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Sainem Wiyono</div>
+                    <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.1rem; color: #475569; line-height: 1.6;">"{{ $review->comment }}"</p>
+                    <div style="margin-top: 15px; font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Pesanan #{{ substr($review->order->order_number, -8) }}</div>
                 </div>
             </div>
-
-            <!-- Review 2 -->
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-                    <img src="{{ asset('assets/images/reviews/user2.png') }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
-                </div>
-                <div>
-                    <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Sangat Helpful!!! Terima kasih yaa, sangat menghemat waktu dan respon dokternya juga baik. Rekep obatnya juga manjur sekali!"</p>
-                    <div style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Lintang Anindhitya Indraswari</div>
-                </div>
-            </div>
-
-            <!-- Review 2 -->
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-                    <img src="{{ asset('assets/images/reviews/user3.png') }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
-                </div>
-                <div>
-                    <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 15px;">"Menggunakan Pharmacare untuk layanan kesehatan keluarga sangat memuaskan. Proses cepat, refund mudah & transparan."</p>
-                    <div style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Ahkbar Felayati</div>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
+    @endif
 </div>
 @endsection
 

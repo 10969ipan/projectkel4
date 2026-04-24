@@ -134,11 +134,30 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             outline: none;
         }
+
+        /* Global fix for SweetAlert z-index */
+        .swal2-container {
+            z-index: 1000000 !important;
+        }
+
+        /* Skeleton Animation */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite linear;
+        }
+
+        [x-cloak] { display: none !important; }
     </style>
     @stack('styles')
 </head>
 
-<body class="h-full" x-data="{ mobileMenuOpen: false, profileMenuOpen: false }">
+<body class="h-full" x-data="{ mobileMenuOpen: false, profileMenuOpen: false, pageLoading: true }" x-init="window.onload = () => { setTimeout(() => { pageLoading = false }, 400) }">
     <div class="min-h-screen flex flex-col md:flex-row">
         <div class="hidden md:flex md:flex-shrink-0">
             <div class="flex flex-col w-64 bg-white border-r border-gray-200">
@@ -498,12 +517,50 @@
             </div>
 
             <div class="flex-1 overflow-y-auto">
-                <main class="p-4 sm:px-6 lg:px-8">
-                    <div class="mb-6">
-                        @yield('header')
+                <main class="p-4 sm:px-6 lg:px-8 relative">
+                    <!-- Skeleton Loader -->
+                    <div x-show="pageLoading" class="space-y-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <div class="h-8 w-48 skeleton rounded-lg"></div>
+                            <div class="h-10 w-32 skeleton rounded-lg"></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <template x-for="i in 4">
+                                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                                    <div class="h-4 w-20 skeleton rounded"></div>
+                                    <div class="h-8 w-32 skeleton rounded"></div>
+                                    <div class="h-3 w-40 skeleton rounded"></div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div class="p-6 border-b border-gray-50 flex justify-between">
+                                <div class="h-6 w-32 skeleton rounded"></div>
+                                <div class="h-6 w-24 skeleton rounded"></div>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <template x-for="i in 5">
+                                    <div class="flex gap-4">
+                                        <div class="h-12 w-12 skeleton rounded-xl"></div>
+                                        <div class="flex-1 space-y-2 py-1">
+                                            <div class="h-4 w-3/4 skeleton rounded"></div>
+                                            <div class="h-3 w-1/2 skeleton rounded"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     </div>
 
-                    @yield('content')
+                    <!-- Main Content -->
+                    <div x-show="!pageLoading" x-cloak>
+                        <div class="mb-6">
+                            @yield('header')
+                        </div>
+                        @yield('content')
+                    </div>
                 </main>
             </div>
         </div>

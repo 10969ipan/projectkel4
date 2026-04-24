@@ -20,7 +20,7 @@ class ProcessPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => 'required|in:qris,paylater,bank,ewallet,cod,wallet',
+            'payment_method' => 'required|in:qris,paylater,bank,ewallet,cod,wallet,midtrans',
             'shipping_method' => 'required|string',
             'shipping_cost' => 'required|numeric|min:0'
         ];

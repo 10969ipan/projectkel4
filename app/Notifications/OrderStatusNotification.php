@@ -47,8 +47,8 @@ class OrderStatusNotification extends Notification
             $message = "Pesanan #{$this->order->order_number} sedang dikirim!";
             $icon = 'fa-truck';
         } elseif ($this->status === 'completed') {
-            $message = "Pesanan #{$this->order->order_number} telah sampai. Terima kasih!";
-            $icon = 'fa-check-circle';
+            $message = "Pesanan #{$this->order->order_number} telah sampai. Yuk berikan rating!";
+            $icon = 'fa-star';
         }
 
         return [
@@ -56,7 +56,8 @@ class OrderStatusNotification extends Notification
             'order_number' => $this->order->order_number,
             'status' => $this->status,
             'message' => $message,
-            'icon' => $icon
+            'icon' => $icon,
+            'needs_rating' => $this->status === 'completed'
         ];
     }
 }

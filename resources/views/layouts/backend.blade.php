@@ -143,6 +143,11 @@
             outline: none;
         }
 
+        /* Global fix for SweetAlert z-index */
+        .swal2-container {
+            z-index: 1000000 !important;
+        }
+
         /* Page Transitions - Option 1: Premium Fade & Slide (Smoothed) */
         @keyframes fadeInUp {
             from {

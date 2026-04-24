@@ -19,6 +19,9 @@ use App\Http\Controllers\NotificationController;
 Route::get('/auth/google', [StoreAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [StoreAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
+// Midtrans Webhook Callback
+Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::class, 'callback'])->name('midtrans.callback');
+
 Route::middleware(['customer'])->group(function () {
     Route::get('/store', [StoreController::class, 'index'])->name('store.index');
     Route::get('/store/item/{id}', [StoreController::class, 'show'])->name('store.show');
@@ -86,6 +89,8 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::get('/account/orders/{id}/pay', [AccountController::class, 'showPayment'])->name('account.orders.pay');
     Route::post('/account/orders/pay-new', [AccountController::class, 'processPayment'])->name('account.orders.pay.new');
     Route::post('/account/orders/{id}/pay', [AccountController::class, 'processPayment'])->name('account.orders.pay.post');
+    Route::get('/account/orders/{id}/check-status', [AccountController::class, 'checkPaymentStatus'])->name('account.orders.check_status');
+    Route::post('/account/orders/{id}/force-success', [AccountController::class, 'forcePaymentSuccess'])->name('account.orders.force_success');
     Route::delete('/account/orders/{id}', [AccountController::class, 'cancelOrder'])->name('account.orders.cancel');
     
     // Address Management
@@ -94,4 +99,5 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::delete('/account/address/{id}', [AccountController::class, 'deleteAddress'])->name('account.address.delete');
     Route::post('/account/address/{id}/primary', [AccountController::class, 'setPrimaryAddress'])->name('account.address.primary');
     Route::get('/account/orders/{id}/invoice', [AccountController::class, 'showInvoice'])->name('account.orders.invoice');
+    Route::post('/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
 });

@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'consultation/ai-reply',
             'chatbot/*',
             'auth/google/callback',
+            'midtrans/callback',
         ]);
 
         // Redireksi dinamis untuk tamu (Guest)
