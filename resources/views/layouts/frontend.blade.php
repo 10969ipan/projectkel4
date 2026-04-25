@@ -7,17 +7,26 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - Pharmacare</title>
 
-    <!-- Optimization: Preload Critical Assets -->
-    <link rel="preload" href="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}" as="script">
-    <link rel="preload" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}" as="style">
-    <link rel="preload" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}" as="style">
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Offline Assets -->
-    <script src="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo.png') }}">
+    <!-- Non-blocking Font Awesome -->
+    <link rel="preload" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}"></noscript>
+
+    <!-- Local Fonts (non-blocking) -->
+    <link rel="preload" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}"></noscript>
+
+    <!-- Google Fonts (async) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+    <!-- Tailwind CDN (deferred, non-blocking) -->
+    <script defer src="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}"></script>
+
+    <!-- Favicon (optimized) -->
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo-opt.png') }}">
 
     <style>
         :root {
@@ -957,6 +966,194 @@
             top: 70px !important;
             right: 20px !important;
         }
+
+        /* ============================================
+           MOBILE HAMBURGER MENU
+        ============================================ */
+        .hamburger-btn {
+            display: none;
+            background: #E6F3FF;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .mobile-drawer {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+        }
+
+        .mobile-drawer-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        .mobile-drawer-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 85%;
+            max-width: 340px;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 20px;
+            gap: 16px;
+            overflow-y: auto;
+            box-shadow: 10px 0 40px rgba(0,0,0,0.15);
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .mobile-drawer.open {
+            display: block;
+        }
+
+        .mobile-drawer.open .mobile-drawer-panel {
+            transform: translateX(0);
+        }
+
+        .mobile-drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .mobile-drawer-close {
+            background: #f1f5f9;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background 0.2s;
+            background: #f8fafc;
+        }
+
+        .mobile-nav-link:hover { background: #e0f2fe; color: var(--primary-blue); }
+        .mobile-nav-link i { width: 20px; text-align: center; color: var(--primary-blue); }
+
+        /* ============================================
+           RESPONSIVE — TABLET & MOBILE
+        ============================================ */
+
+        /* Tablet (≤1024px) */
+        @media (max-width: 1024px) {
+            .top-bar { padding: 12px 20px; }
+            .search-container { max-width: 300px !important; }
+
+            /* Sembunyikan foto dokter di tablet agar tidak menimpa teks */
+            .store-hero-doctors { display: none !important; }
+            .store-hero-card { padding: 50px 40px !important; }
+            .store-hero-card h1 { font-size: 2.6rem !important; }
+        }
+
+        /* Mobile (≤768px) */
+        @media (max-width: 768px) {
+            /* Navbar */
+            .top-bar { padding: 12px 16px; gap: 10px; }
+            .search-container { display: none !important; }
+            .top-bar-right > *:not(.cart-dropdown-container) { display: none !important; }
+            .hamburger-btn { display: flex; }
+
+            /* Container */
+            .container { min-height: unset; }
+
+            /* Cart dropdown narrower on mobile */
+            .cart-dropdown-menu { width: 300px; right: -10px; }
+
+            /* Auth Modal */
+            .auth-modal-content { padding: 28px 20px; border-radius: 20px; }
+
+            /* Footer */
+            .footer-grid { grid-template-columns: 1fr !important; padding: 0 20px !important; gap: 30px !important; }
+            .site-footer { padding: 50px 0 30px; }
+            .footer-bottom { margin-top: 30px; padding: 20px 20px 0; }
+
+            /* Chat FAB */
+            .chat-fab-card { bottom: 16px; right: 16px; padding: 6px; gap: 8px; }
+            .chat-fab-text { display: none; }
+            .chat-fab-logo { width: 42px; height: 42px; }
+            #chat-greeting-bubble { right: 16px; bottom: 90px; max-width: 210px; font-size: 0.85rem; }
+
+            /* Chatbot window full-screen on mobile */
+            .chat-window { width: 100vw; height: 85vh; bottom: 75px; right: -16px; border-radius: 20px 20px 0 0; }
+
+            /* Quick View Modal */
+            .qv-modal-content { grid-template-columns: 1fr !important; max-height: 90vh; overflow-y: auto; }
+            .qv-left { height: 220px !important; padding: 20px !important; }
+            .qv-right { padding: 20px !important; }
+            .qv-title { font-size: 1.4rem !important; }
+
+            /* STORE INDEX — Hero */
+            .store-hero-wrapper { padding: 0 12px 40px !important; }
+            .store-hero-card { padding: 32px 24px 36px !important; min-height: unset !important; border-radius: 24px !important; }
+            .store-hero-card h1 { font-size: 1.75rem !important; margin-bottom: 12px !important; letter-spacing: -0.03em !important; line-height: 1.15 !important; }
+            .store-hero-card p { font-size: 0.92rem !important; margin-bottom: 24px !important; opacity: 0.85; max-width: 100% !important; }
+            .store-hero-doctors { display: none !important; }
+            .store-hero-buttons { flex-direction: column !important; gap: 10px !important; align-items: stretch !important; }
+            .store-hero-buttons > a:first-child { text-align: center; padding: 14px 24px !important; font-size: 1rem !important; border-radius: 14px !important; }
+            .store-hero-buttons > a:last-child { justify-content: center !important; background: rgba(255,255,255,0.15) !important; border-radius: 14px !important; padding: 12px 24px !important; backdrop-filter: blur(5px); }
+
+            /* STORE INDEX — Catalog header */
+            .catalog-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px; }
+
+            /* STORE INDEX — Wellness carousel */
+            .wellness-highlights { height: auto !important; min-height: 380px !important; }
+            .slide-item { padding: 28px 20px !important; justify-content: flex-start !important; padding-top: 36px !important; }
+            .slide-item > div { max-width: 100% !important; }
+            .slide-item h3 { font-size: 1.5rem !important; margin-bottom: 12px !important; line-height: 1.2 !important; }
+            .slide-item p { font-size: 0.88rem !important; margin-bottom: 20px !important; line-height: 1.5 !important; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+            .slide-item a { padding: 12px 22px !important; font-size: 0.88rem !important; border-radius: 12px !important; }
+            .wellness-nav-indicators { bottom: 16px !important; right: 16px !important; }
+
+            /* STORE SHOW — Product Detail */
+            .product-detail-grid { grid-template-columns: 1fr !important; }
+
+            /* CART & CHECKOUT */
+            .cart-layout { flex-direction: column !important; }
+            .cart-sidebar { width: 100% !important; }
+
+            /* ACCOUNT */
+            .account-layout { flex-direction: column !important; }
+            .account-sidebar { width: 100% !important; }
+        }
+
+        /* Extra small mobile (≤480px) */
+        @media (max-width: 480px) {
+            .store-hero-card h1 { font-size: 1.7rem !important; }
+            .auth-modal-content { padding: 22px 16px; }
+        }
     </style>
     <script>
         @php
@@ -1189,9 +1386,49 @@
          @open-quickview.window="openQuickView($event.detail)"
          @add-to-cart.window="addToCart($event.detail.id, $event.detail.qty)"
          @open-wellness.window="openWellnessModal($event.detail)">
+        <!-- Mobile Drawer -->
+        <div class="mobile-drawer" id="mobile-drawer" onclick="if(event.target===this||event.target.classList.contains('mobile-drawer-overlay')) closeMobileDrawer()">
+            <div class="mobile-drawer-overlay"></div>
+            <div class="mobile-drawer-panel">
+                <div class="mobile-drawer-header">
+                    <span style="font-size: 1.3rem; font-weight: 800; color: var(--primary-blue);">Pharma<span style="color: #333;">care</span></span>
+                    <button class="mobile-drawer-close" onclick="closeMobileDrawer()"><i class="fas fa-times"></i></button>
+                </div>
+
+                <!-- Mobile Search -->
+                <div style="position: relative;">
+                    <input type="text" class="search-input" id="mobile-search" placeholder="Cari obat..." autocomplete="off" style="padding-left: 40px;">
+                    <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                </div>
+
+                <!-- Nav Links -->
+                <nav style="display: flex; flex-direction: column; gap: 8px;">
+                    <a href="{{ route('store.index') }}" class="mobile-nav-link"><i class="fas fa-home"></i> Beranda</a>
+                    <a href="{{ route('cart.index') }}" class="mobile-nav-link"><i class="fas fa-shopping-cart"></i> Keranjang</a>
+                    @auth
+                        <a href="{{ route('account.orders') }}" class="mobile-nav-link"><i class="fas fa-box"></i> Pesanan</a>
+                        <a href="{{ route('account.profile') }}" class="mobile-nav-link"><i class="fas fa-user"></i> Profil</a>
+                        <a href="{{ url('/account/wallet') }}" class="mobile-nav-link"><i class="fas fa-wallet"></i> Dompet</a>
+                        <form action="{{ route('store.logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="mobile-nav-link" style="width: 100%; border: none; cursor: pointer; background: #fff0f0; color: #ef4444;"><i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Keluar</button>
+                        </form>
+                    @else
+                        <a href="javascript:void(0)" onclick="closeMobileDrawer(); setTimeout(()=>{ window.StoreUI && (window.StoreUI.showAuthModal=true, window.StoreUI.authTab='login') }, 300)" class="mobile-nav-link"><i class="fas fa-sign-in-alt"></i> Masuk</a>
+                        <a href="javascript:void(0)" onclick="closeMobileDrawer(); setTimeout(()=>{ window.StoreUI && (window.StoreUI.showAuthModal=true, window.StoreUI.authTab='register') }, 300)" class="mobile-nav-link" style="background: #E6F3FF; color: var(--primary-blue);"><i class="fas fa-user-plus"></i> Daftar</a>
+                    @endauth
+                </nav>
+            </div>
+        </div>
+
         <!-- Top Bar Navigation -->
         <div class="top-bar">
-            <a href="{{ route('store.index') }}" style="text-decoration: none;">
+            <!-- Hamburger (mobile only) -->
+            <button class="hamburger-btn" onclick="openMobileDrawer()" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <a href="{{ route('store.index') }}" style="text-decoration: none; flex-shrink: 0;">
                 <span style="font-size: 1.5rem; font-weight: 800; color: var(--primary-blue); letter-spacing: -0.025em;">Pharma<span style="color: #333;">care</span></span>
             </a>
 
@@ -1697,6 +1934,19 @@
                 });
             }
         });
+    </script>
+    <script>
+    // Mobile Drawer
+    function openMobileDrawer() {
+        var d = document.getElementById('mobile-drawer');
+        d.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeMobileDrawer() {
+        var d = document.getElementById('mobile-drawer');
+        d.classList.remove('open');
+        document.body.style.overflow = '';
+    }
     </script>
 
     <!-- WELLNESS DETAIL MODAL (GLOBAL - Pure Vanilla JS) -->

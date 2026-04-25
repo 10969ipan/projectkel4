@@ -3,11 +3,11 @@
 @section('title', 'Pharmacare - Beli Obat Mudah')
 
 @section('content')
-<div style="padding: 0 40px 60px;">
+<div class="store-hero-wrapper" style="padding: 0 40px 60px;">
 
     <!-- Hero Section: Premium AI Experience -->
     <div style="padding-top: 40px; margin-bottom: 40px;">
-        <div style="background: linear-gradient(135deg, #0076D6 0%, #005FA3 100%); color: white; border-radius: 32px; padding: 60px 80px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 30px 60px rgba(0, 118, 214, 0.2); position: relative; overflow: hidden; min-height: 400px;">
+        <div class="store-hero-card" style="background: linear-gradient(135deg, #0076D6 0%, #005FA3 100%); color: white; border-radius: 32px; padding: 60px 80px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 30px 60px rgba(0, 118, 214, 0.2); position: relative; overflow: hidden; min-height: 400px;">
             <!-- Decorative Elements -->
             <div style="position: absolute; top: -20%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
             <div style="position: absolute; bottom: -10%; left: -5%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%); border-radius: 50%;"></div>
@@ -16,7 +16,7 @@
                 <h1 style="font-size: 3.5rem; font-weight: 900; margin-bottom: 20px; line-height: 1.05; letter-spacing: -0.05em;">Solusi Sehat,<br><span style="color: #93C5FD;">Cerdas & Terpercaya.</span></h1>
                 <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 35px; line-height: 1.6; font-weight: 400; max-width: 500px;">Konsultasi kesehatan Anda dengan asisten <strong>SIMA</strong> yang siap membantu kapan saja.</p>
                 
-                <div style="display: flex; gap: 20px; align-items: center;">
+                <div class="store-hero-buttons" style="display: flex; gap: 20px; align-items: center;">
                     <a href="#katalog" style="background: white; color: var(--primary-blue); padding: 16px 36px; border-radius: 14px; font-weight: 800; text-decoration: none; font-size: 1.1rem; transition: 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)'">Jelajahi Produk</a>
                     <a href="javascript:void(0)" onclick="toggleChat()" style="color: white; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 1rem; opacity: 0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
                         <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);"><i class="fas fa-comment-dots"></i></div>
@@ -25,17 +25,17 @@
                 </div>
             </div>
 
-            <div style="position: absolute; bottom: 0; right: 40px; z-index: 5; display: flex; align-items: flex-end;">
-                <img src="{{ asset('assets/images/branding/dokter1.png') }}" style="height: 450px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -80px; position: relative; z-index: 2;">
-                <img src="{{ asset('assets/images/branding/dokter.png') }}" style="height: 420px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;">
+            <div class="store-hero-doctors" style="position: absolute; bottom: 0; right: 40px; z-index: 5; display: flex; align-items: flex-end;">
+                <img src="{{ asset('assets/images/branding/dokter1-opt.png') }}" loading="lazy" style="height: 450px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -80px; position: relative; z-index: 2;">
+                <img src="{{ asset('assets/images/branding/dokter-opt.png') }}" loading="lazy" style="height: 420px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;">
             </div>
         </div>
     </div>
 
 
     <!-- Product Grid Section -->
-    <div id="katalog" style="margin-bottom: 60px; scroll-margin-top: 120px; padding-top: 40px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+    <div id="katalog" class="catalog-section" style="margin-bottom: 60px; scroll-margin-top: 120px; padding-top: 40px;">
+        <div class="catalog-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
             <div>
                 <h2 style="font-size: 2.2rem; font-weight: 800; color: #1e293b; letter-spacing: -0.03em; margin-bottom: 5px;"><span style="color: var(--primary-blue);">Katalog</span> Obat</h2>
                 <p style="color: #64748b; font-size: 0.95rem;">Daftar obat-obatan terpercaya & bersertifikat</p>
@@ -222,7 +222,7 @@
 
 
             <!-- Navigation Indicators -->
-            <div style="position: absolute; bottom: 40px; right: 60px; display: flex; gap: 12px; z-index: 10;">
+            <div class="wellness-nav-indicators" style="position: absolute; bottom: 40px; right: 60px; display: flex; gap: 12px; z-index: 10;">
                 @foreach($wellnessArticles as $index => $article)
                 <button @click="active = {{ $index }}" 
                         :style="active === {{ $index }} ? 'width: 40px; background: white;' : 'width: 12px; background: rgba(255,255,255,0.3);'" 

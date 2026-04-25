@@ -88,13 +88,36 @@
 
 /**
  * AJAX Search Autocomplete
+ * Supports both desktop (#main-search) and mobile (#mobile-search)
  */
 function initSearch() {
-    const searchInput = document.getElementById('main-search');
-    const searchResults = document.getElementById('search-results');
-    let searchTimeout = null;
+    setupSearchInput('main-search', 'search-results');
+    setupSearchInput('mobile-search', 'mobile-search-results');
+}
 
-    if (!searchInput || !searchResults) return;
+function setupSearchInput(inputId, resultsId) {
+    const searchInput = document.getElementById(inputId);
+    if (!searchInput) return;
+
+    // Buat container hasil jika belum ada
+    let searchResults = document.getElementById(resultsId);
+    if (!searchResults) {
+        searchResults = document.createElement('div');
+        searchResults.id = resultsId;
+        searchResults.style.cssText = `
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            border: 1px solid #f0f0f0;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            margin-top: 8px;
+        `;
+        searchInput.parentNode.insertBefore(searchResults, searchInput.nextSibling);
+    }
+
+    let searchTimeout = null;
 
     searchInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
