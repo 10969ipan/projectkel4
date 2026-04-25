@@ -21,12 +21,11 @@ class MidtransController extends Controller
         Config::$is3ds = config('services.midtrans.is_3ds');
 
         try {
-            $notification = new Notification();
-
-            $transaction = $notification->transaction_status;
-            $type = $notification->payment_type;
-            $order_id = $notification->order_id;
-            $fraud = $notification->fraud_status;
+            // Bypass Midtrans SDK Notification() because php://input is often consumed on Vercel Serverless
+            $transaction = $request->transaction_status;
+            $type = $request->payment_type;
+            $order_id = $request->order_id;
+            $fraud = $request->fraud_status;
 
             // Handle order_id with timestamp suffix (e.g. ORD-123-1714000000)
             $real_order_id = $order_id;
