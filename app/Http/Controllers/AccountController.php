@@ -247,7 +247,7 @@ class AccountController extends Controller
                     $item_details = [];
                     foreach ($order->items as $orderItem) {
                         $item_details[] = [
-                            'id' => $orderItem->item_id,
+                            'id' => (string) $orderItem->item_id, // Must be string
                             'price' => (int) $orderItem->price,
                             'quantity' => (int) $orderItem->quantity,
                             'name' => substr($orderItem->item->name ?? 'Produk Apotek', 0, 50),
@@ -264,6 +264,9 @@ class AccountController extends Controller
                         ];
                     }
 
+                    \Illuminate\Support\Facades\Log::info('MIDTRANS SNAP PARAMS ITEM DETAILS: ', $item_details);
+                    \Illuminate\Support\Facades\Log::info('MIDTRANS GROSS AMOUNT: ' . (int) $order->grand_total);
+
                     $params = [
                         'transaction_details' => [
                             'order_id' => $midtransOrderId,
@@ -271,14 +274,17 @@ class AccountController extends Controller
                         ],
                         'item_details' => $item_details,
                         'customer_details' => [
-                            'first_name' => $user->name,
+                            'first_name' => substr($user->name, 0, 50),
                             'email' => $user->email,
-                            'phone' => '0800000000', // Default if phone not available
+                            'phone' => '08123456789', // Midtrans strict validation
                             'shipping_address' => [
-                                'first_name' => $user->name,
+                                'first_name' => substr($user->name, 0, 50),
                                 'email' => $user->email,
-                                'phone' => '0800000000',
-                                'address' => $order->address->full_address ?? 'Alamat tidak diisi',
+                                'phone' => '08123456789',
+                                'address' => substr($order->address->full_address ?? 'Alamat tidak diisi', 0, 200),
+                                'city' => 'Bandung', // Mandatory
+                                'postal_code' => '40000', // Mandatory
+                                'country_code' => 'IDN' // Mandatory
                             ]
                         ],
                         'enabled_payments' => [
