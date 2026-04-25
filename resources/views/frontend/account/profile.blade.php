@@ -64,8 +64,8 @@
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
         .modal-overlay.open { display: flex; }
-        .modal-box { background: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 500px; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 25px; }
+        .modal-box { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 25px; flex-shrink: 0; }
 
         @keyframes slideUp { 
             from { transform: translateY(30px); opacity: 0; } 
@@ -245,36 +245,36 @@
 
 <!-- Modal Dompet Saya -->
 <div id="walletModal" class="modal-overlay">
-    <div class="modal-box" style="max-width: 700px; padding: 0; overflow: hidden;">
-        <div style="background: linear-gradient(135deg, var(--primary-blue), #005BAA); padding: 40px; color: white;">
-            <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 10px;">Saldo Dompet Tersedia</div>
-            <div style="font-size: 2.5rem; font-weight: 800; margin-bottom: 30px;">Rp {{ number_format($user->wallet_balance, 0, ',', '.') }}</div>
+    <div class="modal-box" style="max-width: 400px; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="background: linear-gradient(135deg, var(--primary-blue), #005BAA); padding: 30px 25px; color: white; flex-shrink: 0;">
+            <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; margin-bottom: 8px;">Saldo Dompet Tersedia</div>
+            <div style="font-size: 2rem; font-weight: 800; margin-bottom: 20px;">Rp {{ number_format($user->wallet_balance, 0, ',', '.') }}</div>
             <form action="{{ url('/account/wallet/topup') }}" method="POST">
                 @csrf
                 <input type="hidden" name="amount" value="100000">
-                <button type="submit" style="background: white; color: var(--primary-blue); border: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <button type="submit" style="background: white; color: var(--primary-blue); border: none; padding: 12px 20px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: 0.3s; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                     Isi Saldo (Simulasi Rp 100.000)
                 </button>
             </form>
         </div>
-        <div style="padding: 30px; max-height: 400px; overflow-y: auto;">
-            <h4 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 20px;">Riwayat Transaksi</h4>
+        <div style="padding: 20px 25px; overflow-y: auto; flex: 1;">
+            <h4 style="font-size: 1rem; font-weight: 800; margin-bottom: 15px; color: #1e293b;">Riwayat Transaksi</h4>
             @forelse($transactions as $trx)
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0;">
-                <div>
-                    <div style="font-weight: 700; font-size: 0.95rem;">{{ $trx->description }}</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ $trx->created_at->format('d M Y, H:i') }}</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #f0f0f0;">
+                <div style="flex: 1; padding-right: 15px;">
+                    <div style="font-weight: 700; font-size: 0.85rem; color: #334155; line-height: 1.4; margin-bottom: 4px;">{{ $trx->description }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ $trx->created_at->format('d M Y, H:i') }}</div>
                 </div>
-                <div style="font-weight: 800; color: {{ $trx->type === 'payment' ? '#ef4444' : '#10b981' }};">
+                <div style="font-weight: 800; font-size: 0.9rem; flex-shrink: 0; color: {{ $trx->type === 'payment' ? '#ef4444' : '#10b981' }};">
                     {{ $trx->type === 'payment' ? '-' : '+' }}Rp {{ number_format($trx->amount, 0, ',', '.') }}
                 </div>
             </div>
             @empty
-            <div style="text-align: center; padding: 30px; color: var(--text-muted); font-style: italic;">Belum ada riwayat transaksi.</div>
+            <div style="text-align: center; padding: 30px 10px; color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Belum ada riwayat transaksi.</div>
             @endforelse
         </div>
-        <div style="padding: 20px; text-align: center; background: #f8fafc; border-top: 1px solid #f0f0f0;">
-            <button class="btn-cancel" onclick="toggleModal('walletModal')" style="width: 100%;">Tutup</button>
+        <div style="padding: 15px 25px; text-align: center; background: #f8fafc; border-top: 1px solid #f0f0f0; flex-shrink: 0;">
+            <button type="button" class="btn-cancel" onclick="toggleModal('walletModal')" style="width: 100%; font-size: 0.9rem; padding: 10px;">Tutup</button>
         </div>
     </div>
 </div>

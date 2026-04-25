@@ -70,16 +70,61 @@
 
         @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-        /* Payment Modal Specific Styles */
-        .pay-modal-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
-        .pay-section { padding: 20px; border-radius: 12px; border: 1px solid #f0f0f0; margin-bottom: 20px; }
-        .pay-title { font-weight: 800; font-size: 1rem; margin-bottom: 15px; color: var(--primary-blue); }
-        .pay-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
-        .pay-method-card { border: 2px solid #eee; border-radius: 12px; padding: 12px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
-        .pay-method-card:hover { border-color: var(--primary-blue); background: #f8fbff; }
-        input[type="radio"]:checked + .pay-method-card { border-color: var(--primary-blue); background: #E6F3FF; }
+        /* Dashboard-style Payment Modal */
+        #orderDetailModal, #addressModal, #paymentModal { 
+            display:none; 
+            position: fixed; 
+            top:0; left:0; width:100%; height:100%; 
+            background:rgba(15,23,42,0.6); 
+            backdrop-filter: blur(12px);
+            z-index:9999; 
+            align-items: center; 
+            justify-content: center; 
+            overflow-y:auto; 
+            padding: 50px 20px; 
+        }
+        #orderDetailModal > div, #addressModal > div, #paymentModal > div { 
+            background:white; 
+            border-radius:28px; 
+            width:100%; 
+            position:relative; 
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+            margin: 0 auto; /* To ensure it stays centered if flex fails */
+        }
+        #paymentModal > div { max-width: 450px; }
+        #addressModal > div { max-width: 500px; }
+        #orderDetailModal > div { max-width: 680px; }
+        
+        .pay-modal-grid { display: flex; flex-direction: column; gap: 15px; }
+        .pay-section { padding: 12px 15px; border-radius: 16px; background: #ffffff; border: 1.5px solid #f8fafc; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 0; text-align: left; }
+        .pay-title { font-weight: 800; font-size: 0.85rem; margin-bottom: 12px; color: #0076D6; }
+        .pay-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; color: #475569; }
+        
+        .pay-method-card { 
+            border: 1.5px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 12px 15px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            margin-bottom: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center;
+            background: #fff;
+        }
+        .pay-method-card strong { font-size: 0.85rem; }
+        .pay-method-card div { font-size: 0.6rem !important; }
+        .pay-method-card:hover { border-color: #0076D6; background: #f0f7ff; }
+        input[type="radio"]:checked + .pay-method-card { 
+            border-color: #0076D6; 
+            background: #f0f7ff; 
+            box-shadow: 0 4px 12px rgba(0,118,214,0.1); 
+            border-width: 2px;
+        }
         input[type="radio"] { display: none; }
-        @media (max-width: 600px) { .pay-modal-grid { grid-template-columns: 1fr; } }
         
         /* Ensure SweetAlert appears above modals */
         .swal2-container { z-index: 1000000 !important; }
@@ -95,6 +140,58 @@
             background-size: 1000px 100%;
             animation: shimmer 2s infinite linear;
             border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .container { margin: 20px auto; padding: 0 15px; }
+            .header { flex-direction: row-reverse; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 0; }
+            .header h1 { font-size: 1.4rem; text-align: right; }
+            .back-link { font-size: 0.9rem; }
+            .dashboard-grid { gap: 20px; }
+            .sidebar { padding: 20px 15px; }
+            .content-card { padding: 20px; border-radius: 16px; }
+            
+            /* Order List Mobile */
+            #section-orders h2 { font-size: 1.3rem; margin-bottom: 20px; }
+            .content-section > div { gap: 15px !important; }
+            [id^="section-orders"] .content-section > div > div { padding: 15px !important; border-radius: 12px !important; }
+            
+            .order-header-flex { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+            .order-header-flex > div:last-child { text-align: left !important; width: 100%; padding-top: 10px; border-top: 1px solid #f1f5f9; }
+            
+            /* Progress Tracker Mobile */
+            .progress-tracker { padding: 0 !important; margin-bottom: 20px !important; }
+            .progress-tracker span { font-size: 0.6rem !important; }
+            .progress-tracker-circle { width: 32px !important; height: 32px !important; }
+            .progress-tracker-line { top: 16px !important; }
+            
+            .order-action-bar { padding: 12px !important; border-radius: 12px !important; flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+            .order-action-bar button, .order-action-bar a { width: 100% !important; text-align: center; justify-content: center; }
+            
+            /* Subscriptions Mobile */
+            [id^="section-subscriptions"] > div > div { flex-direction: column; align-items: flex-start !important; gap: 15px !important; }
+            [id^="section-subscriptions"] .sub-image { width: 60px !important; height: 60px !important; }
+            
+            /* Addresses Mobile */
+            [id^="section-addresses"] > div:last-child { grid-template-columns: 1fr !important; }
+            
+            /* Modals Mobile */
+            #orderDetailModal, #addressModal, #paymentModal { padding: 20px 15px !important; align-items: center !important; justify-content: center !important; }
+            #orderDetailModal > div, #addressModal > div, #paymentModal > div { border-radius: 24px !important; max-width: 100% !important; width: 100% !important; max-height: 85vh !important; }
+            
+            /* Wellness Banner Mobile */
+            .wellness-highlights { height: auto !important; padding: 25px 20px !important; border-radius: 20px !important; }
+            .wellness-highlights h3 { font-size: 1.3rem !important; margin-bottom: 10px !important; }
+            .wellness-highlights p { font-size: 0.85rem !important; margin-bottom: 15px !important; }
+            .wellness-highlights a { font-size: 0.8rem !important; }
+
+            /* Wellness Modal Mobile */
+            #wellnessModal { padding: 20px 15px !important; }
+            #wellnessModal > div { max-height: 85vh; border-radius: 24px !important; display: flex; flex-direction: column; }
+            #wellnessModal > div > div:nth-child(2) { height: 160px !important; flex-shrink: 0; } /* Image container */
+            #wellnessModal > div > div:nth-child(3) { padding: 25px 20px !important; overflow-y: auto; } /* Text container */
+            #wellnessModal h2 { font-size: 1.3rem !important; margin-bottom: 15px !important; }
+            #wellnessModal p { font-size: 0.9rem !important; }
         }
 
         [x-cloak] { display: none !important; }
@@ -194,7 +291,7 @@
                     <div style="display: flex; flex-direction: column; gap: 20px;">
                         @foreach($orders as $order)
                         <div style="border: 1px solid #eee; border-radius: 16px; padding: 25px; transition: all 0.3s;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                            <div class="order-header-flex" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                                 <div>
                                     <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 5px;">PESANAN #{{ $order->order_number }}</div>
                                     <div style="font-weight: 700; font-size: 1.1rem;">{{ $order->created_at->format('d M Y, H:i') }}</div>
@@ -213,7 +310,7 @@
                                 </div>
                             @else
                                 <!-- Progress Tracker with SVG Icons -->
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 25px; position: relative; padding: 0 10px;">
+                                <div class="progress-tracker" style="display: flex; justify-content: space-between; margin-bottom: 25px; position: relative; padding: 0 10px;">
                                     @php
                                         $steps = [
                                             ['id' => 'ordered', 'label' => 'Dipesan', 'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>'],
@@ -226,13 +323,13 @@
                                             if($order->order_status == $s['id']) $currentIdx = $idx;
                                         }
                                     @endphp
-                                    <div style="position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: #eee; z-index: 1; border-radius:99px;"></div>
-                                    <div style="position: absolute; top: 20px; left: 10%; height: 3px; width: calc({{ $currentIdx }} * (80% / 3)); background: var(--primary-blue); z-index: 1; border-radius:99px; transition: width 0.5s ease;"></div>
+                                    <div class="progress-tracker-line" style="position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: #eee; z-index: 1; border-radius:99px;"></div>
+                                    <div class="progress-tracker-line" style="position: absolute; top: 20px; left: 10%; height: 3px; width: calc({{ $currentIdx }} * (80% / 3)); background: var(--primary-blue); z-index: 1; border-radius:99px; transition: width 0.5s ease;"></div>
 
                                     @foreach($steps as $idx => $step)
                                     @php $done = $idx <= $currentIdx; $active = $idx == $currentIdx; @endphp
                                     <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; flex: 1;">
-                                        <div style="width: 42px; height: 42px; background: {{ $done ? 'var(--primary-blue)' : 'white' }}; border: 2px solid {{ $done ? 'var(--primary-blue)' : '#e2e8f0' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: {{ $done ? 'white' : '#cbd5e1' }}; transition: all 0.4s; box-shadow: {{ $active ? '0 0 0 4px rgba(0,118,214,0.15)' : 'none' }};">
+                                        <div class="progress-tracker-circle" style="width: 42px; height: 42px; background: {{ $done ? 'var(--primary-blue)' : 'white' }}; border: 2px solid {{ $done ? 'var(--primary-blue)' : '#e2e8f0' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: {{ $done ? 'white' : '#cbd5e1' }}; transition: all 0.4s; box-shadow: {{ $active ? '0 0 0 4px rgba(0,118,214,0.15)' : 'none' }};">
                                             {!! $step['icon'] !!}
                                         </div>
                                         <span style="font-size: 0.72rem; font-weight: 800; color: {{ $done ? 'var(--primary-blue)' : '#94a3b8' }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ $step['label'] }}</span>
@@ -245,18 +342,8 @@
                                 $hasPrescription = !empty($order->prescription_path) || $user->is_prescription_approved;
                                 $reqPres = false;
                                 foreach($order->items as $it) { if($it->item && $it->item->requires_prescription) { $reqPres = true; break; } }
-                                $orderItemsJson = [];
-                                foreach($order->items as $oi) {
-                                    $orderItemsJson[] = [
-                                        'name'     => $oi->item->name ?? 'Item Dihapus',
-                                        'qty'      => $oi->quantity,
-                                        'price'    => $oi->price,
-                                        'subtotal' => $oi->sub_total,
-                                        'image'    => $oi->item->image_path ?? null,
-                                    ];
-                                }
                             @endphp
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; padding: 15px 20px; border-radius: 12px; gap: 10px; flex-wrap: wrap;">
+                            <div class="order-action-bar" style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; padding: 15px 20px; border-radius: 12px; gap: 10px; flex-wrap: wrap;">
                                 <div style="font-size: 0.9rem; color: var(--text-muted);">
                                     Dikirim ke: <strong>{{ $order->address->label ?? 'Alamat Default' }}</strong>
                                 </div>
@@ -317,23 +404,24 @@
                                     <span style="font-size: 2rem;">💊</span>
                                 @endif
                             </div>
-                            <div style="flex: 1;">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                    <div>
-                                        <h4 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">{{ $sub->item->name }}</h4>
+                            <div class="sub-details" style="flex: 1; width: 100%;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                                    <div style="flex: 1;">
+                                        <h4 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px; line-height: 1.3;">{{ $sub->item->name }}</h4>
                                         <div style="color: #64748b; font-size: 0.85rem;">Interval: <strong>Setiap {{ $sub->interval_days }} Hari</strong></div>
                                     </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Status</div>
-                                        <span class="badge badge-delivered" style="background: #ecfdf5; color: #059669;">{{ strtoupper($sub->status) }}</span>
+                                    <div style="text-align: right; flex-shrink: 0;">
+                                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 3px;">Status</div>
+                                        <span class="badge badge-delivered" style="background: #ecfdf5; color: #059669; padding: 4px 10px;">{{ strtoupper($sub->status) }}</span>
                                     </div>
                                 </div>
-                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="font-size: 0.85rem; color: #475569;">
-                                        <i class="far fa-calendar-alt"></i> Pengiriman Berikutnya: <strong>{{ \Carbon\Carbon::parse($sub->next_delivery_date)->format('d M Y') }}</strong>
+                                <div class="sub-footer" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                                    <div style="font-size: 0.85rem; color: #475569; line-height: 1.4;">
+                                        <span style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 2px;"><i class="far fa-calendar-alt"></i> Pengiriman Berikutnya:</span>
+                                        <strong>{{ \Carbon\Carbon::parse($sub->next_delivery_date)->format('d M Y') }}</strong>
                                     </div>
-                                    <div style="color: #059669; font-weight: 800; font-size: 0.95rem;">
-                                        Hemat 10% Aktif
+                                    <div style="color: #059669; font-weight: 800; font-size: 0.9rem; text-align: right; background: #f0fdf4; padding: 6px 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                        Hemat 10%
                                     </div>
                                 </div>
                             </div>
@@ -390,7 +478,7 @@
             </div>
 
             <!-- Modal Tambah Alamat (Simple Hidden Div) -->
-            <div id="addressModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+            <div id="addressModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
                 <div style="background:white; padding:40px; border-radius:20px; width:100%; max-width:500px;">
                     <h3 style="margin-bottom:20px;">Tambah Alamat Baru</h3>
                     <form action="{{ route('account.address.store') }}" method="POST">
@@ -583,7 +671,7 @@
 </script>
 
     <!-- ORDER DETAIL MODAL -->
-    <div id="orderDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:99998; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 20px; backdrop-filter:blur(4px);">
+    <div id="orderDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:99998; overflow-y:auto; backdrop-filter:blur(4px);">
         <div style="background:white; border-radius:24px; width:100%; max-width:680px; position:relative; box-shadow: 0 25px 50px rgba(0,0,0,0.25); animation: slideUp 0.35s cubic-bezier(0.23,1,0.32,1);">
             <!-- Header -->
             <div style="background:var(--primary-blue); color:white; padding:30px; border-radius:32px 32px 0 0; position:relative;">
@@ -648,78 +736,82 @@
     </div>
 
     <!-- PAYMENT MODAL -->
-    <div id="paymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:flex-start; justify-content:center; overflow-y:auto; padding: 40px 20px;">
-        <div style="background:white; border-radius:24px; width:100%; max-width:800px; position:relative; animation: slideUp 0.3s ease-out;">
-            <button onclick="toggleModal('paymentModal')" style="position: absolute; right: 20px; top: 20px; border: none; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">✕</button>
-            <div style="padding: 30px;">
-                <h3 style="margin-bottom:25px; font-size: 1.4rem;">Konfirmasi Pembayaran</h3>
-                
+    <div id="paymentModal">
+        <div>
+            <div class="modal-header" style="padding: 15px 20px 10px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: #1e293b;">Konfirmasi Pembayaran</h3>
+                <button onclick="toggleModal('paymentModal')" style="border: none; background: #f1f5f9; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: 0.2s;">✕</button>
+            </div>
+            
+            <div class="modal-body" style="padding: 0 20px 20px;">
                 <form id="paymentForm" method="POST">
                     @csrf
                     <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="15000">
                     <div class="pay-modal-grid">
-                        <div class="left-col">
-                            <div class="pay-section">
-                                <div class="pay-title">Info Pesanan</div>
-                                <div class="pay-row"><span>No Pesanan</span><strong id="pay-order-number">ORD-XXX</strong></div>
-                                <div id="pres-warning-box" style="display:none; margin-top:15px; background:#FFF5F5; border:1px solid #FFC9C9; color:#C92A2A; padding:12px; border-radius:10px; font-size:0.8rem;">
-                                    ⚠️ <strong>Resep Diperlukan:</strong> Pesanan ini mengandung obat keras dan resep Anda belum terverifikasi. Pembayaran diblokir.
-                                </div>
-                                <div id="pres-success-box" style="display:none; margin-top:15px; background:#E6FCF5; border:1px solid #C3FAE8; color:#087F5B; padding:12px; border-radius:10px; font-size:0.8rem;">
-                                    ✅ <strong>Resep Terverifikasi:</strong> Resep manual terlampir atau akun sudah diapprove Dokter.
-                                </div>
+                        <div class="pay-section" style="padding: 12px 15px;">
+                            <div class="pay-title">Info Pesanan</div>
+                            <div class="pay-row"><span>No Pesanan</span><strong id="pay-order-number" style="color: #1e293b;">ORD-XXX</strong></div>
+                            <div id="pres-warning-box" style="display:none; margin-top:10px; background:#fff1f2; border:1px solid #ef4444; color:#991b1b; padding:10px 15px; border-radius:12px; font-size:0.75rem;">
+                                ⚠️ <strong>Resep Diperlukan:</strong> Pesanan ini mengandung obat keras dan resep belum terverifikasi.
                             </div>
-
-                            <div class="pay-section">
-                                <div class="pay-title">Pilih Durasi Pengiriman</div>
-                                <div id="shipping-options-container">
-                                    <label><input type="radio" name="shipping_method" value="instant" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong>Instant Delivery</strong><br><span style="font-size:0.8rem; color:#666;">2 Jam Sampai (Rp 15.000)</span></div>
-                                    </label>
-                                    <label><input type="radio" name="shipping_method" value="regular" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong>JNE / J&T Reguler</strong><br><span style="font-size:0.8rem; color:#666;">2-3 Hari Kerja (Rp 10.000)</span></div>
-                                    </label>
-                                </div>
-                                <div id="order-shipping-option" style="display:none;">
-                                    <!-- Dynamic shipping from DB will go here -->
-                                </div>
+                            <div id="pres-success-box" style="display:none; margin-top:10px; background:#ecfdf5; border:1px solid #10b981; color:#065f46; padding:10px 15px; border-radius:12px; font-size:0.75rem;">
+                                ✅ <strong>Resep Terverifikasi.</strong>
                             </div>
                         </div>
 
-                        <div class="right-col">
-                            <div class="pay-section" style="background:#f8f9fa;">
-                                <div class="pay-title">Metode Pembayaran</div>
-                                <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-                                    <label><input type="radio" name="payment_method" value="midtrans" checked onchange="calcTotal()">
-                                        <div class="pay-method-card">
-                                            <strong><i class="fas fa-credit-card"></i> Bayar Online (Midtrans)</strong>
-                                            <div style="font-size: 0.6rem; color: #64748b; margin-top: 2px;">CC, GoPay, ShopeePay, VA</div>
-                                        </div>
-                                    </label>
-                                    <label><input type="radio" name="payment_method" value="qris" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong><i class="fas fa-qrcode"></i> QRIS</strong></div>
-                                    </label>
-                                    <label><input type="radio" name="payment_method" value="wallet" onchange="calcTotal()">
-                                        <div class="pay-method-card">
-                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <strong><i class="fas fa-wallet"></i> Saldo Dompet</strong>
-                                                <span style="font-size: 0.75rem; color: #065f46; font-weight: 800;">Rp {{ number_format($user->wallet_balance, 0, ',', '.') }}</span>
-                                            </div>
-                                        </div>
-                                    </label>
-                                    <label><input type="radio" name="payment_method" value="paylater" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong><i class="fas fa-clock"></i> Paylater</strong></div>
-                                    </label>
-                                </div>
-
-                                <div style="margin-top:20px; padding-top:15px; border-top:1px dashed #ddd;">
-                                    <div class="pay-row"><span>Subtotal</span><span id="pay-subtotal">Rp 0</span></div>
-                                    <div class="pay-row"><span>Ongkir</span><span id="pay-shipping">Rp 15.000</span></div>
-                                    <div class="pay-row" style="font-weight:800; border-top:1px solid #eee; padding-top:10px; color:var(--primary-blue); font-size:1.1rem;"><span>Total</span><span id="pay-total">Rp 0</span></div>
-                                </div>
-
-                                <button type="submit" id="pay-confirm-btn" style="width:100%; padding:15px; background:#2F9E44; color:white; border:none; border-radius:12px; font-weight:800; margin-top:20px; cursor:pointer;">Konfirmasi & Bayar</button>
+                        <div class="pay-section" style="padding: 12px 15px;">
+                            <div class="pay-title">Durasi Pengiriman Terpilih</div>
+                            <div id="shipping-options-container">
+                                <label><input type="radio" name="shipping_method" value="instant" onchange="calcTotal()">
+                                    <div class="pay-method-card">
+                                        <strong>Instant Delivery</strong>
+                                        <div style="font-size:0.6rem; color:#64748b; margin-top: 2px;">2 Jam Sampai (Rp 15.000)</div>
+                                    </div>
+                                </label>
+                                <label><input type="radio" name="shipping_method" value="regular" onchange="calcTotal()">
+                                    <div class="pay-method-card">
+                                        <strong>JNE / J&T Reguler</strong>
+                                        <div style="font-size:0.6rem; color:#64748b; margin-top: 2px;">2-3 Hari Kerja (Rp 10.000)</div>
+                                    </div>
+                                </label>
                             </div>
+                            <div id="order-shipping-option" style="display:none;">
+                                <!-- Dynamic shipping from DB will go here -->
+                            </div>
+                        </div>
+
+                        <div class="pay-section" style="background:#fcfdfe; padding: 12px 15px;">
+                            <div class="pay-title">Metode Pembayaran</div>
+                            <div class="pay-method-grid">
+                                <label><input type="radio" name="payment_method" value="midtrans" checked onchange="calcTotal()">
+                                    <div class="pay-method-card">
+                                        <strong>Bayar Online (Midtrans)</strong>
+                                        <div style="font-size: 0.6rem; color: #64748b; margin-top: 2px;">CC, GoPay, ShopeePay, VA</div>
+                                    </div>
+                                </label>
+                                <label><input type="radio" name="payment_method" value="qris" onchange="calcTotal()">
+                                    <div class="pay-method-card"><strong>QRIS</strong></div>
+                                </label>
+                                <label><input type="radio" name="payment_method" value="wallet" onchange="calcTotal()">
+                                    <div class="pay-method-card">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <strong>Saldo Dompet</strong>
+                                            <span style="font-size: 0.75rem; color: #065f46; font-weight: 800;">Rp {{ number_format($user->wallet_balance, 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label><input type="radio" name="payment_method" value="paylater" onchange="calcTotal()">
+                                    <div class="pay-method-card"><strong>Paylater</strong></div>
+                                </label>
+                            </div>
+
+                            <div style="margin-top:15px; padding-top:12px; border-top:1.5px dashed #e2e8f0;">
+                                <div class="pay-row"><span>Subtotal</span><span id="pay-subtotal" style="font-weight: 700; color: #1e293b;">Rp 0</span></div>
+                                <div class="pay-row"><span>Ongkir</span><span id="pay-shipping" style="font-weight: 700; color: #1e293b;">Rp 15.000</span></div>
+                                <div class="pay-row" style="font-weight:900; border-top:1.5px solid #f1f5f9; padding-top:12px; color:#0076D6; font-size:1.1rem; margin-top: 8px;"><span>Total</span><span id="pay-total">Rp 0</span></div>
+                            </div>
+
+                            <button type="submit" id="pay-confirm-btn" style="width:100%; padding:14px; background:#059669; color:white; border:none; border-radius:12px; font-weight:800; margin-top:15px; cursor:pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(5,150,105,0.15); font-size: 0.9rem;">Konfirmasi & Bayar</button>
                         </div>
                     </div>
                 </form>
@@ -730,21 +822,21 @@
     <!-- SUCCESS MODAL (POST-PAYMENT) -->
     @if($justPaidOrder)
     <div id="successModal" style="display:flex; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999999; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
-        <div style="background:white; border-radius:32px; width:100%; max-width:480px; text-align:center; padding:50px 40px; position:relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: zoomIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+        <div style="background:white; border-radius:28px; width:90%; max-width:400px; max-height:90vh; overflow-y:auto; text-align:center; padding:35px 25px; position:relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: zoomIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
             <button onclick="document.getElementById('successModal').style.display='none'" 
-                    style="position:absolute; right:20px; top:20px; border:none; background:#f1f5f9; color:#64748b; width:42px; height:42px; border-radius:50%; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:1.1rem; transition:all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"
+                    style="position:absolute; right:15px; top:15px; border:none; background:#f1f5f9; color:#64748b; width:32px; height:32px; border-radius:50%; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"
                     onmouseover="this.style.background='#e2e8f0'; this.style.transform='scale(1.1)'"
                     onmouseout="this.style.background='#f1f5f9'; this.style.transform='scale(1)'"
                     onmousedown="this.style.transform='scale(0.9)'">✕</button>
             
             <!-- Success Animation (CSS only) -->
-            <div style="width:100px; height:100px; background:#f0fdf4; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 30px; border:4px solid #fff; box-shadow:0 0 0 4px #f0fdf4;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: checkmark 0.6s ease-in-out forwards;"><polyline points="20 6 9 17 4 12"/></svg>
+            <div style="width:80px; height:80px; background:#f0fdf4; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; border:4px solid #fff; box-shadow:0 0 0 4px #f0fdf4;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: checkmark 0.6s ease-in-out forwards;"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
 
             @if($justPaidOrder->payment_status === 'paid')
-                <h3 style="font-size:1.8rem; font-weight:800; color:#0f172a; margin-bottom:12px;">Yeay! Pembayaran Berhasil</h3>
-                <p style="color:#64748b; font-size:1rem; line-height:1.6; margin-bottom:30px;">Pesanan kamu sedang kami siapkan. Terima kasih telah mempercayai Pharmacare.</p>
+                <h3 style="font-size:1.4rem; font-weight:800; color:#0f172a; margin-bottom:10px;">Yeay! Pembayaran Berhasil</h3>
+                <p style="color:#64748b; font-size:0.9rem; line-height:1.5; margin-bottom:25px;">Pesanan kamu sedang kami siapkan. Terima kasih telah mempercayai Pharmacare.</p>
             @else
                 <h3 style="font-size:1.8rem; font-weight:800; color:#0f172a; margin-bottom:12px;">Pesanan Berhasil Dibuat!</h3>
                 <p style="color:#64748b; font-size:1rem; line-height:1.6; margin-bottom:30px;">Silakan selesaikan pembayaran agar pesanan kamu bisa segera kami proses.</p>

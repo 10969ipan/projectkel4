@@ -89,21 +89,84 @@
             #paymentModal > div { border-radius: 24px 24px 0 0 !important; max-height: 92vh !important; }
         }
 
-        /* Payment Modal Specific Styles */
-        .pay-modal-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
-        .pay-section { padding: 20px; border-radius: 12px; border: 1px solid #f0f0f0; margin-bottom: 20px; text-align: left; }
-        .pay-title { font-weight: 800; font-size: 1rem; margin-bottom: 15px; color: var(--primary-blue); }
-        .pay-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
-        .pay-method-card { border: 2px solid #eee; border-radius: 12px; padding: 12px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
-        .pay-method-card:hover { border-color: var(--primary-blue); background: #f8fbff; }
-        input[type="radio"]:checked + .pay-method-card { border-color: var(--primary-blue); background: #E6F3FF; }
+        /* Dashboard-style Payment Modal */
+        #paymentModal { 
+            display:none; 
+            position: fixed; 
+            top:0; left:0; width:100%; height:100%; 
+            background:rgba(15,23,42,0.6); 
+            backdrop-filter: blur(12px);
+            z-index:9999; 
+            align-items: center; 
+            justify-content: center; 
+            overflow-y:auto; 
+            padding: 50px 20px; 
+        }
+        #paymentModal > div { 
+            background:white; 
+            border-radius:28px; 
+            width:100%; 
+            max-width:450px; 
+            position:relative; 
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+        }
+
+        .pay-modal-grid { display: flex; flex-direction: column; gap: 15px; }
+        .pay-section { padding: 12px 15px; border-radius: 16px; background: #ffffff; border: 1.5px solid #f8fafc; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 0; text-align: left; }
+        .pay-title { font-weight: 800; font-size: 0.85rem; margin-bottom: 12px; color: #0076D6; }
+        .pay-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; color: #475569; }
+        
+        .pay-method-card { 
+            border: 1.5px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 12px 15px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            margin-bottom: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center;
+            background: #fff;
+        }
+        .pay-method-card strong { font-size: 0.85rem; }
+        .pay-method-card div { font-size: 0.6rem !important; }
+        .pay-method-card:hover { border-color: #0076D6; background: #f0f7ff; }
+        input[type="radio"]:checked + .pay-method-card { 
+            border-color: #0076D6; 
+            background: #f0f7ff; 
+            box-shadow: 0 4px 12px rgba(0,118,214,0.1); 
+            border-width: 2px;
+        }
         input[type="radio"] { display: none; }
-        @media (max-width: 600px) { .pay-modal-grid { grid-template-columns: 1fr; } }
+
+        @media (max-width: 768px) {
+            #paymentModal { padding: 20px 15px !important; align-items: center !important; justify-content: center !important; }
+            #paymentModal > div { border-radius: 24px !important; max-width: 100% !important; width: 100% !important; max-height: 85vh !important; }
+            #paymentModal .modal-header { padding: 20px 20px 10px !important; }
+            #paymentModal .modal-body { padding: 0 15px 20px !important; }
+            
+            .pay-section { padding: 15px; border-radius: 16px; margin-bottom: 12px; }
+            .pay-title { font-size: 0.85rem; margin-bottom: 10px; }
+            
+            .pay-method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .pay-method-card { padding: 12px 10px; border-radius: 12px; margin-bottom: 0; text-align: center; align-items: center; }
+            .pay-method-card strong { font-size: 0.75rem; }
+            .pay-method-card div { font-size: 0.55rem !important; }
+
+            .order-status-card { padding: 15px !important; border-radius: 16px !important; }
+
+            #simPaymentModal { padding: 15px !important; align-items: center !important; justify-content: center !important; }
+            #simPaymentModal > div { border-radius: 24px !important; max-width: 100% !important; width: 100% !important; max-height: 85vh !important; }
+        }
+
         
         /* Ensure SweetAlert appears above modals */
         .swal2-container { z-index: 1000000 !important; }
         
-        @keyframes slideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        @keyframes slideUp { from { transform: translateY(40px); opacity:0; } to { transform: translateY(0); opacity:1; } }
     </style>
 
     <!-- Essential Dependencies -->
@@ -335,110 +398,99 @@
     <script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
 
     <!-- PAYMENT MODAL -->
-    <div id="paymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:flex-start; justify-content:center; overflow-y:auto; padding: 40px 20px;">
-        <div style="background:white; border-radius:24px; width:100%; max-width:800px; position:relative; animation: slideUp 0.3s ease-out;">
-            <button onclick="toggleModal('paymentModal')" style="position: absolute; right: 20px; top: 20px; border: none; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">✕</button>
-            <div style="padding: 30px;">
-                <h3 style="margin-bottom:25px; font-size: 1.4rem;">Konfirmasi Pembayaran</h3>
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 25px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="color: #64748b; font-size: 0.9rem;">Status Pesanan</span>
-                        <span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; border: 1px solid #fde68a;">MENUNGGU KONFIRMASI</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #64748b; font-size: 0.9rem;">No Pesanan</span>
-                        <span id="order-number" style="color: #0f172a; font-weight: 800; font-size: 1rem;">-</span>
-                    </div>
+    <div id="paymentModal">
+        <div>
+            <div class="modal-header" style="padding: 15px 20px 10px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: #1e293b;">Konfirmasi Pembayaran</h3>
+                <button onclick="closePaymentModal()" style="border: none; background: #f1f5f9; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: 0.2s;">✕</button>
+            </div>
+            
+            <div class="modal-body" style="padding: 0 20px 20px;">
+                <div id="pres-success-box" style="display:none; background:#ecfdf5; border:1px solid #10b981; padding:15px; border-radius:16px; margin-bottom:20px; color:#065f46; font-size:0.9rem;">
                 </div>
-
-                <div id="pres-success-box" style="display:none; background:#E8F5E9; border:1px solid #C8E6C9; padding:15px; border-radius:12px; margin-bottom:20px; color:#2E7D32; font-size:0.9rem;">
-                </div>
-                <div id="pres-warning-box" style="display:none; background:#FFF3E0; border:1px solid #FFE0B2; padding:15px; border-radius:12px; margin-bottom:20px; color:#E65100; font-size:0.9rem;">
+                <div id="pres-warning-box" style="display:none; background:#fff1f2; border:1px solid #ef4444; padding:15px; border-radius:16px; margin-bottom:20px; color:#991b1b; font-size:0.9rem;">
                 </div>
 
                 <form id="paymentForm" method="POST">
                     @csrf
                     <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="0">
                     <div class="pay-modal-grid">
-                        <div class="left-col">
-                            <div class="pay-section">
-                                <div class="pay-title">Hitung Ongkos Kirim</div>
-                                
-                                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0;">
-                                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Dikirim dari: <strong style="color: #1e293b;">Jakarta Pusat</strong></div>
-                                    <div style="font-size: 0.8rem; color: #64748b;">Tujuan: <strong id="ro-dest-label" style="color: #1e293b;">Mendeteksi Alamat...</strong></div>
-                                </div>
-
-                                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-                                    <select id="ro-courier" class="form-control" style="padding: 10px; font-size: 0.9rem;">
-                                        <option value="">-- Pilih Kurir --</option>
-                                        <option value="jne">JNE (Jalur Nugraha Ekakurir)</option>
-                                        <option value="pos">POS Indonesia</option>
-                                        <option value="tiki">TIKI (Citra Van Titipan Kilat)</option>
-                                    </select>
-                                    <button type="button" id="btn-cek-ongkir" onclick="cekOngkirCheckout()" style="padding: 12px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s;">
-                                        Cari Tarif Pengiriman
-                                    </button>
-                                </div>
-
-                                <div id="ro-results" style="margin-top: 15px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
-                                    <div style="text-align:center; font-size:0.85rem; color:#888; padding: 20px 0;">Silakan cek tarif pengiriman terlebih dahulu.</div>
-                                </div>
+                        <div class="pay-section" style="padding: 18px 20px;">
+                            <div class="pay-title">Info Pesanan</div>
+                            <div class="pay-row">
+                                <span>No Pesanan</span>
+                                <strong id="order-number" style="color: #1e293b;">-</strong>
                             </div>
                         </div>
 
-                        <div class="right-col">
-                            <div class="pay-section" style="background:#f8f9fa;">
-                                <div class="pay-title">Metode Pembayaran</div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <label><input type="radio" name="payment_method" value="midtrans" checked onchange="calcTotal()">
-                                        <div class="pay-method-card" style="border-color: var(--primary-blue); background: #E6F3FF;">
-                                            <strong><i class="fas fa-credit-card"></i> Bayar Online (Midtrans)</strong>
-                                            <div style="font-size: 0.6rem; color: #64748b; margin-top: 2px;">CC, GoPay, ShopeePay, VA</div>
-                                        </div>
-                                    </label>
-                                    <label><input type="radio" name="payment_method" value="qris" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong><i class="fas fa-qrcode"></i> QRIS</strong></div>
-                                    </label>
-                                    <label><input type="radio" name="payment_method" value="wallet" onchange="calcTotal()">
-                                        <div class="pay-method-card">
-                                            <strong><i class="fas fa-wallet"></i> Saldo Dompet</strong>
-                                        </div>
-                                    </label>
-                                    <label><input type="radio" name="payment_method" value="paylater" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong><i class="fas fa-clock"></i> Paylater</strong></div>
-                                    </label>
-                                    <label><input type="radio" name="payment_method" value="bank" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong><i class="fas fa-university"></i> Transfer Bank</strong></div>
-                                    </label>
-                                    <label><input type="radio" name="payment_method" value="ewallet" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong><i class="fas fa-mobile-alt"></i> E-Wallet</strong></div>
-                                    </label>
-                                    <label style="grid-column: span 2;"><input type="radio" name="payment_method" value="cod" onchange="calcTotal()">
-                                        <div class="pay-method-card"><strong><i class="fas fa-hand-holding-usd"></i> Bayar di Tempat (COD)</strong></div>
-                                    </label>
-                                </div>
-
-                                <div style="margin-top:20px; padding-top:15px; border-top:1px dashed #ddd;">
-                                    <div class="pay-row"><span>Subtotal</span><span id="payment-subtotal">Rp 0</span></div>
-                                    <div class="pay-row"><span>Ongkir</span><span id="pay-shipping">Rp 15.000</span></div>
-                                    <div class="pay-row" style="font-weight:800; border-top:1px solid #eee; padding-top:10px; color:var(--primary-blue); font-size:1.1rem;"><span>Total</span><span id="pay-total">Rp 0</span></div>
-                                </div>
-
-                                <button type="submit" id="pay-confirm-btn" style="width:100%; padding:15px; background:#2F9E44; color:white; border:none; border-radius:12px; font-weight:800; margin-top:20px; cursor:pointer;">Konfirmasi & Bayar</button>
+                        <div class="pay-section" style="padding: 18px 20px;">
+                            <div class="pay-title">Pilih Durasi Pengiriman</div>
+                            
+                            <div style="background: #f8fafc; padding: 12px 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-map-marker-alt" style="color: #0076D6;"></i>
+                                <div style="font-size: 0.8rem; color: #64748b;">Tujuan: <strong id="ro-dest-label" style="color: #1e293b;">Mendeteksi Alamat...</strong></div>
                             </div>
+
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <select id="ro-courier" class="form-control" style="flex: 1; padding: 12px; font-size: 0.9rem; height: auto; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff;">
+                                    <option value="">-- Pilih Kurir --</option>
+                                    <option value="jne">JNE (Jalur Nugraha Ekakurir)</option>
+                                    <option value="pos">POS Indonesia</option>
+                                    <option value="tiki">TIKI (Citra Van Titipan Kilat)</option>
+                                </select>
+                                <button type="button" id="btn-cek-ongkir" onclick="cekOngkirCheckout()" style="padding: 10px 15px; background: #0076D6; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.75rem;">
+                                    Cek Tarif
+                                </button>
+                            </div>
+
+                            <div id="ro-results">
+                                <div style="text-align:center; font-size:0.85rem; color:#94a3b8; padding: 10px 0;">Silakan cek tarif pengiriman terlebih dahulu.</div>
+                            </div>
+                        </div>
+
+                        <div class="pay-section" style="background:#fcfdfe; padding: 18px 20px;">
+                            <div class="pay-title">Metode Pembayaran</div>
+                            <div class="pay-method-grid">
+                                <label><input type="radio" name="payment_method" value="midtrans" checked onchange="calcTotal()">
+                                    <div class="pay-method-card">
+                                        <strong>Bayar Online (Midtrans)</strong>
+                                        <div style="font-size: 0.65rem; color: #64748b; margin-top: 4px;">CC, GoPay, ShopeePay, VA</div>
+                                    </div>
+                                </label>
+                                <label><input type="radio" name="payment_method" value="qris" onchange="calcTotal()">
+                                    <div class="pay-method-card"><strong>QRIS</strong></div>
+                                </label>
+                                <label><input type="radio" name="payment_method" value="wallet" onchange="calcTotal()">
+                                    <div class="pay-method-card" style="flex-direction: row; justify-content: space-between; align-items: center;">
+                                        <strong>Saldo Dompet</strong>
+                                        <span style="font-size: 0.85rem; color: #059669; font-weight: 800;">Rp {{ number_format($user->wallet_balance, 0, ',', '.') }}</span>
+                                    </div>
+                                </label>
+                                <label><input type="radio" name="payment_method" value="paylater" onchange="calcTotal()">
+                                    <div class="pay-method-card"><strong>Paylater</strong></div>
+                                </label>
+                            </div>
+
+                            <div style="margin-top:20px; padding-top:15px; border-top:1.5px dashed #e2e8f0;">
+                                <div class="pay-row"><span>Subtotal</span><span id="payment-subtotal" style="font-weight: 700; color: #1e293b;">Rp 0</span></div>
+                                <div class="pay-row"><span>Ongkir</span><span id="pay-shipping" style="font-weight: 700; color: #1e293b;">Rp 0</span></div>
+                                <div class="pay-row" style="font-weight:900; border-top:1.5px solid #f1f5f9; padding-top:12px; color:#0076D6; font-size:1.1rem; margin-top: 8px;"><span>Total</span><span id="pay-total">Rp 0</span></div>
+                            </div>
+
+                            <button type="submit" id="pay-confirm-btn" style="width:100%; padding:14px; background:#059669; color:white; border:none; border-radius:12px; font-weight:800; margin-top:15px; cursor:pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(5,150,105,0.15); font-size: 0.9rem;">Konfirmasi & Bayar</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+</div>
 
     <!-- MODAL PEMBAYARAN (STEP 2) -->
     <div id="simPaymentModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999999; align-items:center; justify-content:center; padding: 20px;">
-        <div style="background:white; border-radius:24px; width:100%; max-width:480px; overflow:hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative;">
-            <button onclick="backToSelection()" style="position: absolute; right: 20px; top: 20px; border: none; background: #f1f5f9; color: #64748b; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 10; font-weight: bold; transition: all 0.2s;">✕</button>
-            <div id="sim-header" style="padding: 25px 30px; text-align:center; color:#1e293b; font-weight:800; font-size:1.2rem; border-bottom: 1px solid #f1f5f9;">
+        <div style="background:white; border-radius:24px; width:100%; max-width:480px; overflow:hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative; animation: slideUp 0.3s ease-out;">
+            <button onclick="backToSelection()" style="position: absolute; right: 20px; top: 20px; border: none; background: #f1f5f9; color: #64748b; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 10; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">✕</button>
+            <div id="sim-header" style="padding: 25px 30px; text-align:center; color:#1e293b; font-weight:800; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; letter-spacing: 0.5px;">
                 KONFIRMASI PEMBAYARAN
             </div>
             
@@ -986,7 +1038,19 @@
 
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
-            modal.style.display = (modal.style.display === 'none' || modal.style.display === '') ? 'flex' : 'none';
+            const isClosing = modal.style.display === 'flex' || modal.style.display === 'block';
+            modal.style.display = isClosing ? 'none' : 'flex';
+        }
+
+        function closePaymentModal() {
+            toggleModal('paymentModal');
+            // If we are closing the payment modal and an order has already been created,
+            // redirect to the order dashboard to avoid "empty cart" confusion on checkout page
+            const orderNumElem = document.getElementById('order-number');
+            const orderNum = orderNumElem ? orderNumElem.innerText : '-';
+            if (orderNum && orderNum !== '-' && !orderNum.includes('PROSES')) {
+                window.location.href = "{{ route('account.orders') }}";
+            }
         }
 
         @if (session('success'))
