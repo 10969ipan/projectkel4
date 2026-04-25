@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacare - {{ $item->name ?? 'Detail Obat' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo-opt.png') }}">
     <style>
         /* Desktop-First Detail Page */
         :root {
@@ -271,7 +272,7 @@
     <div class="product-wrapper">
         <div class="image-section" style="background: white; padding: 40px;">
             @if($item->image_path)
-                <img src="{{ asset($item->image_path) }}" alt="{{ $item->name }}" style="max-height: 400px; width: auto; object-fit: contain;">
+                <img src="{{ asset($item->image_path) }}" alt="{{ $item->name }}" width="400" height="400" style="max-height: 400px; width: auto; object-fit: contain;">
             @else
                 {{ isset($item) && $item->requires_prescription ? '⚕️' : '💊' }}
             @endif

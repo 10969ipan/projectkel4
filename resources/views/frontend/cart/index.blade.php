@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacare - Keranjang Belanja</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo-opt.png') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>

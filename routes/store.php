@@ -90,7 +90,6 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::post('/account/orders/pay-new', [AccountController::class, 'processPayment'])->name('account.orders.pay.new');
     Route::post('/account/orders/{id}/pay', [AccountController::class, 'processPayment'])->name('account.orders.pay.post');
     Route::get('/account/orders/{id}/check-status', [AccountController::class, 'checkPaymentStatus'])->name('account.orders.check_status');
-    Route::post('/account/orders/{id}/force-success', [AccountController::class, 'forcePaymentSuccess'])->name('account.orders.force_success');
     Route::delete('/account/orders/{id}', [AccountController::class, 'cancelOrder'])->name('account.orders.cancel');
     
     // Address Management

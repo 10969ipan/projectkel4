@@ -26,8 +26,8 @@
             </div>
 
             <div class="store-hero-doctors" style="position: absolute; bottom: 0; right: 40px; z-index: 5; display: flex; align-items: flex-end;">
-                <img src="{{ asset('assets/images/branding/dokter1-opt.png') }}" loading="lazy" style="height: 450px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -80px; position: relative; z-index: 2;">
-                <img src="{{ asset('assets/images/branding/dokter-opt.png') }}" loading="lazy" style="height: 420px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;">
+                <img src="{{ asset('assets/images/branding/dokter1.webp') }}" loading="lazy" width="380" height="450" style="height: 450px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -80px; position: relative; z-index: 2;">
+                <img src="{{ asset('assets/images/branding/dokter.webp') }}" loading="lazy" width="350" height="420" style="height: 420px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;">
             </div>
         </div>
     </div>

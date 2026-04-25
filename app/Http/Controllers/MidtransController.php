@@ -39,7 +39,8 @@ class MidtransController extends Controller
             $order = StoreOrder::where('order_number', $real_order_id)->first();
 
             if (!$order) {
-                return response()->json(['message' => 'Order not found'], 404);
+                // Return 200 even if order not found, so Midtrans doesn't retry invalid/test orders
+                return response()->json(['message' => 'Order not found (Ignored)'], 200);
             }
 
             if ($transaction == 'capture') {

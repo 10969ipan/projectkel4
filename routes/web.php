@@ -9,6 +9,9 @@ use App\Http\Controllers\AuthController;
 |--------------------------------------------------------------------------
 */
 
+// Midtrans Webhook Callback
+Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::class, 'callback']);
+
 // EMERGENCY DATA FIX (Internal Fix)
 Route::get('/fix-roles', function() {
     \App\Models\User::where('store_role', 'customer')->update(['role' => null]);

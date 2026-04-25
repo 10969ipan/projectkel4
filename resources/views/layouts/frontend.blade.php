@@ -19,8 +19,8 @@
     <link rel="preload" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}"></noscript>
 
-    <!-- Google Fonts (async) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <!-- Primary Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Tailwind CDN (deferred, non-blocking) -->
     <script defer src="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}"></script>
@@ -1941,7 +1941,7 @@
         };
     </script>
     <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>
-    <script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}" defer></script>
     <script src="{{ asset('assets/js/pharmacare.js') }}?v=3.1" defer></script>
     @vite(['resources/js/frontend/chatbot_widget.js'])
     @stack('scripts')

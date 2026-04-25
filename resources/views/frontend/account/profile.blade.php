@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akun Saya - Pharmacare</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo-opt.png') }}">
     <style>
         :root {
             --primary-blue: #0076D6;
@@ -280,7 +281,7 @@
 </div>
 
 <!-- SweetAlert2 -->
-<script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
+<script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}" defer></script>
 <script>
     function showSection(id, btn) {
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
@@ -322,6 +323,21 @@
 
         // RajaOngkir Logic for Profile
         loadProvincesProfile();
+        
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end',
+            showConfirmButton: false, timer: 3000, timerProgressBar: true
+        });
+
+        @if(session('success'))
+            Toast.fire({ icon: 'success', title: '{{ session('success') }}' });
+        @endif
+        @if(session('error'))
+            Toast.fire({ icon: 'error', title: '{{ session('error') }}' });
+        @endif
+        @if($errors->any())
+            Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
+        @endif
     });
 
     async function loadProvincesProfile() {
@@ -362,21 +378,6 @@
             }
         } catch (error) { console.error('Error:', error); }
     }
-
-    const Toast = Swal.mixin({
-        toast: true, position: 'top-end',
-        showConfirmButton: false, timer: 3000, timerProgressBar: true
-    });
-
-    @if(session('success'))
-        Toast.fire({ icon: 'success', title: '{{ session('success') }}' });
-    @endif
-    @if(session('error'))
-        Toast.fire({ icon: 'error', title: '{{ session('error') }}' });
-    @endif
-    @if($errors->any())
-        Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
-    @endif
 </script>
 </body>
 </html>

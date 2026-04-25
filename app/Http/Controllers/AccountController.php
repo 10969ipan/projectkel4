@@ -467,37 +467,10 @@ class AccountController extends Controller
             }
 
             // If we reached here, none of the IDs worked
-            // Special fallback for Sandbox testing
-            if (!config('services.midtrans.is_production')) {
-                return response()->json([
-                    'success' => false, 
-                    'can_force' => true, // Flag to show "Force Success" for demo
-                    'message' => 'Data transaksi tidak ditemukan di Midtrans API.',
-                    'debug_ids' => $attempts,
-                    'error' => $lastError
-                ], 404);
-            }
-
-            return response()->json(['success' => false, 'message' => 'Gagal mengecek status: ' . $lastError], 500);
+            return response()->json(['success' => false, 'message' => 'Data transaksi tidak ditemukan di sistem Midtrans.'], 404);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
-    }
-
-    /**
-     * Force success for Sandbox mode only (Demo Helper)
-     */
-    public function forcePaymentSuccess($id)
-    {
-        if (config('services.midtrans.is_production')) {
-            return response()->json(['success' => false, 'message' => 'Hanya diizinkan pada mode Sandbox.'], 403);
-        }
-
-        $user = Auth::user();
-        $order = StoreOrder::where('user_id', $user->id)->findOrFail($id);
-        $order->update(['payment_status' => 'paid', 'order_status' => 'paid']);
-
-        return response()->json(['success' => true, 'message' => 'Berhasil simulasi pembayaran lunas!']);
     }
 }

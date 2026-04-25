@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akun Saya - Pharmacare</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo-opt.png') }}">
     <style>
         :root {
             --primary-blue: #0076D6;
@@ -399,7 +400,7 @@
                         <div style="background: #fdfdfd; border: 1px solid #edf2f7; border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 20px;">
                             <div style="width: 80px; height: 80px; background: white; border: 1px solid #eee; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
                                 @if($sub->item->image_path)
-                                    <img src="{{ asset($sub->item->image_path) }}" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy">
+                                    <img src="{{ asset($sub->item->image_path) }}" width="80" height="80" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy">
                                 @else
                                     <span style="font-size: 2rem;">💊</span>
                                 @endif
@@ -545,7 +546,7 @@
 </div>
 
 <!-- SweetAlert2 -->
-<script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}"></script>
+<script src="{{ asset('sweetalert/sweetalert2.all.min.js') }}" defer></script>
 <script>
     function showSection(id, btn) {
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
@@ -587,25 +588,28 @@
         }
     }
 
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
+    let Toast;
+    document.addEventListener('DOMContentLoaded', function() {
+        Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+
+        @if(session('success'))
+            Toast.fire({ icon: 'success', title: '{{ session('success') }}' });
+        @endif
+
+        @if(session('error'))
+            Toast.fire({ icon: 'error', title: '{{ session('error') }}' });
+        @endif
+
+        @if($errors->any())
+            Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
+        @endif
     });
-
-    @if(session('success'))
-        Toast.fire({ icon: 'success', title: '{{ session('success') }}' });
-    @endif
-
-    @if(session('error'))
-        Toast.fire({ icon: 'error', title: '{{ session('error') }}' });
-    @endif
-
-    @if($errors->any())
-        Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
-    @endif
 </script>
 
 {{-- Pre-encode all order data safely as a JS map --}}
@@ -1206,29 +1210,12 @@
                             });
                         }
                     } else {
-                        // Special Handling for Sandbox Fallback
-                        if (data.can_force) {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Data Tidak Ditemukan',
-                                html: `<p>${data.message}</p><p style="font-size:0.8rem; color:#666;">ID yang dicek: ${data.debug_ids.join(', ')}</p><p>Karena ini mode <b>Sandbox</b>, apakah Anda ingin mengonfirmasi secara manual bahwa Anda sudah membayar?</p>`,
-                                showCancelButton: true,
-                                confirmButtonText: 'Ya, Konfirmasi Manual',
-                                cancelButtonText: 'Nanti Saja',
-                                confirmButtonColor: '#2F9E44'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    forceConfirmPayment(orderId, btn);
-                                }
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Status Belum Berubah',
-                                text: data.message,
-                                confirmButtonColor: '#0076D6'
-                            });
-                        }
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Status Belum Berubah',
+                            text: data.message,
+                            confirmButtonColor: '#0076D6'
+                        });
                     }
                 })
                 .catch(error => {
@@ -1239,36 +1226,6 @@
                         title: 'Terjadi kesalahan saat mengecek status.'
                     });
                 });
-        }
-
-        function forceConfirmPayment(orderId, btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-
-            fetch(`/account/orders/${orderId}/force-success`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: data.message,
-                        confirmButtonColor: '#0076D6'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Cek Status';
-                    Toast.fire({ icon: 'error', title: data.message });
-                }
-            });
         }
     </script>
 
