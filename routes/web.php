@@ -23,7 +23,8 @@ Route::get('/', function () {
         }
         return redirect()->route('store.index');
     }
-    return view('auth.login');
+    // Default untuk tamu (Guest), langsung ke Store
+    return redirect()->route('store.index');
 })->name('home');
 
 // General Authentication (Staff & Admin)
