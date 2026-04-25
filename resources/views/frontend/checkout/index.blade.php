@@ -19,9 +19,26 @@
         
         .container { max-width: 1200px; margin: 0 auto; padding: 40px; }
         
-        .top-bar { display: flex; align-items: center; margin-bottom: 40px; }
-        .top-bar a { text-decoration: none; color: var(--text-main); font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-        .top-bar h1 { font-size: 2rem; margin-left: auto; margin-right: auto; }
+        .top-bar { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            margin-bottom: 30px; 
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .btn-back-link { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-weight: 700; 
+            color: #1e293b; 
+            text-decoration: none; 
+            font-size: 1rem; 
+            transition: 0.2s;
+        }
+        .btn-back-link:hover { color: var(--primary-blue); transform: translateX(-3px); }
+        .page-title { font-size: 1.25rem; font-weight: 800; color: #64748b; }
 
         .checkout-grid {
             display: grid;
@@ -53,7 +70,24 @@
         .btn-pay { width: 100%; background: var(--primary-blue); color: white; padding: 18px; border-radius: 12px; border: none; font-size: 1.2rem; font-weight: 700; text-align: center; cursor: pointer; transition: background 0.2s; }
         .btn-pay:hover { background: #005FA3; }
 
-        @media (max-width: 900px) { .checkout-grid { grid-template-columns: 1fr; } .method-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { 
+            .container { padding: 20px 16px; }
+            .top-bar { margin-bottom: 25px; }
+            .page-title { font-size: 1.1rem !important; }
+            .btn-back-link { font-size: 0.95rem; }
+            .checkout-grid { grid-template-columns: 1fr; gap: 20px; } 
+            .method-grid { grid-template-columns: 1fr; } 
+            .section { padding: 20px; border-radius: 20px; }
+            .summary-box { position: static; padding: 20px; border-radius: 20px; }
+        }
+
+        /* Additional fine-tuning for address cards on mobile */
+        @media (max-width: 600px) {
+            .address-card { padding: 15px !important; }
+            .pay-modal-grid { grid-template-columns: 1fr; }
+            #paymentModal { padding: 0 !important; align-items: flex-end !important; }
+            #paymentModal > div { border-radius: 24px 24px 0 0 !important; max-height: 92vh !important; }
+        }
 
         /* Payment Modal Specific Styles */
         .pay-modal-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
@@ -117,13 +151,11 @@
             return this.selectedIds.includes(id.toString());
         }
     }'>
-    <div class="top-bar">
-        <a href="javascript:history.back()" style="display: flex; align-items: center; gap: 5px; font-weight: 700; color: var(--text-main); text-decoration: none;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            Kembali
+    <div class="top-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px;">
+        <a href="javascript:history.back()" class="btn-back-link" style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e293b; text-decoration: none; font-size: 1rem;">
+            <i class="fas fa-chevron-left"></i> Kembali
         </a>
-        <h1 style="font-size: 1.2rem; font-weight: 700; color: var(--text-muted); opacity: 0.8;">Checkout Pesanan</h1>
-        <div style="width: 100px;"></div> <!-- Spacer -->
+        <div class="page-title" style="font-size: 1.25rem; font-weight: 800; color: #64748b; opacity: 0.8;">Checkout Pesanan</div>
     </div>
 
     <form id="checkoutForm" action="{{ route('checkout.store') }}" method="POST" enctype="multipart/form-data" class="checkout-grid">

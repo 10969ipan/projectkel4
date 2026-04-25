@@ -1147,6 +1147,16 @@
             /* ACCOUNT */
             .account-layout { flex-direction: column !important; }
             .account-sidebar { width: 100% !important; }
+
+            /* PRODUCT CARDS (Katalog) */
+            #carousel-track { gap: 12px !important; padding: 10px 5px 20px !important; }
+            .product-card { min-width: 170px !important; max-width: 170px !important; padding: 12px !important; border-radius: 16px !important; }
+            .product-card > a > div:first-child { height: 110px !important; margin-bottom: 10px !important; }
+            .product-card > a > div:nth-child(2) { font-size: 0.9rem !important; margin-bottom: 4px !important; }
+            .product-card > a > div:nth-child(3) { font-size: 0.72rem !important; margin-bottom: 8px !important; }
+            .product-card > a > div:last-child { font-size: 1rem !important; }
+            .product-card button:last-child { width: 32px !important; height: 32px !important; bottom: 12px !important; right: 12px !important; font-size: 1rem !important; border-radius: 9px !important; }
+            .product-card .quick-view-btn { width: 28px !important; height: 28px !important; top: 8px !important; right: 8px !important; font-size: 0.75rem !important; }
         }
 
         /* Extra small mobile (≤480px) */

@@ -223,9 +223,25 @@
         }
 
         @media (max-width: 900px) {
-            .product-wrapper { grid-template-columns: 1fr; }
-            .image-section { min-height: 300px; }
-            .action-container { flex-direction: column; }
+            .container { padding: 15px !important; }
+            .top-bar { margin-bottom: 15px; }
+            .top-bar a { font-size: 0.95rem; }
+            .product-wrapper { grid-template-columns: 1fr; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+            .image-section { min-height: 250px !important; padding: 20px !important; }
+            .image-section img { max-height: 220px !important; }
+            .details-section { padding: 25px 20px !important; }
+            .category-badge { font-size: 0.75rem !important; margin-bottom: 10px !important; padding: 4px 12px !important; }
+            .product-title { font-size: 1.4rem !important; font-weight: 800 !important; margin-bottom: 4px !important; }
+            .product-variant { font-size: 0.9rem !important; margin-bottom: 12px !important; }
+            .rating { font-size: 0.85rem !important; margin-bottom: 15px !important; }
+            .price { font-size: 1.6rem !important; font-weight: 800 !important; margin-bottom: 25px !important; }
+            .desc-title { font-size: 0.95rem !important; margin-bottom: 8px !important; }
+            .desc-text { font-size: 0.88rem !important; line-height: 1.6 !important; margin-bottom: 30px !important; color: #64748b !important; }
+            .action-container { flex-direction: row !important; gap: 15px !important; margin-top: 15px !important; }
+            .qty-selector { width: 130px !important; height: 60px !important; border-radius: 16px !important; background: #f1f5f9 !important; border: none !important; padding: 4px !important; justify-content: space-between !important; flex-shrink: 0 !important; }
+            .qty-selector .btn-qty { width: 44px !important; height: 52px !important; border-radius: 12px !important; background: white !important; font-size: 1.3rem !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important; color: #1e293b !important; }
+            .qty-number { font-size: 1.1rem !important; font-weight: 800 !important; width: 40px !important; background: transparent !important; color: #1e293b !important; }
+            .btn-buy { flex: 1 !important; height: 60px !important; font-size: 1rem !important; border-radius: 16px !important; font-weight: 800 !important; background: var(--primary-blue) !important; color: white !important; box-shadow: 0 8px 20px rgba(0,118,214,0.15) !important; text-transform: none !important; border: none !important; margin-top: 0 !important; }
         }
 
         /* SweetAlert2 Toast Adjustment */
@@ -292,15 +308,15 @@
 
             <!-- Action Buttons -->
             <div class="action-container">
-                <div style="display: flex; gap: 20px; flex: 1;">
-                    <div class="qty-selector">
-                        <button type="button" class="btn-qty" @click="qty > 1 ? qty-- : null">−</button>
-                        <input type="number" name="qty" x-model.number="qty" class="qty-number" min="1" max="99" style="width:60px; border:none; text-align:center;">
-                        <button type="button" class="btn-qty" @click="qty < 99 ? qty++ : null">+</button>
-                    </div>
-
-                    <button type="button" @click="addToCart({{ $item->id }})" class="btn-buy">+ Tambah ke Keranjang</button>
+                <div class="qty-selector">
+                    <button type="button" class="btn-qty" @click="qty > 1 ? qty-- : null">−</button>
+                    <input type="number" name="qty" x-model.number="qty" class="qty-number" min="1" max="99" style="width:60px; border:none; text-align:center; background: transparent;">
+                    <button type="button" class="btn-qty" @click="qty < 99 ? qty++ : null">+</button>
                 </div>
+
+                <button type="button" @click="addToCart({{ $item->id }})" class="btn-buy">
+                    <i class="fas fa-shopping-cart" style="margin-right: 10px; font-size: 0.9rem;"></i> Tambah ke Keranjang
+                </button>
             </div>
 
         </div>
