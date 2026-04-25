@@ -243,14 +243,43 @@ class AccountController extends Controller
                     // Save timestamp to unique_code for status checking later
                     $order->update(['unique_code' => $timestamp]);
 
+                    // Build Item Details
+                    $item_details = [];
+                    foreach ($order->items as $orderItem) {
+                        $item_details[] = [
+                            'id' => $orderItem->item_id,
+                            'price' => (int) $orderItem->price,
+                            'quantity' => (int) $orderItem->quantity,
+                            'name' => substr($orderItem->item->name ?? 'Produk Apotek', 0, 50),
+                        ];
+                    }
+
+                    // Add shipping cost as an item if exists
+                    if ($order->shipping_cost > 0) {
+                        $item_details[] = [
+                            'id' => 'SHIPPING',
+                            'price' => (int) $order->shipping_cost,
+                            'quantity' => 1,
+                            'name' => 'Ongkos Kirim (' . ($order->shipping_method ?? 'Reguler') . ')',
+                        ];
+                    }
+
                     $params = [
                         'transaction_details' => [
                             'order_id' => $midtransOrderId,
                             'gross_amount' => (int) $order->grand_total,
                         ],
+                        'item_details' => $item_details,
                         'customer_details' => [
                             'first_name' => $user->name,
                             'email' => $user->email,
+                            'phone' => '0800000000', // Default if phone not available
+                            'shipping_address' => [
+                                'first_name' => $user->name,
+                                'email' => $user->email,
+                                'phone' => '0800000000',
+                                'address' => $order->address->full_address ?? 'Alamat tidak diisi',
+                            ]
                         ],
                         'enabled_payments' => [
                             'credit_card', 'gopay', 'shopeepay', 'permata_va', 'bca_va', 'bni_va', 'bri_va', 'other_va'
