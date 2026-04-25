@@ -164,6 +164,23 @@
                     }
                 }, { passive: false });
 
+                // --- Touch Swipe Support (Mobile/Tablet) ---
+                let touchStartX = 0;
+                let touchStartY = 0;
+                outer.addEventListener('touchstart', (e) => {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+
+                outer.addEventListener('touchend', (e) => {
+                    const deltaX = touchStartX - e.changedTouches[0].clientX;
+                    const deltaY = Math.abs(touchStartY - e.changedTouches[0].clientY);
+                    // Swipe horizontal lebih dari 40px dan lebih dominan dari vertikal
+                    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > deltaY) {
+                        if (!isSliding) slide(deltaX > 0 ? 1 : -1);
+                    }
+                }, { passive: true });
+
                 // Recalculate on resize
                 window.addEventListener('resize', () => {
                     jumpToReal();

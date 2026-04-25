@@ -99,7 +99,10 @@ function setupSearchInput(inputId, resultsId) {
     const searchInput = document.getElementById(inputId);
     if (!searchInput) return;
 
-    // Buat container hasil jika belum ada
+    // Wrapper = div yang membungkus input + icon (position:relative)
+    const wrapper = searchInput.parentNode;
+
+    // Buat container hasil DI LUAR wrapper (setelah wrapper), bukan di dalam
     let searchResults = document.getElementById(resultsId);
     if (!searchResults) {
         searchResults = document.createElement('div');
@@ -112,9 +115,11 @@ function setupSearchInput(inputId, resultsId) {
             max-height: 300px;
             overflow-y: auto;
             display: none;
-            margin-top: 8px;
+            margin-top: 6px;
+            z-index: 99999;
         `;
-        searchInput.parentNode.insertBefore(searchResults, searchInput.nextSibling);
+        // Insert SETELAH wrapper, bukan di dalam wrapper
+        wrapper.parentNode.insertBefore(searchResults, wrapper.nextSibling);
     }
 
     let searchTimeout = null;

@@ -1154,6 +1154,16 @@
             .store-hero-card h1 { font-size: 1.7rem !important; }
             .auth-modal-content { padding: 22px 16px; }
         }
+
+        /* Wellness Modal Responsive */
+        @media (max-width: 768px) {
+            #wellnessModal { padding: 12px !important; align-items: flex-end !important; }
+            #wellnessModal > div { border-radius: 20px 20px 0 0 !important; max-height: 88vh !important; overflow-y: auto; }
+            #wellnessModal > div > div:nth-child(2) { height: 180px !important; }
+            #wellnessModal > div > div:last-child { padding: 24px 20px !important; }
+            #wm-title { font-size: 1.3rem !important; margin-bottom: 12px !important; }
+            #wm-content { font-size: 0.9rem !important; line-height: 1.6 !important; }
+        }
     </style>
     <script>
         @php
