@@ -1106,8 +1106,8 @@
             .chat-fab-logo { width: 42px; height: 42px; }
             #chat-greeting-bubble { right: 16px; bottom: 90px; max-width: 210px; font-size: 0.85rem; }
 
-            /* Chatbot window full-screen on mobile */
-            .chat-window { width: 100vw; height: 85vh; bottom: 75px; right: -16px; border-radius: 20px 20px 0 0; }
+            /* Chatbot window — Much smaller on mobile */
+            .chat-window { width: 330px !important; max-width: calc(100vw - 32px) !important; height: 480px !important; max-height: 65vh !important; bottom: 95px !important; right: 16px !important; border-radius: 22px !important; }
 
             /* Quick View Modal */
             .qv-modal-content { grid-template-columns: 1fr !important; max-height: 90vh; overflow-y: auto; }
@@ -1157,11 +1157,12 @@
 
         /* Wellness Modal Responsive */
         @media (max-width: 768px) {
-            #wellnessModal { padding: 12px !important; align-items: flex-end !important; }
-            #wellnessModal > div { border-radius: 20px 20px 0 0 !important; max-height: 88vh !important; overflow-y: auto; }
-            #wellnessModal > div > div:nth-child(2) { height: 180px !important; }
-            #wellnessModal > div > div:last-child { padding: 24px 20px !important; }
-            #wm-title { font-size: 1.3rem !important; margin-bottom: 12px !important; }
+            #wellnessModal { padding: 16px !important; align-items: center !important; }
+            #wellnessModal > div { border-radius: 28px !important; max-height: 85vh !important; overflow-y: auto; width: 100% !important; max-width: 500px !important; margin: 0 auto !important; }
+            #wellnessModal > div > button { top: 15px !important; right: 15px !important; width: 32px !important; height: 32px !important; }
+            #wellnessModal > div > div:nth-child(2) { height: 160px !important; }
+            #wellnessModal > div > div:last-child { padding: 25px 20px !important; }
+            #wm-title { font-size: 1.25rem !important; margin-bottom: 12px !important; line-height: 1.3 !important; }
             #wm-content { font-size: 0.9rem !important; line-height: 1.6 !important; }
         }
     </style>
