@@ -237,35 +237,27 @@
 
         /* Mobile Specific Optimization */
         @media (max-width: 768px) {
-            .container { padding: 20px 16px; }
-            .top-bar { margin-bottom: 20px; }
-            .btn-back-link { font-size: 0.9rem; }
-            .page-title { font-size: 1rem; }
+            .container { padding: 15px; }
+            .top-bar { margin-bottom: 15px; padding-bottom: 15px; }
+            .page-title { font-size: 0.95rem; }
             
-            .cart-card { border-radius: 20px; }
-            .cart-table thead { display: none; }
-            .cart-table, .cart-table tbody, .cart-table tr, .cart-table td { display: block; width: 100%; }
-            .cart-table tr { padding: 20px 15px; border-bottom: 8px solid #f8fafc; position: relative; }
-            .cart-table td { padding: 0; border: none; margin-bottom: 12px; }
-            .cart-table td:last-child { margin-bottom: 0; }
-
-            .item-info { gap: 15px; }
-            .item-image { width: 64px; height: 64px; border-radius: 12px; }
-            .item-name { font-size: 0.95rem; }
+            .cart-card { border-radius: 20px; overflow: hidden; }
             
-            .qty-box { margin-top: 5px; scale: 0.95; transform-origin: left; }
+            /* Keep table layout but make it scrollable */
+            .cart-table { min-width: 600px; }
+            .cart-table th, .cart-table td { padding: 15px 10px; }
             
-            .price-text { font-size: 0.85rem; color: var(--text-muted); }
-            .subtotal-text { font-size: 1rem; display: block; margin-top: 5px; }
-            .subtotal-text::before { content: 'Subtotal: '; font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
-
-            .btn-delete { position: absolute; top: 20px; right: 15px; width: 36px; height: 36px; }
+            .item-image { width: 50px; height: 50px; border-radius: 10px; }
+            .item-name { font-size: 0.9rem; }
+            .item-badge { font-size: 0.6rem; padding: 2px 6px; }
+            
+            .qty-box { scale: 0.85; transform-origin: left; }
+            .price-text { font-size: 0.9rem; }
+            .subtotal-text { font-size: 0.95rem; }
+            
+            .btn-delete { width: 32px; height: 32px; font-size: 0.85rem; }
             
             .summary-card { padding: 20px; border-radius: 20px; }
-            .summary-title { font-size: 1.2rem; margin-bottom: 20px; }
-            .summary-row { font-size: 0.9rem; }
-            .summary-row.total { font-size: 1.25rem; margin-top: 15px; padding-top: 15px; }
-            .btn-primary-action { padding: 16px; font-size: 1rem; }
         }
     </style>
 </head>
@@ -329,7 +321,7 @@
                             <td>
                                 <div class="price-text" x-text="formatIDR(item.price)"></div>
                             </td>
-                            <td>
+                            <td :data-subtotal="formatIDR(item.price * item.qty)">
                                 <div class="qty-box">
                                     <button type="button" class="qty-btn" @click="updateQty(item.id, -1)">−</button>
                                     <input type="number" class="qty-input" x-model.number="item.qty" readonly>
