@@ -1244,7 +1244,7 @@
 
             async refreshCart() {
                 try {
-                    const res = await fetch('{{ route('cart.summary') }}');
+                    const res = await fetch('/cart/summary');
                     const data = await res.json();
                     this.cartItems = data.items;
                     this.cartTotal = data.grand_total;
@@ -1521,6 +1521,10 @@
                                         </div>
                                     </div>
                                 </template>
+                                
+                                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0; font-size: 0.65rem; color: #cbd5e1; text-align: center;">
+                                    User Session ID: {{ Auth::id() }}
+                                </div>
                             </div>
                         </div>
                     </div>
