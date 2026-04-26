@@ -48,18 +48,30 @@ class MidtransController extends Controller
                         $order->update(['payment_status' => 'pending']);
                     } else {
                         $order->update(['payment_status' => 'paid', 'order_status' => 'paid']);
+                        if ($order->user) {
+                            $order->user->notify(new \App\Notifications\OrderStatusNotification($order, 'paid'));
+                        }
                     }
                 }
             } else if ($transaction == 'settlement') {
                 $order->update(['payment_status' => 'paid', 'order_status' => 'paid']);
+                if ($order->user) {
+                    $order->user->notify(new \App\Notifications\OrderStatusNotification($order, 'paid'));
+                }
             } else if ($transaction == 'pending') {
                 $order->update(['payment_status' => 'pending']);
             } else if ($transaction == 'deny') {
                 $order->update(['payment_status' => 'cancelled', 'order_status' => 'cancelled']);
             } else if ($transaction == 'expire') {
                 $order->update(['payment_status' => 'cancelled', 'order_status' => 'cancelled']);
+                if ($order->user) {
+                    $order->user->notify(new \App\Notifications\OrderStatusNotification($order, 'cancelled'));
+                }
             } else if ($transaction == 'cancel') {
                 $order->update(['payment_status' => 'cancelled', 'order_status' => 'cancelled']);
+                if ($order->user) {
+                    $order->user->notify(new \App\Notifications\OrderStatusNotification($order, 'cancelled'));
+                }
             }
 
             return response()->json(['message' => 'Notification processed']);
