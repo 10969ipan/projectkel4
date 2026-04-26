@@ -118,7 +118,6 @@
                             <p class="mt-1.5 text-xs text-red-600 font-medium">{{ $message }}</p>
                         @enderror
                     </div>
-                    </div>
                 </div>
 
                 <div class="mt-8 flex justify-end">

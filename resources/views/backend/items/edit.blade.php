@@ -110,7 +110,7 @@
                         <label for="image" class="block text-sm font-semibold text-gray-700 mb-2">Foto Produk (Opsional)</label>
                         @if ($item->image_path)
                             <div class="mb-3">
-                                <img src="{{ asset('storage/' . $item->image_path) }}" alt="Current Image" class="h-24 w-24 object-cover rounded-lg border border-gray-200">
+                                <img src="{{ Str::startsWith($item->image_path, ['http://', 'https://']) ? $item->image_path : asset('storage/' . $item->image_path) }}" alt="Current Image" class="h-24 w-24 object-cover rounded-lg border border-gray-200">
                                 <p class="text-xs text-gray-500 mt-1">Foto saat ini. Upload foto baru untuk mengganti.</p>
                             </div>
                         @endif
@@ -119,7 +119,6 @@
                         @error('image')
                             <p class="mt-1.5 text-xs text-red-600 font-medium">{{ $message }}</p>
                         @enderror
-                    </div>
                     </div>
                 </div>
 
