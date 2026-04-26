@@ -1203,6 +1203,31 @@
             }
         @endphp
 
+        @php
+            $notifData = [];
+            $notifDbCount = 0;
+            $notifUnreadCount = 0;
+            if (Auth::check()) {
+                $notifRows = \Illuminate\Support\Facades\DB::table('notifications')
+                    ->where('notifiable_id', Auth::id())
+                    ->latest()
+                    ->take(10)
+                    ->get();
+                foreach ($notifRows as $n) {
+                    $notifData[] = [
+                        'id' => $n->id,
+                        'data' => json_decode($n->data, true),
+                        'is_read' => $n->read_at !== null,
+                        'created_at' => \Carbon\Carbon::parse($n->created_at)->diffForHumans(),
+                    ];
+                }
+                $notifDbCount = \Illuminate\Support\Facades\DB::table('notifications')
+                    ->where('notifiable_id', Auth::id())->count();
+                $notifUnreadCount = \Illuminate\Support\Facades\DB::table('notifications')
+                    ->where('notifiable_id', Auth::id())->whereNull('read_at')->count();
+            }
+        @endphp
+
         // Global State Definition for Early Loading
         window.PharmacareState = {
             isAuthenticated: {{ Auth::check() ? 'true' : 'false' }},
@@ -1214,21 +1239,9 @@
             cartTotal: {{ $initialTotal }},
             cartCount: {{ $initialCount }},
             currentBasePrice: 0,
-            notifications: @auth(
-                \Illuminate\Support\Facades\DB::table('notifications')
-                    ->where('notifiable_id', Auth::id())
-                    ->latest()
-                    ->take(10)
-                    ->get()
-                    ->map(fn($n) => [
-                        'id' => $n->id,
-                        'data' => json_decode($n->data, true),
-                        'is_read' => $n->read_at !== null,
-                        'created_at' => \Carbon\Carbon::parse($n->created_at)->diffForHumans(),
-                    ])
-            ) @else [] @endauth,
-            dbCount: @auth(\Illuminate\Support\Facades\DB::table('notifications')->where('notifiable_id', Auth::id())->count()) @else 0 @endauth,
-            unreadNotificationsCount: @auth(\Illuminate\Support\Facades\DB::table('notifications')->where('notifiable_id', Auth::id())->whereNull('read_at')->count()) @else 0 @endauth,
+            notifications: @json($notifData),
+            dbCount: {{ $notifDbCount }},
+            unreadNotificationsCount: {{ $notifUnreadCount }},
             showNotifications: false,
             showWellnessModal: false,
             activeWellnessArticle: {},
