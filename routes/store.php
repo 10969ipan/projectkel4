@@ -22,6 +22,45 @@ Route::get('/auth/google/callback', [StoreAuthController::class, 'handleGoogleCa
 // Midtrans Webhook Callback
 Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::class, 'callback'])->name('midtrans.callback');
 
+// === TEMPORARY DEBUG ROUTE (HAPUS SETELAH SELESAI) ===
+Route::get('/debug-notif/{user_id}', function ($user_id) {
+    try {
+        // Cek apakah tabel notifications ada
+        $tableExists = \Illuminate\Support\Facades\Schema::hasTable('notifications');
+        
+        // Coba insert dummy notification
+        $testId = \Illuminate\Support\Str::uuid()->toString();
+        \Illuminate\Support\Facades\DB::table('notifications')->insert([
+            'id' => $testId,
+            'type' => 'TestNotification',
+            'notifiable_type' => 'App\Models\User',
+            'notifiable_id' => (int) $user_id,
+            'data' => json_encode(['message' => 'TEST NOTIFIKASI - bisa dihapus', 'status' => 'test', 'needs_rating' => false]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        // Hitung jumlah notif di DB untuk user ini
+        $count = \Illuminate\Support\Facades\DB::table('notifications')->where('notifiable_id', $user_id)->count();
+        
+        return response()->json([
+            'success' => true,
+            'table_exists' => $tableExists,
+            'inserted_id' => $testId,
+            'total_for_user' => $count,
+            'db_connection' => config('database.default'),
+            'message' => 'Insert berhasil! Segarkan bel notifikasi Anda.'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
+});
+
 Route::middleware(['customer'])->group(function () {
     Route::get('/store', [StoreController::class, 'index'])->name('store.index');
     Route::get('/store/item/{id}', [StoreController::class, 'show'])->name('store.show');
