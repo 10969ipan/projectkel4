@@ -254,7 +254,112 @@
 <body class="h-full" x-data="{ mobileMenuOpen: false, profileMenuOpen: false }">
     <div class="loading-bar"></div>
     <div class="min-h-screen flex flex-col md:flex-row">
-        <!-- Sidebar -->
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="mobileMenuOpen" class="fixed inset-0 z-50 flex md:hidden" x-cloak>
+            <div x-show="mobileMenuOpen" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-600 bg-opacity-75" @click="mobileMenuOpen = false"></div>
+
+            <div x-show="mobileMenuOpen" x-transition:enter="transition ease-in-out duration-300 transform" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-white">
+                <div class="absolute top-0 right-0 -mr-12 pt-2">
+                    <button @click="mobileMenuOpen = false" class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                        <i class="fas fa-times text-white text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="flex-shrink-0 flex items-center px-4">
+                    <img src="{{ asset('image/sima1.png') }}" alt="SIMA-APOTEK" class="h-8 w-8 mr-2" />
+                    <span class="text-base font-black text-gray-800 tracking-tighter uppercase">SIMA-<span class="text-primary-600">APOTEK</span></span>
+                </div>
+                
+                <div class="mt-5 flex-1 h-0 overflow-y-auto">
+                    <!-- User Profile Card in Mobile Sidebar -->
+                    <div class="flex items-center p-3 bg-primary-50 rounded-xl border border-primary-100 mb-4 mx-4">
+                        <div class="relative h-10 w-10 flex-shrink-0">
+                            <div class="absolute inset-0 rounded-full bg-primary-600 flex items-center justify-center text-white font-black shadow-sm">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </div>
+                        </div>
+                        <div class="ml-3 overflow-hidden">
+                            <p class="text-sm font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-[10px] font-bold text-primary-500 uppercase tracking-tighter">{{ auth()->user()->role === 'admin' ? 'Administrator' : 'Staf Farmasi' }}</p>
+                        </div>
+                    </div>
+
+                    <nav class="px-2 space-y-1">
+                        <a href="{{ route('dashboard') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('dashboard') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                            <i class="fas fa-chart-line mr-3"></i> Dashboard
+                        </a>
+                        <a href="{{ route('items.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('items.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                            <i class="fas fa-pills mr-3"></i> Obat
+                        </a>
+                        @if (auth()->user()->isAdmin())
+                            <a href="{{ route('transactions.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('transactions.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-exchange-alt mr-3"></i> Mutasi Stok
+                            </a>
+                        @endif
+                        <a href="{{ route('item-requests.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('item-requests.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                            <i class="fas fa-file-medical mr-3"></i> Permintaan Obat
+                        </a>
+
+                        @if (auth()->user()->isAdmin())
+                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3></div>
+                            <a href="{{ route('admin.pharmacare.transactions') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-shopping-cart mr-3"></i> Transaksi Toko
+                            </a>
+                            <a href="{{ route('admin.pharmacare.transaction-logs') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-history mr-3"></i> Log Transaksi
+                            </a>
+                            <a href="{{ route('admin.pharmacare.customers') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-users mr-3"></i> Manajemen Pelanggan
+                            </a>
+
+                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Data</h3></div>
+                            <a href="{{ route('users.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('users.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-users-cog mr-3"></i> User Staff
+                            </a>
+                            <a href="{{ route('categories.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('categories.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-tags mr-3"></i> Kategori
+                            </a>
+                            <a href="{{ route('units.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('units.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-balance-scale mr-3"></i> Satuan Ukur
+                            </a>
+
+                            <div x-data="{ reportOpen: false }" class="space-y-1 mt-2">
+                                <button @click="reportOpen = !reportOpen" class="group w-full flex items-center px-4 py-3 text-sm font-bold text-gray-500 hover:text-primary-600 hover:bg-gray-50 rounded-xl transition-all">
+                                    <i class="fas fa-file-medical-alt mr-3 text-gray-400 group-hover:text-primary-600"></i>
+                                    <span class="flex-1 text-left uppercase text-[10px] tracking-widest font-black">Laporan Medik</span>
+                                    <svg :class="{ 'transform rotate-180': reportOpen }" class="ml-3 h-4 w-4 text-gray-400 group-hover:text-primary-600 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <div x-show="reportOpen" x-transition x-cloak class="pl-4 space-y-1">
+                                    <a href="{{ route('reports.stock') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                        <i class="fas fa-boxes mr-3 text-[10px]"></i> Laporan Stok
+                                    </a>
+                                    <a href="{{ route('reports.transactions') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                        <i class="fas fa-history mr-3 text-[10px]"></i> Riwayat Mutasi
+                                    </a>
+                                    <a href="{{ route('reports.requests') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                        <i class="fas fa-clipboard-check mr-3 text-[10px]"></i> Rekap Permintaan
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
+                    </nav>
+                </div>
+                
+                <div class="p-4 border-t border-gray-100 bg-gray-50/50 mt-auto">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="group flex items-center w-full px-4 py-3 text-sm font-bold text-red-500 rounded-xl hover:bg-red-50 transition-all">
+                            <i class="fas fa-power-off mr-3"></i> Keluar
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="flex-shrink-0 w-14"></div>
+        </div>
+
+        <!-- Desktop Sidebar -->
         <div class="hidden md:flex md:flex-shrink-0">
             <div class="flex flex-col w-64 bg-white border-r border-gray-200">
                 <div class="flex items-center justify-center h-16 px-4 bg-white border-b border-gray-100">
