@@ -1459,7 +1459,7 @@
             </div>
 
             <div class="top-bar-right" style="display: flex; align-items: center; gap: 20px;">
-                @php $cartCount = array_sum(session()->get('cart', [])); @endphp
+                @php $cartCount = collect(session()->get('cart', []))->sum('qty'); @endphp
 
                 @guest
                     @if(request()->routeIs('store.index'))
