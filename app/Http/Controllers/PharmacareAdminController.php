@@ -67,12 +67,37 @@ class PharmacareAdminController extends Controller
         }
         $order->save();
         
-        // Trigger Notification
-        if (in_array($request->order_status, ['processing', 'completed'])) {
-            $user = $order->user;
-            if ($user) {
-                $user->notify(new \App\Notifications\OrderStatusNotification($order, $request->order_status));
+        // Trigger Notification Manual
+        if (in_array($request->order_status, ['paid', 'processing', 'completed'])) {
+            $message = '';
+            $icon = '';
+            
+            if ($request->order_status === 'completed') {
+                $message = "Pesanan #{$order->order_number} telah sampai. Yuk berikan rating!";
+                $icon = 'fa-star';
+            } elseif ($request->order_status === 'processing') {
+                $message = "Pesanan #{$order->order_number} sedang dikirim!";
+                $icon = 'fa-truck';
+            } elseif ($request->order_status === 'paid') {
+                $message = "Pembayaran untuk pesanan #{$order->order_number} berhasil!";
+                $icon = 'fa-check-circle';
             }
+            
+            \Illuminate\Support\Facades\DB::table('notifications')->insert([
+                'id' => \Illuminate\Support\Str::uuid(),
+                'type' => 'App\Notifications\OrderStatusNotification',
+                'notifiable_type' => 'App\Models\User',
+                'notifiable_id' => $order->user_id,
+                'data' => json_encode([
+                    'order_id' => $order->id,
+                    'message' => $message,
+                    'icon' => $icon,
+                    'status' => $request->order_status,
+                    'needs_rating' => $request->order_status === 'completed',
+                ]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
         
         return back()->with('success', 'Status pesanan berhasil diperbarui!');

@@ -55,8 +55,22 @@ class MidtransController extends Controller
                 }
             } else if ($transaction == 'settlement') {
                 $order->update(['payment_status' => 'paid', 'order_status' => 'paid']);
-                if ($order->user) {
-                    $order->user->notify(new \App\Notifications\OrderStatusNotification($order, 'paid'));
+                if ($order->user_id) {
+                    \Illuminate\Support\Facades\DB::table('notifications')->insert([
+                        'id' => \Illuminate\Support\Str::uuid(),
+                        'type' => 'App\Notifications\OrderStatusNotification',
+                        'notifiable_type' => 'App\Models\User',
+                        'notifiable_id' => $order->user_id,
+                        'data' => json_encode([
+                            'order_id' => $order->id,
+                            'message' => "Pembayaran untuk pesanan #{$order->order_number} berhasil!",
+                            'icon' => 'fa-check-circle',
+                            'status' => 'paid',
+                            'needs_rating' => false,
+                        ]),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
                 }
             } else if ($transaction == 'pending') {
                 $order->update(['payment_status' => 'pending']);
