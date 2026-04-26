@@ -49,6 +49,9 @@ class OrderStatusNotification extends Notification
         } elseif ($this->status === 'completed') {
             $message = "Pesanan #{$this->order->order_number} telah sampai. Yuk berikan rating!";
             $icon = 'fa-star';
+        } elseif ($this->status === 'paid') {
+            $message = "Pembayaran untuk pesanan #{$this->order->order_number} berhasil!";
+            $icon = 'fa-check-circle';
         }
 
         return [
