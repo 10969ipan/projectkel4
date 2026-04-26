@@ -1255,7 +1255,10 @@
             
             async fetchNotifications() {
                 try {
-                    const res = await fetch('/api/notifications');
+                    const res = await fetch('/api/notifications', {
+                        credentials: 'same-origin',
+                        headers: { 'Accept': 'application/json' }
+                    });
                     const data = await res.json();
                     this.notifications = data.notifications;
                     this.unreadNotificationsCount = data.unreadCount;
@@ -1268,6 +1271,7 @@
                 try {
                     await fetch('/api/notifications/read', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Content-Type': 'application/json',
