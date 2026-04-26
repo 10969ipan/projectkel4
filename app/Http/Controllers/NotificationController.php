@@ -17,21 +17,32 @@ class NotificationController extends Controller
             return response()->json(['notifications' => [], 'unreadCount' => 0]);
         }
 
-        $allNotifications = $user->notifications()->take(10)->get();
-        $unreadCount = $user->unreadNotifications()->count();
-        
+        // Ambil notifikasi secara manual lewat query builder untuk menghindari isu notifiable_type mismatch
+        $allNotifications = \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('notifiable_id', $user->id)
+            ->latest()
+            ->take(10)
+            ->get();
+            
+        $unreadCount = \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('notifiable_id', $user->id)
+            ->whereNull('read_at')
+            ->count();
+            
         $notifications = $allNotifications->map(function ($notification) {
+            $data = json_decode($notification->data, true);
             return [
                 'id' => $notification->id,
-                'data' => $notification->data,
+                'data' => $data,
                 'is_read' => $notification->read_at !== null,
-                'created_at' => $notification->created_at->diffForHumans(),
+                'created_at' => \Carbon\Carbon::parse($notification->created_at)->diffForHumans(),
             ];
         });
 
         return response()->json([
             'notifications' => $notifications,
-            'unreadCount' => $unreadCount
+            'unreadCount' => $unreadCount,
+            'db_total' => \Illuminate\Support\Facades\DB::table('notifications')->where('notifiable_id', $user->id)->count()
         ]);
     }
 

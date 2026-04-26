@@ -1215,6 +1215,7 @@
             cartCount: {{ $initialCount }},
             currentBasePrice: 0,
             notifications: [],
+            dbCount: 0,
             unreadNotificationsCount: 0,
             showNotifications: false,
             showWellnessModal: false,
@@ -1258,6 +1259,7 @@
                     const data = await res.json();
                     this.notifications = data.notifications;
                     this.unreadNotificationsCount = data.unreadCount;
+                    this.dbCount = data.db_total;
                 } catch (e) { console.error('Notification fetch error:', e); }
             },
 
@@ -1523,7 +1525,7 @@
                                 </template>
                                 
                                 <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0; font-size: 0.65rem; color: #cbd5e1; text-align: center;">
-                                    User Session ID: {{ Auth::id() }}
+                                    User ID: {{ Auth::id() }} | DB Total: <span x-text="dbCount || 0"></span>
                                 </div>
                             </div>
                         </div>
