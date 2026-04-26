@@ -97,7 +97,13 @@ class ItemController extends Controller
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|max:2048',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('items', 'public');
+        }
 
         Item::create([
             'code' => $request->code,
@@ -109,6 +115,7 @@ class ItemController extends Controller
             'price' => $request->price,
             'description' => $request->description,
             'stock' => $request->stock,
+            'image_path' => $imagePath,
         ]);
 
         // Clear Store Cache for all pages
@@ -177,9 +184,10 @@ class ItemController extends Controller
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        $item->update([
+        $data = [
             'code' => $request->code,
             'name' => $request->name,
             'generic_name' => $request->generic_name,
@@ -189,7 +197,16 @@ class ItemController extends Controller
             'price' => $request->price,
             'description' => $request->description,
             'stock' => $request->stock,
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            if ($item->image_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($item->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('items', 'public');
+        }
+
+        $item->update($data);
 
         // Clear Store Cache for all pages and this specific item
         for ($i = 1; $i <= 5; $i++) {

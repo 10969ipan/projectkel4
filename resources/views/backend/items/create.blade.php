@@ -3,24 +3,22 @@
 @section('title', 'Tambah Obat Baru')
 
 @section('header')
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Tambah Obat Baru</h1>
-            <p class="text-sm text-gray-500 mt-1">Tambahkan data obat baru beserta detail batch dan masa kadaluwarsa.</p>
-        </div>
-        <div>
-            <a href="{{ route('items.index') }}"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
-                <i class="fas fa-arrow-left mr-2"></i> Kembali
-            </a>
-        </div>
+    <div class="flex-1">
+        <h1 class="text-2xl font-bold text-gray-900">Tambah Obat Baru</h1>
+        <p class="text-sm text-gray-500 mt-1">Tambahkan data obat baru beserta detail batch dan masa kadaluwarsa.</p>
+    </div>
+    <div class="flex-shrink-0 mt-4 sm:mt-0">
+        <a href="{{ route('items.index') }}"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+            <i class="fas fa-arrow-left mr-2"></i> Kembali
+        </a>
     </div>
 @endsection
 
 @section('content')
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-8">
-            <form action="{{ route('items.store') }}" method="POST" id="itemForm">
+            <form action="{{ route('items.store') }}" method="POST" id="itemForm" enctype="multipart/form-data">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {{-- Kode Obat --}}
@@ -108,6 +106,15 @@
                             @endforeach
                         </select>
                         @error('unit_id')
+                            <p class="mt-1.5 text-xs text-red-600 font-medium">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    {{-- Foto Obat --}}
+                    <div class="md:col-span-2">
+                        <label for="image" class="block text-sm font-semibold text-gray-700 mb-2">Foto Produk (Opsional)</label>
+                        <input type="file" name="image" id="image" accept="image/*"
+                            class="block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border transition-all">
+                        @error('image')
                             <p class="mt-1.5 text-xs text-red-600 font-medium">{{ $message }}</p>
                         @enderror
                     </div>
