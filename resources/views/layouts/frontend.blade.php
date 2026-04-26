@@ -1254,7 +1254,7 @@
             
             async fetchNotifications() {
                 try {
-                    const res = await fetch('{{ route('notifications.index') }}');
+                    const res = await fetch('/api/notifications');
                     const data = await res.json();
                     this.notifications = data.notifications;
                     this.unreadNotificationsCount = data.unreadCount;
@@ -1264,10 +1264,13 @@
             async markNotificationsAsRead() {
                 if (this.unreadNotificationsCount === 0) return;
                 try {
-                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
-                    await fetch('{{ route('notifications.read') }}', {
+                    await fetch('/api/notifications/read', {
                         method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': csrf }
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
                     });
                     this.unreadNotificationsCount = 0;
                 } catch (e) { console.error('Notification read error:', e); }
