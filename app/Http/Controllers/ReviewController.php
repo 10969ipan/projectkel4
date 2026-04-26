@@ -39,6 +39,22 @@ class ReviewController extends Controller
             'is_visible'     => true,
         ]);
 
+        // Update notification needs_rating to false
+        $notifications = \Illuminate\Support\Facades\DB::table('notifications')
+            ->where('notifiable_id', $user->id)
+            ->where('type', 'App\Notifications\OrderStatusNotification')
+            ->get();
+            
+        foreach ($notifications as $notif) {
+            $data = json_decode($notif->data, true);
+            if (isset($data['order_id']) && $data['order_id'] == $order->id && isset($data['needs_rating']) && $data['needs_rating']) {
+                $data['needs_rating'] = false;
+                \Illuminate\Support\Facades\DB::table('notifications')
+                    ->where('id', $notif->id)
+                    ->update(['data' => json_encode($data)]);
+            }
+        }
+
         return response()->json(['success' => true, 'message' => 'Terima kasih atas ulasan Anda!']);
     }
 
@@ -48,7 +64,7 @@ class ReviewController extends Controller
     public static function getLatestReviews($limit = 6)
     {
         return StoreReview::where('is_visible', true)
-            ->with('user:id,name')
+            ->with(['user:id,name', 'order.items.item'])
             ->latest()
             ->limit($limit)
             ->get();

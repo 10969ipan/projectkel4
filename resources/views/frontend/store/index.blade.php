@@ -272,7 +272,29 @@
                 </div>
                 <div>
                     <p style="font-style: italic; font-family: 'Georgia', serif; font-size: 1.1rem; color: #475569; line-height: 1.6;">"{{ $review->comment }}"</p>
-                    <div style="margin-top: 15px; font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Pesanan #{{ substr($review->order->order_number, -8) }}</div>
+                    <div style="margin-top: 15px; font-size: 0.8rem; color: #64748b; line-height: 1.5;">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                            <i class="far fa-clock"></i> {{ \Carbon\Carbon::parse($review->created_at)->isoFormat('D MMM YYYY, HH:mm') }}
+                        </div>
+                        <div style="display: flex; align-items: flex-start; gap: 6px;">
+                            <i class="fas fa-shopping-bag" style="margin-top: 3px;"></i>
+                            <span>
+                                @php
+                                    $productNames = 'Produk tidak tersedia';
+                                    if ($review->order && $review->order->items) {
+                                        $productNames = $review->order->items->take(2)->map(function($oi) {
+                                            return $oi->item->name ?? 'Produk Dihapus';
+                                        })->implode(', ');
+                                        $moreCount = $review->order->items->count() - 2;
+                                        if ($moreCount > 0) {
+                                            $productNames .= " (+$moreCount lainnya)";
+                                        }
+                                    }
+                                @endphp
+                                {{ $productNames }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
             @endforeach

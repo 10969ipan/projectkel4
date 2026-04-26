@@ -1403,6 +1403,17 @@
                         headers: { 'Accept': 'application/json' }
                     });
                     const data = await res.json();
+                    
+                    if (data.already_reviewed) {
+                        this.showRatingModal = false;
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'info', title: 'Info', text: 'Anda sudah memberikan rating untuk pesanan ini.' });
+                        } else {
+                            alert('Anda sudah memberikan rating untuk pesanan ini.');
+                        }
+                        return;
+                    }
+
                     this.ratingOrderItems = data.items || [];
                     this.ratingLastDate = data.last_rated_at || null;
                 } catch(e) { console.error('Rating info error:', e); }
