@@ -102,7 +102,10 @@ class ItemController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('items', 'public');
+            $file = $request->file('image');
+            $filename = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $file->move(public_path('image/items'), $filename);
+            $imagePath = 'image/items/' . $filename;
         }
 
         Item::create([
@@ -200,10 +203,13 @@ class ItemController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            if ($item->image_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($item->image_path);
+            if ($item->image_path && file_exists(public_path($item->image_path))) {
+                @unlink(public_path($item->image_path));
             }
-            $data['image_path'] = $request->file('image')->store('items', 'public');
+            $file = $request->file('image');
+            $filename = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+            $file->move(public_path('image/items'), $filename);
+            $data['image_path'] = 'image/items/' . $filename;
         }
 
         $item->update($data);
