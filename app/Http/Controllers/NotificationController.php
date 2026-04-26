@@ -17,18 +17,21 @@ class NotificationController extends Controller
             return response()->json(['notifications' => [], 'unreadCount' => 0]);
         }
 
-        $unread = $user->unreadNotifications;
-        $notifications = $unread->map(function ($notification) {
+        $allNotifications = $user->notifications()->take(10)->get();
+        $unreadCount = $user->unreadNotifications()->count();
+        
+        $notifications = $allNotifications->map(function ($notification) {
             return [
                 'id' => $notification->id,
                 'data' => $notification->data,
+                'is_read' => $notification->read_at !== null,
                 'created_at' => $notification->created_at->diffForHumans(),
             ];
         });
 
         return response()->json([
             'notifications' => $notifications,
-            'unreadCount' => $unread->count()
+            'unreadCount' => $unreadCount
         ]);
     }
 
