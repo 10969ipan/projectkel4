@@ -134,30 +134,36 @@ class RajaOngkirController extends Controller
         $data = $response->json();
 
         // MOCK DATA IF API IS DEAD
-        if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir'])) {
-            $baseCost = 10000;
+        if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir']) || isset($data['rajaongkir']['status']['code']) && $data['rajaongkir']['status']['code'] != 200) {
+            
+            // Generate a fake but deterministic base price based on origin and destination
+            $originId = intval($origin) ?: 1;
+            $destId = intval($destination) ?: 1;
+            $distanceFactor = abs($destId - $originId) * 1500;
+            $baseCost = 10000 + $distanceFactor;
+
             if ($courier === 'jne') {
                 $costs = [
-                    ['service' => 'OKE', 'description' => 'Ongkos Kirim Ekonomis', 'cost' => [['value' => 12000, 'etd' => '3-4']]],
-                    ['service' => 'REG', 'description' => 'Layanan Reguler', 'cost' => [['value' => 15000, 'etd' => '2-3']]],
-                    ['service' => 'YES', 'description' => 'Yakin Esok Sampai', 'cost' => [['value' => 25000, 'etd' => '1-1']]],
+                    ['service' => 'OKE', 'description' => 'Ongkos Kirim Ekonomis', 'cost' => [['value' => $baseCost, 'etd' => '3-4']]],
+                    ['service' => 'REG', 'description' => 'Layanan Reguler', 'cost' => [['value' => $baseCost + 5000, 'etd' => '2-3']]],
+                    ['service' => 'YES', 'description' => 'Yakin Esok Sampai', 'cost' => [['value' => $baseCost + 15000, 'etd' => '1-1']]],
                 ];
             } else if ($courier === 'tiki') {
                 $costs = [
-                    ['service' => 'ECO', 'description' => 'Economy Service', 'cost' => [['value' => 10000, 'etd' => '4-5']]],
-                    ['service' => 'REG', 'description' => 'Regular Service', 'cost' => [['value' => 14000, 'etd' => '2-3']]],
-                    ['service' => 'ONS', 'description' => 'Over Night Service', 'cost' => [['value' => 24000, 'etd' => '1-1']]],
+                    ['service' => 'ECO', 'description' => 'Economy Service', 'cost' => [['value' => $baseCost - 1000, 'etd' => '4-5']]],
+                    ['service' => 'REG', 'description' => 'Regular Service', 'cost' => [['value' => $baseCost + 4000, 'etd' => '2-3']]],
+                    ['service' => 'ONS', 'description' => 'Over Night Service', 'cost' => [['value' => $baseCost + 14000, 'etd' => '1-1']]],
                 ];
             } else {
                 $costs = [
-                    ['service' => 'Paket Kilat Khusus', 'description' => 'Paket Kilat Khusus', 'cost' => [['value' => 13000, 'etd' => '2-4']]],
-                    ['service' => 'Express', 'description' => 'Express', 'cost' => [['value' => 22000, 'etd' => '1-2']]],
+                    ['service' => 'Paket Kilat Khusus', 'description' => 'Paket Kilat Khusus', 'cost' => [['value' => $baseCost + 2000, 'etd' => '2-4']]],
+                    ['service' => 'Express', 'description' => 'Express', 'cost' => [['value' => $baseCost + 12000, 'etd' => '1-2']]],
                 ];
             }
 
             return response()->json([
                 'rajaongkir' => [
-                    'status' => ['code' => 200, 'description' => 'OK (Mocked)'],
+                    'status' => ['code' => 200, 'description' => 'OK (Mocked API)'],
                     'results' => [
                         [
                             'code' => $courier,
