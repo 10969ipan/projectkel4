@@ -1544,10 +1544,6 @@
                                         </div>
                                     </div>
                                 </template>
-                                
-                                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e2e8f0; font-size: 0.65rem; color: #cbd5e1; text-align: center;">
-                                    User ID: {{ Auth::id() }} | DB Total: <span x-text="dbCount || 0"></span>
-                                </div>
                             </div>
                         </div>
                     </div>
