@@ -249,6 +249,11 @@
         [x-cloak] { display: none !important; }
     </style>
     @stack('styles')
+    <!-- Vercel Speed Insights -->
+    <script>
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 
 <body class="h-full" x-data="{ mobileMenuOpen: false, profileMenuOpen: false }">
