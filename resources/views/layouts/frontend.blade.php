@@ -1208,6 +1208,11 @@
             $notifDbCount = 0;
             $notifUnreadCount = 0;
             if (Auth::check()) {
+                $reviewedOrderIds = \Illuminate\Support\Facades\DB::table('store_reviews')
+                    ->where('user_id', Auth::id())
+                    ->pluck('store_order_id')
+                    ->toArray();
+
                 $notifRows = \Illuminate\Support\Facades\DB::table('notifications')
                     ->where('notifiable_id', Auth::id())
                     ->latest()
@@ -1216,9 +1221,9 @@
                 foreach ($notifRows as $n) {
                     $data = json_decode($n->data, true);
                     
-                    // Sembunyikan notifikasi jika status 'completed' dan sudah dirating (needs_rating = false)
+                    // Sembunyikan notifikasi jika pesanan sudah dirating
                     if (isset($data['status']) && $data['status'] === 'completed') {
-                        if (isset($data['needs_rating']) && $data['needs_rating'] == false) {
+                        if (isset($data['order_id']) && in_array($data['order_id'], $reviewedOrderIds)) {
                             continue;
                         }
                     }
