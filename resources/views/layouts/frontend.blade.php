@@ -1211,20 +1211,35 @@
                 $notifRows = \Illuminate\Support\Facades\DB::table('notifications')
                     ->where('notifiable_id', Auth::id())
                     ->latest()
-                    ->take(10)
+                    ->take(30)
                     ->get();
                 foreach ($notifRows as $n) {
+                    $data = json_decode($n->data, true);
+                    
+                    // Sembunyikan notifikasi jika status 'completed' dan sudah dirating (needs_rating = false)
+                    if (isset($data['status']) && $data['status'] === 'completed') {
+                        if (isset($data['needs_rating']) && $data['needs_rating'] == false) {
+                            continue;
+                        }
+                    }
+
                     $notifData[] = [
                         'id' => $n->id,
-                        'data' => json_decode($n->data, true),
+                        'data' => $data,
                         'is_read' => $n->read_at !== null,
                         'created_at' => \Carbon\Carbon::parse($n->created_at)->diffForHumans(),
                     ];
+
+                    if ($n->read_at === null) {
+                        $notifUnreadCount++;
+                    }
+
+                    // Ambil maksimal 10 notifikasi untuk ditampilkan
+                    if (count($notifData) >= 10) {
+                        break;
+                    }
                 }
-                $notifDbCount = \Illuminate\Support\Facades\DB::table('notifications')
-                    ->where('notifiable_id', Auth::id())->count();
-                $notifUnreadCount = \Illuminate\Support\Facades\DB::table('notifications')
-                    ->where('notifiable_id', Auth::id())->whereNull('read_at')->count();
+                $notifDbCount = count($notifData);
             }
         @endphp
 
