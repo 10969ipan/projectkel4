@@ -1214,9 +1214,21 @@
             cartTotal: {{ $initialTotal }},
             cartCount: {{ $initialCount }},
             currentBasePrice: 0,
-            notifications: [],
-            dbCount: 0,
-            unreadNotificationsCount: 0,
+            notifications: @auth(
+                \Illuminate\Support\Facades\DB::table('notifications')
+                    ->where('notifiable_id', Auth::id())
+                    ->latest()
+                    ->take(10)
+                    ->get()
+                    ->map(fn($n) => [
+                        'id' => $n->id,
+                        'data' => json_decode($n->data, true),
+                        'is_read' => $n->read_at !== null,
+                        'created_at' => \Carbon\Carbon::parse($n->created_at)->diffForHumans(),
+                    ])
+            ) @else [] @endauth,
+            dbCount: @auth(\Illuminate\Support\Facades\DB::table('notifications')->where('notifiable_id', Auth::id())->count()) @else 0 @endauth,
+            unreadNotificationsCount: @auth(\Illuminate\Support\Facades\DB::table('notifications')->where('notifiable_id', Auth::id())->whereNull('read_at')->count()) @else 0 @endauth,
             showNotifications: false,
             showWellnessModal: false,
             activeWellnessArticle: {},
@@ -1254,16 +1266,8 @@
             },
             
             async fetchNotifications() {
-                try {
-                    const res = await fetch('/api/notifications', {
-                        credentials: 'same-origin',
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    const data = await res.json();
-                    this.notifications = data.notifications;
-                    this.unreadNotificationsCount = data.unreadCount;
-                    this.dbCount = data.db_total;
-                } catch (e) { console.error('Notification fetch error:', e); }
+                // Data sudah di-inject dari server-side PHP, tidak perlu AJAX
+                // Fungsi ini dikosongkan agar kompatibel jika ada pemanggilan lain
             },
 
             async markNotificationsAsRead() {
