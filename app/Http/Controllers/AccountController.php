@@ -508,4 +508,34 @@ class AccountController extends Controller
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Ambil info produk dan riwayat rating untuk modal rating
+     */
+    public function getRatingInfo($id)
+    {
+        $user = Auth::user();
+        $order = StoreOrder::where('user_id', $user->id)
+            ->with(['items.item:id,name,image_path'])
+            ->findOrFail($id);
+
+        $lastReview = DB::table('store_reviews')
+            ->where('user_id', $user->id)
+            ->where('store_order_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $items = $order->items->map(fn($oi) => [
+            'name'  => $oi->item->name ?? 'Produk Dihapus',
+            'qty'   => $oi->quantity,
+            'image' => $oi->item->image_path ?? null,
+            'price' => $oi->price,
+        ]);
+
+        return response()->json([
+            'items'            => $items,
+            'last_rated_at'    => $lastReview ? \Carbon\Carbon::parse($lastReview->created_at)->isoFormat('D MMM YYYY, HH:mm') : null,
+            'already_reviewed' => $lastReview !== null,
+        ]);
+    }
 }

@@ -1247,6 +1247,9 @@
             activeWellnessArticle: {},
             showRatingModal: false,
             ratingOrderId: null,
+            ratingOrderItems: [],
+            ratingLastDate: null,
+            ratingLoadingItems: false,
             ratingValue: 5,
             ratingComment: '',
 
@@ -1383,13 +1386,27 @@
                 });
             },
 
-            openRatingModal(orderId) {
+            async openRatingModal(orderId) {
                 console.log('Alpine: Opening Rating Modal for Order', orderId);
                 this.ratingOrderId = orderId;
                 this.ratingValue = 5;
                 this.ratingComment = '';
+                this.ratingOrderItems = [];
+                this.ratingLastDate = null;
+                this.ratingLoadingItems = true;
                 this.showRatingModal = true;
                 this.showNotifications = false;
+
+                try {
+                    const res = await fetch(`/account/orders/${orderId}/rating-info`, {
+                        credentials: 'same-origin',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const data = await res.json();
+                    this.ratingOrderItems = data.items || [];
+                    this.ratingLastDate = data.last_rated_at || null;
+                } catch(e) { console.error('Rating info error:', e); }
+                this.ratingLoadingItems = false;
             },
 
             async submitRating() {
@@ -1869,32 +1886,68 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click.self="showRatingModal = false">
-            <div class="auth-modal-content" style="max-width: 450px; text-align: center; padding: 40px 30px;">
+            <div class="auth-modal-content" style="max-width: 480px; text-align: center; padding: 35px 30px;">
                 <button class="auth-modal-close" @click="showRatingModal = false">
                     <i class="fas fa-times"></i>
                 </button>
                 
-                <div style="width: 80px; height: 80px; background: #FFF9DB; color: #F59E0B; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px;">
+                <div style="width: 70px; height: 70px; background: #FFF9DB; color: #F59E0B; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 16px;">
                     <i class="fas fa-star"></i>
                 </div>
 
-                <h2 style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 10px;">Berikan Penilaian</h2>
-                <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 25px;">Bagaimana pengalaman Anda belanja di Pharmacare?</p>
+                <h2 style="font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: 6px;">Berikan Penilaian</h2>
+                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 18px;">Bagaimana pengalaman Anda belanja di Pharmacare?</p>
+
+                {{-- Tanggal Rating Terakhir --}}
+                <template x-if="ratingLastDate">
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 8px 14px; margin-bottom: 16px; font-size: 0.82rem; color: #166534; display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Terakhir memberi rating: <strong x-text="ratingLastDate"></strong></span>
+                    </div>
+                </template>
+
+                {{-- Produk yang Dibeli --}}
+                <div style="margin-bottom: 20px;">
+                    <template x-if="ratingLoadingItems">
+                        <div style="padding: 12px; color: #94a3b8; font-size: 0.85rem;"><i class="fas fa-spinner fa-spin"></i> Memuat produk...</div>
+                    </template>
+                    <template x-if="!ratingLoadingItems && ratingOrderItems.length > 0">
+                        <div style="background: #f8fafc; border-radius: 12px; padding: 12px; text-align: left;">
+                            <p style="font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Produk yang Dibeli</p>
+                            <template x-for="(item, idx) in ratingOrderItems" :key="idx">
+                                <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #e2e8f0;" :style="idx === ratingOrderItems.length - 1 ? 'border-bottom:none;' : ''">
+                                    <div style="width: 36px; height: 36px; background: #e0e7ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;">
+                                        <template x-if="item.image">
+                                            <img :src="'/' + item.image" style="width:100%; height:100%; object-fit:contain;">
+                                        </template>
+                                        <template x-if="!item.image">
+                                            <i class="fas fa-pills" style="color:#6366f1; font-size:0.9rem;"></i>
+                                        </template>
+                                    </div>
+                                    <div style="flex:1; min-width:0;">
+                                        <div style="font-size: 0.85rem; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="item.name"></div>
+                                        <div style="font-size: 0.75rem; color: #64748b;" x-text="item.qty + ' item'"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
 
                 <!-- Stars -->
-                <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 30px;">
+                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 24px;">
                     <template x-for="i in 5">
                         <button type="button" @click="ratingValue = i" 
-                                style="background: none; border: none; cursor: pointer; font-size: 2.2rem; transition: transform 0.2s;"
+                                style="background: none; border: none; cursor: pointer; font-size: 2rem; transition: transform 0.2s;"
                                 :style="i <= ratingValue ? 'color: #F59E0B;' : 'color: #E2E8F0;'">
-                            <i class="fas fa-star" :class="i <= ratingValue ? 'fa-star' : 'fa-star'"></i>
+                            <i class="fas fa-star"></i>
                         </button>
                     </template>
                 </div>
 
                 <div class="form-group" style="text-align: left;">
                     <label class="form-label">Tulis Ulasan (Opsional)</label>
-                    <textarea x-model="ratingComment" class="form-input" style="height: 100px; resize: none; padding-top: 12px;" placeholder="Ceritakan pengalaman Anda..."></textarea>
+                    <textarea x-model="ratingComment" class="form-input" style="height: 90px; resize: none; padding-top: 12px;" placeholder="Ceritakan pengalaman Anda..."></textarea>
                 </div>
 
                 <button @click="submitRating()" class="btn-auth-submit" style="margin-top: 10px;">Kirim Ulasan</button>

@@ -100,5 +100,6 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::delete('/account/address/{id}', [AccountController::class, 'deleteAddress'])->name('account.address.delete');
     Route::post('/account/address/{id}/primary', [AccountController::class, 'setPrimaryAddress'])->name('account.address.primary');
     Route::get('/account/orders/{id}/invoice', [AccountController::class, 'showInvoice'])->name('account.orders.invoice');
+    Route::get('/account/orders/{id}/rating-info', [AccountController::class, 'getRatingInfo'])->name('account.orders.rating-info');
     Route::post('/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
 });
