@@ -17,7 +17,13 @@
         </button>
 
         <a href="{{ route('store.show', $item->id) }}" style="text-decoration: none; color: inherit; display: block;">
-            <div style="width: 100%; height: 160px; margin-bottom: 16px; background-color: #F8F9FB; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: 0.3s;">
+            <div style="width: 100%; height: 160px; margin-bottom: 16px; background-color: #F8F9FB; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: 0.3s; position: relative;">
+                @if($item->requires_prescription)
+                    <div style="position: absolute; top: 10px; right: 10px; background-color: #0076D6; border-radius: 12px; padding: 4px 8px; text-align: center; font-size: 0.55rem; font-weight: 800; line-height: 1.2; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <div style="color: white;">CONTROLLED</div>
+                        <div style="color: #ff4d4d;">SUBSTANCE</div>
+                    </div>
+                @endif
                 @if($item->image_path)
                     <img src="{{ asset($item->image_path) }}" alt="{{ $item->name }}" width="160" height="160" style="height: 100%; width: 100%; object-fit: contain;" loading="lazy">
                 @else
