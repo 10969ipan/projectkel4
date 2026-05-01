@@ -98,7 +98,7 @@
             padding: 10px;
             border: 1px solid #f1f5f9;
         }
-        .item-name { font-weight: 700; font-size: 1.1rem; color: var(--text-main); margin-bottom: 4px; }
+        .item-name { font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 2px; }
         .item-badge { 
             background: #ffebeb; 
             color: #ef4444; 
@@ -317,7 +317,7 @@
                                             <span class="item-badge">Wajib Resep</span>
                                         </template>
                                         <!-- Stok tersedia -->
-                                        <div style="margin-top: 4px; font-size: 0.68rem; font-weight: 500; opacity: 0.9;" 
+                                        <div style="margin-top: 2px; font-size: 0.62rem; font-weight: 500; opacity: 0.85; white-space: nowrap;" 
                                              :style="item.stock <= 0 ? 'color: #ef4444;' : item.stock <= 5 ? 'color: #f59e0b;' : 'color: #10b981;'">
                                             <i style="margin-right: 4px;"></i>
                                             <span x-text="item.stock <= 0 ? 'Stok habis' : 'Stok: ' + item.stock + ' tersedia'"></span>
