@@ -5,7 +5,12 @@
 @section('header')
     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
         <h1 class="text-2xl font-bold text-gray-900">Riwayat Mutasi Stok</h1>
-        
+        <div class="mt-4 md:mt-0">
+            <a href="{{ route('transactions.create') }}"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                <i class="fas fa-plus mr-2"></i> Tambah Mutasi
+            </a>
+        </div>
     </div>
 @endsection
 

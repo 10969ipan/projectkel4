@@ -59,6 +59,7 @@ class ItemRequest extends Model
         'item_id',          // ID barang yang diminta
         'user_id',          // ID staff yang membuat permintaan
         'quantity',         // Jumlah yang diminta
+        'type',             // Jenis: 'in' (tambah stok), 'out' (kurangi stok)
         'reason',           // Alasan permintaan (wajib, contoh: "Untuk kebutuhan proyek X")
         'status',           // Status: 'pending', 'approved', 'rejected'
         'rejection_reason', // Alasan penolakan (diisi jika rejected)

@@ -21,22 +21,36 @@
                 @csrf
                 <div class="space-y-6">
                     {{-- Pilih Barang --}}
-                    <div>
-                        <label for="item_id" class="block text-sm font-medium text-gray-700 mb-1">Barang</label>
-                        <select name="item_id" id="item_id" required
-                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                            <option value="">Pilih Barang</option>
-                            @foreach ($items as $item)
-                                <option value="{{ $item->id }}" 
-                                    data-total-stock="{{ $item->stock }}"
-                                    {{ old('item_id') == $item->id ? 'selected' : '' }}>
-                                    {{ $item->name }} (Stok: {{ $item->stock }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('item_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="item_id" class="block text-sm font-medium text-gray-700 mb-1">Barang</label>
+                            <select name="item_id" id="item_id" required
+                                class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">Pilih Barang</option>
+                                @foreach ($items as $item)
+                                    <option value="{{ $item->id }}" 
+                                        data-total-stock="{{ $item->stock }}"
+                                        {{ old('item_id', request('item_id')) == $item->id ? 'selected' : '' }}>
+                                        {{ $item->name }} (Stok: {{ $item->stock }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('item_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Jenis Permintaan</label>
+                            <select name="type" id="type" required
+                                class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="out" {{ old('type') == 'out' ? 'selected' : '' }}>Pengambilan Obat (Kurangi Stok)</option>
+                                <option value="in" {{ old('type') == 'in' ? 'selected' : '' }}>Penambahan Obat (Restock)</option>
+                            </select>
+                            @error('type')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     {{-- Jumlah --}}
@@ -78,6 +92,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const itemSelect = document.getElementById('item_id');
+            const typeSelect = document.getElementById('type');
             const quantityInput = document.getElementById('quantity');
             const stockDisplay = document.getElementById('available-stock');
             const submitBtn = document.getElementById('submit-btn');
@@ -87,6 +102,7 @@
             handleItemChange();
 
             itemSelect.addEventListener('change', handleItemChange);
+            typeSelect.addEventListener('change', validateQuantity);
             quantityInput.addEventListener('input', validateQuantity);
 
             function handleItemChange() {
@@ -104,8 +120,10 @@
 
             function validateQuantity() {
                 const qty = parseInt(quantityInput.value) || 0;
+                const type = typeSelect.value;
                 
-                if (qty > currentMaxStock || currentMaxStock === 0) {
+                // Hanya validasi stok jika jenisnya 'out' (Pengambilan)
+                if (type === 'out' && (qty > currentMaxStock || currentMaxStock === 0)) {
                     quantityInput.classList.add('border-red-500', 'text-red-600');
                     submitBtn.disabled = true;
                     submitBtn.classList.add('opacity-50', 'cursor-not-allowed');

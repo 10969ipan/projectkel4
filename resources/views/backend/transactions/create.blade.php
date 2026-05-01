@@ -26,7 +26,7 @@
                             class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             <option value="">Pilih Barang</option>
                             @foreach ($items as $item)
-                                <option value="{{ $item->id }}" {{ old('item_id') == $item->id ? 'selected' : '' }}
+                                <option value="{{ $item->id }}" {{ (old('item_id', request('item_id')) == $item->id) ? 'selected' : '' }}
                                     data-unit-symbol="{{ $item->unit->symbol }}"
                                     data-stock="{{ $item->stock }}">
                                     {{ $item->name }} (Stok: {{ $item->stock }} {{ $item->unit->symbol }})

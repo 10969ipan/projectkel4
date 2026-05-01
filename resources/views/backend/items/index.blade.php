@@ -44,9 +44,7 @@
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Deskripsi Medis</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stok Total</th>
                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategori</th>
-                        @if(auth()->user()->isAdmin())
-                            <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
-                        @endif
+                        <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
@@ -109,9 +107,15 @@
                                 <div class="text-xs font-medium text-gray-600">{{ $item->category->name }}</div>
                             </td>
 
-                            @if(auth()->user()->isAdmin())
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <div class="flex justify-center space-x-2">
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="flex justify-center space-x-2">
+                                    {{-- Mutasi Stok Button (Admin & Staff) --}}
+                                    <a href="{{ route('transactions.create', ['item_id' => $item->id]) }}"
+                                        class="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors border border-green-200" title="Mutasi Stok (Tambah/Kurang)">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </a>
+
+                                    @if(auth()->user()->isAdmin())
                                         <a href="{{ route('items.edit', $item->id) }}"
                                             class="p-2 text-primary-600 hover:bg-primary-100 rounded-lg transition-colors border border-primary-200" title="Edit">
                                             <i class="fas fa-edit"></i>
@@ -124,13 +128,13 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
-                                    </div>
-                                </td>
-                            @endif
+                                    @endif
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()->isAdmin() ? 6 : 5 }}" class="px-6 py-10 text-center text-gray-500 italic">
+                            <td colspan="{{ (auth()->user()->isAdmin() || auth()->user()->isStaff()) ? 6 : 5 }}" class="px-6 py-10 text-center text-gray-500 italic">
                                 <i class="fas fa-box-open text-3xl mb-3 block text-gray-200"></i>
                                 Data obat tidak tersedia
                             </td>

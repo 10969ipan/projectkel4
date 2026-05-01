@@ -38,12 +38,13 @@ class ItemRequestController extends Controller
         $request->validate([
             'item_id' => 'required|exists:items,id',
             'quantity' => 'required|integer|min:1',
+            'type' => 'required|in:in,out',
             'reason' => 'required|string',
         ]);
 
         $item = Item::findOrFail($request->item_id);
 
-        if ($request->quantity > $item->stock) {
+        if ($request->type === 'out' && $request->quantity > $item->stock) {
             return back()->withInput()->with('error', 'Jumlah permintaan melebihi stok tersedia.');
         }
 
@@ -52,6 +53,7 @@ class ItemRequestController extends Controller
             'item_id' => $request->item_id,
             'user_id' => auth()->id(),
             'quantity' => $request->quantity,
+            'type' => $request->type,
             'reason' => $request->reason,
             'status' => 'pending',
         ]);
@@ -83,8 +85,8 @@ class ItemRequestController extends Controller
         // Ambil data barang yang diminta
         $item = $itemRequest->item;
 
-        // VALIDASI 2: Cek ketersediaan stok sebelum approve
-        if ($item->stock < $itemRequest->quantity) {
+        // VALIDASI 2: Cek ketersediaan stok sebelum approve (Hanya untuk OUT)
+        if ($itemRequest->type === 'out' && $item->stock < $itemRequest->quantity) {
             return back()->with('error', 'Stok total tidak mencukupi.');
         }
 
@@ -98,21 +100,25 @@ class ItemRequestController extends Controller
                 'processed_at' => now(),
             ]);
 
-            // LANGKAH 2: Buat transaksi keluar otomatis
+            // LANGKAH 2: Buat transaksi otomatis sesuai tipe permintaan
             $item->transactions()->create([
                 'user_id' => $itemRequest->user_id,
-                'type' => 'out',
+                'type' => $itemRequest->type,
                 'quantity' => $itemRequest->quantity,
                 'date' => now(),
-                'note' => 'Approved request #' . $itemRequest->id,
+                'note' => 'Approved request #' . $itemRequest->id . ' (' . ($itemRequest->type == 'in' ? 'Tambah' : 'Kurang') . ')',
             ]);
 
-            // LANGKAH 3: Kurangi stok total barang di tabel items
-            $item->decrement('stock', $itemRequest->quantity);
+            // LANGKAH 3: Update stok total barang di tabel items
+            if ($itemRequest->type === 'in') {
+                $item->increment('stock', $itemRequest->quantity);
+            } else {
+                $item->decrement('stock', $itemRequest->quantity);
+            }
         });
 
         // Redirect kembali dengan pesan sukses
-        return redirect()->route('item-requests.index')->with('success', 'Permintaan disetujui & stok berhasil dikurangi.');
+        return redirect()->route('item-requests.index')->with('success', 'Permintaan disetujui & stok berhasil diperbarui.');
     }
 
     /**

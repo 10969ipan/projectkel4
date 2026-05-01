@@ -46,6 +46,9 @@
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Obat
                         </th>
                         <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe
+                        </th>
+                        <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty
                         </th>
                         <th scope="col"
@@ -66,6 +69,12 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {{ $request->item->name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $request->type === 'in' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800' }}">
+                                    <i class="fas {{ $request->type === 'in' ? 'fa-plus-circle' : 'fa-minus-circle' }} mr-1"></i>
+                                    {{ $request->type === 'in' ? 'Penambahan' : 'Pengambilan' }}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $request->quantity }}
                                 {{ $request->item->unit->symbol }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $request->user->name }}</td>
@@ -93,6 +102,7 @@
                                         data-unit="{{ $request->item->unit->symbol }}"
                                         data-requester="{{ $request->user->name }}"
                                         data-date="{{ $request->created_at->format('d M Y H:i') }}"
+                                        data-type="{{ $request->type }}"
                                         data-status="{{ $request->status }}"
                                         data-reason="{{ $request->reason }}"
                                         data-processed-by="{{ $request->processedBy->name ?? '-' }}"
@@ -214,6 +224,10 @@
                                     <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Status</label>
                                     <p class="text-sm" id="detail-status">-</p>
                                 </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Tipe</label>
+                                    <p class="text-sm" id="detail-type">-</p>
+                                </div>
                             </div>
 
                             {{-- Alasan Permintaan --}}
@@ -277,6 +291,7 @@
                 unit: button.dataset.unit,
                 requester: button.dataset.requester,
                 date: button.dataset.date,
+                type: button.dataset.type,
                 status: button.dataset.status,
                 reason: button.dataset.reason,
                 processedBy: button.dataset.processedBy,
@@ -293,6 +308,14 @@
             document.getElementById('detail-requester').textContent = data.requester;
             document.getElementById('detail-date').textContent = data.date;
             document.getElementById('detail-reason').textContent = data.reason;
+
+            // Tipe
+            const typeElement = document.getElementById('detail-type');
+            if (data.type === 'in') {
+                typeElement.innerHTML = '<span class="text-blue-600 font-bold"><i class="fas fa-plus-circle mr-1"></i>Penambahan Stok</span>';
+            } else {
+                typeElement.innerHTML = '<span class="text-orange-600 font-bold"><i class="fas fa-minus-circle mr-1"></i>Pengambilan Obat</span>';
+            }
 
             // Status dengan badge warna
             const statusElement = document.getElementById('detail-status');
