@@ -22,9 +22,9 @@
                             300: '#7dd3fc',
                             400: '#38bdf8',
                             500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#93cdfdff',
-                            800: '#41b3f0ff',
+                            600: '#0273af',
+                            700: '#0369a1',
+                            800: '#075985',
                             900: '#0c4a6e',
                         },
                         secondary: {
@@ -170,7 +170,7 @@
                 <div class="flex items-center justify-center h-16 px-4 bg-primary-600 border-b border-primary-700">
                     <div class="flex items-center">
                         <img src="{{ asset('image/sima1.png') }}" alt="SIMA-APOTEK" class="h-12 w-12 mr-2" />
-                        <span class="text-xl font-black text-primary-600 tracking-widest">SIMA-APOTEK</span>
+                        <span class="text-xl font-black text-primary-600 tracking-widest" aria-hidden="true">SIMA-APOTEK</span>
                     </div>
                 </div>
                 <div class="flex flex-col flex-grow overflow-y-auto">
@@ -202,19 +202,19 @@
                             </a>
                             <a href="{{ route('items.index') }}"
                                 class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('items.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-pills mr-3 {{ request()->routeIs('items.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                <i class="fas fa-pills mr-3 {{ request()->routeIs('items.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                 Obat
                             </a>
                             @if (auth()->user()->isAdmin())
                                 <a href="{{ route('transactions.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('transactions.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-exchange-alt mr-3 {{ request()->routeIs('transactions.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    <i class="fas fa-exchange-alt mr-3 {{ request()->routeIs('transactions.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                     Mutasi Stok
                                 </a>
                             @endif
                             <a href="{{ route('item-requests.index') }}"
                                 class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('item-requests.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-file-medical mr-3 {{ request()->routeIs('item-requests.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                <i class="fas fa-file-medical mr-3 {{ request()->routeIs('item-requests.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                 Permintaan Obat
                             </a>
 
@@ -225,32 +225,32 @@
 
                                 <a href="{{ route('users.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('users.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-users-cog mr-3 {{ request()->routeIs('users.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    <i class="fas fa-users-cog mr-3 {{ request()->routeIs('users.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                     Manajemen Staff
                                 </a>
                                 <a href="{{ route('admin.pharmacare.customers') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-users mr-3 {{ request()->routeIs('admin.pharmacare.customers') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    <i class="fas fa-users mr-3 {{ request()->routeIs('admin.pharmacare.customers') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                     Manajemen Pelanggan
                                 </a>
                                 <a href="{{ route('admin.pharmacare.transactions') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-shopping-cart mr-3 {{ request()->routeIs('admin.pharmacare.transactions') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    <i class="fas fa-shopping-cart mr-3 {{ request()->routeIs('admin.pharmacare.transactions') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                     Transaksi Toko
                                 </a>
                                 <a href="{{ route('admin.pharmacare.transaction-logs') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-history mr-3 {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    <i class="fas fa-history mr-3 {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                     Log Transaksi
                                 </a>
                                 <a href="{{ route('categories.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('categories.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-tags mr-3 {{ request()->routeIs('categories.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    <i class="fas fa-tags mr-3 {{ request()->routeIs('categories.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                     Kategori Produk
                                 </a>
                                 <a href="{{ route('units.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('units.*') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-balance-scale mr-3 {{ request()->routeIs('units.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                    <i class="fas fa-balance-scale mr-3 {{ request()->routeIs('units.*') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                     Satuan Ukur
                                 </a>
 
