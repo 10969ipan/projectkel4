@@ -35,9 +35,18 @@ class AuthController extends Controller
         // PROSES AUTENTIKASI: Coba login dengan kredensial yang diberikan
         // Auth::attempt() akan mengecek apakah email dan password cocok dengan database
         if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+
+            // ROLE CHECK: Hanya admin dan staff yang boleh masuk ke Dashboard
+            if ($user->role !== 'admin' && $user->role !== 'staff') {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Akses ditolak. Akun ini tidak memiliki akses ke Dashboard Admin.',
+                ])->withInput($request->only('email'));
+            }
+
             // MERGE GUEST CART TO DATABASE
             $cart = session()->get('cart', []);
-            $user = Auth::user();
             foreach ($cart as $id => $details) {
                 // Gunakan updateOrCreate untuk menghindari duplikasi
                 \App\Models\CartItem::updateOrCreate(
@@ -105,8 +114,8 @@ class AuthController extends Controller
         // CSRF (Cross-Site Request Forgery) adalah serangan yang memanfaatkan session aktif
         $request->session()->regenerateToken();
 
-        // LANGKAH 4: Redirect ke halaman home
-        // Arahkan user ke halaman utama setelah logout
-        return redirect('/');
+        // LANGKAH 4: Redirect ke halaman login admin
+        // Arahkan user ke halaman login dashboard setelah logout
+        return redirect()->route('login')->with('success', 'Anda telah berhasil keluar.');
     }
 }

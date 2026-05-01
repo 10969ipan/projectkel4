@@ -29,6 +29,16 @@ class StoreAuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+
+            // ROLE CHECK: Admin dan Staff tidak boleh login di Store
+            if ($user->role === 'admin' || $user->role === 'staff') {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Akun Admin/Staff tidak diperbolehkan login di Store. Silakan gunakan akun Pelanggan terpisah.',
+                ])->withInput($request->only('email'));
+            }
+
             $request->session()->regenerate();
             // Redirect ke halaman yang dituju, default ke /store
             return redirect()->intended(route('store.index'))->with('success', 'Selamat datang di Pharmacare!');
@@ -74,7 +84,7 @@ class StoreAuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('store.index')->with('success', 'Anda berhasil keluar dari Pharmacare.');
+        return redirect()->route('store.login')->with('success', 'Anda berhasil keluar dari Pharmacare.');
     }
 
     // =========================================================================
@@ -134,6 +144,14 @@ class StoreAuthController extends Controller
 
         // Login user
         Auth::login($user, true);
+
+        // ROLE CHECK: Admin dan Staff tidak boleh login di Store via Google
+        if ($user->role === 'admin' || $user->role === 'staff') {
+            Auth::logout();
+            return redirect()->route('store.login')
+                ->with('error', 'Akun Admin/Staff tidak diperbolehkan login di Store.');
+        }
+
         request()->session()->regenerate();
 
         return redirect()->route('store.index')
