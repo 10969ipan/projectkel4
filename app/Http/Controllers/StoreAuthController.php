@@ -145,38 +145,34 @@ class StoreAuthController extends Controller
             } else {
                 // Buat akun baru sebagai customer
                 $user = User::create([
-                    'name'       => $googleUser->getName(),
-                    'email'      => $googleUser->getEmail(),
-                    'google_id'  => $googleUser->getId(),
-                    'avatar'     => $googleUser->getAvatar(),
-                    'password'   => Hash::make(Str::random(32)),
-                    'role'       => null,
-                    'store_role' => 'customer',
+                    'name'           => $googleUser->getName(),
+                    'email'          => $googleUser->getEmail(),
+                    'google_id'      => $googleUser->getId(),
+                    'avatar'         => $googleUser->getAvatar(),
+                    'password'       => Hash::make(Str::random(32)),
+                    'role'           => null,
+                    'store_role'     => 'customer',
                     'paylater_limit' => 0,
                 ]);
             }
         } else {
             // Selalu update avatar & nama agar sinkron dengan Google
-                // Selalu update avatar & nama agar sinkron dengan Google
-                $user->update([
-                    'avatar' => $googleUser->getAvatar(),
-                    'name'   => $googleUser->getName(),
-                ]);
-            }
-
-            // ROLE CHECK: Admin dan Staff dilarang login di Store via Google
-            if ($user->role === 'admin' || $user->role === 'staff') {
-                return redirect()->route('store.login')
-                    ->with('error', 'Akses ditolak. Akun Admin/Staff tidak diperbolehkan login di Store.');
-            }
-
-            // Login user
-            Auth::login($user, true);
-            request()->session()->regenerate();
-
-            return redirect()->intended(route('store.index'))->with('success', 'Berhasil masuk dengan Google!');
-        } catch (\Exception $e) {
-            return redirect()->route('store.login')->with('error', 'Gagal login dengan Google: ' . $e->getMessage());
+            $user->update([
+                'avatar' => $googleUser->getAvatar(),
+                'name'   => $googleUser->getName(),
+            ]);
         }
+
+        // ROLE CHECK: Admin dan Staff tidak dikenal di sistem Store via Google
+        if ($user->role === 'admin' || $user->role === 'staff') {
+            return redirect()->route('store.login')
+                ->with('error', 'Email atau password yang Anda masukkan salah.');
+        }
+
+        // Login user
+        Auth::login($user, true);
+        request()->session()->regenerate();
+
+        return redirect()->intended(route('store.index'))->with('success', 'Berhasil masuk dengan Google!');
     }
 }
