@@ -3,9 +3,9 @@
     @forelse($items as $item)
     <div class="product-card" style="min-width: 230px; max-width: 230px; background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #F1F5F9; display: flex; flex-direction: column; position: relative; transition: box-shadow 0.3s ease, transform 0.3s ease; flex-shrink: 0;">
         @if($item->requires_prescription)
-            <div style="position: absolute; top: -10px; left: -10px; background-color: #0076D6; border-radius: 12px; padding: 6px 10px; text-align: center; font-size: 0.55rem; font-weight: 800; line-height: 1.2; z-index: 15; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transform: rotate(-5deg);">
-                <div style="color: white;">CONTROLLED</div>
-                <div style="color: #ff4d4d;">SUBSTANCE</div>
+            <div style="position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #0076D6, #0055a5); border-radius: 8px; padding: 5px 9px; text-align: center; font-size: 0.5rem; font-weight: 900; line-height: 1.3; z-index: 15; box-shadow: 0 3px 8px rgba(0,118,214,0.4); letter-spacing: 0.3px;">
+                <div style="color: white; text-transform: uppercase;">CONTROLLED</div>
+                <div style="color: #ffd0d0; text-transform: uppercase;">SUBSTANCE</div>
             </div>
         @endif
         
