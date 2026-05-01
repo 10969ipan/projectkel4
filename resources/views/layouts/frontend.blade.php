@@ -167,7 +167,7 @@
         }
 
         .chat-fab-text h5 { margin: 0; font-size: 0.95rem; font-weight: 800; color: #1e293b; }
-        .chat-fab-text p { margin: 0; font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
+        .chat-fab-text p { margin: 0; font-size: 0.75rem; color: #475569; font-weight: 600; }
 
         /* Minimalist Transitions */
         a, button, .card, .btn, .nav-link, input, select {
@@ -668,7 +668,7 @@
             padding: 30px 40px 0;
             border-top: 1px solid rgba(255,255,255,0.05);
             text-align: center;
-            color: #64748b;
+            color: #94a3b8;
             font-size: 0.85rem;
         }
         @media (max-width: 968px) {
@@ -1898,7 +1898,7 @@
                     </a>
 
                     <div style="margin-top: 20px; text-align: center; font-size: 0.9rem; color: #64748b;">
-                        Sudah punya akun? <a href="javascript:void(0)" @click="authTab = 'login'" style="color: var(--primary-blue); font-weight: 800; text-decoration: none;">Login Disini</a>
+                        Sudah punya akun? <a href="#login" @click.prevent="authTab = 'login'" style="color: var(--primary-blue); font-weight: 800; text-decoration: none;">Login Disini</a>
                     </div>
                 </div>
             </div>

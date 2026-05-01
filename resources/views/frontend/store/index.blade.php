@@ -25,9 +25,9 @@
                 </div>
             </div>
 
-            <div class="store-hero-doctors" style="position: absolute; bottom: 0; right: 40px; z-index: 5; display: flex; align-items: flex-end;">
-                <img src="{{ asset('assets/images/branding/dokter1.webp') }}" fetchpriority="high" width="380" height="450" alt="Tenaga Medis Profesional SIMA-APOTEK" style="height: 450px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -80px; position: relative; z-index: 2;">
-                <img src="{{ asset('assets/images/branding/dokter.webp') }}" fetchpriority="high" width="350" height="420" alt="Layanan Kesehatan SIMA-APOTEK" style="height: 420px; width: auto; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;">
+            <div class="store-hero-doctors" style="position: absolute; bottom: 0; right: 40px; z-index: 5; display: flex; align-items: flex-end; height: 450px;">
+                <img src="{{ asset('assets/images/branding/dokter1.webp') }}" fetchpriority="high" width="450" height="450" alt="Tenaga Medis Profesional SIMA-APOTEK" style="width: 450px; height: 450px; object-fit: contain; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -100px; position: relative; z-index: 2;">
+                <img src="{{ asset('assets/images/branding/dokter.webp') }}" fetchpriority="high" width="420" height="420" alt="Layanan Kesehatan SIMA-APOTEK" style="width: 420px; height: 420px; object-fit: contain; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;">
             </div>
         </div>
     </div>
@@ -236,9 +236,17 @@
                      x-transition:leave-start="opacity-100 transform translate-x-0"
                      x-transition:leave-end="opacity-0 transform -translate-x-1/3"
                      class="slide-item" 
-                     style="position: absolute; inset: 0; background-image: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%), url('{{ asset($article->image_path) }}'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; padding: 50px 80px; height: 100%;">
+                     style="position: absolute; inset: 0; height: 100%;">
                 
-                <div style="max-width: 580px; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                <img src="{{ asset($article->image_path) }}" 
+                     alt="{{ $article->title }}"
+                     loading="lazy"
+                     width="1200" height="480"
+                     style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+                
+                <div style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%); z-index: 2;"></div>
+
+                <div style="position: relative; z-index: 10; max-width: 580px; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.3); padding: 50px 80px;">
                     <h3 style="font-size: 2.8rem; font-weight: 800; margin-top: 0; margin-bottom: 20px; line-height: 1.15; letter-spacing: -0.03em;">{{ $article->title }}</h3>
                     <p style="font-size: 1.2rem; opacity: 0.9; line-height: 1.7; margin-bottom: 35px; font-weight: 500;">{{ Str::limit($article->content, 140) }}</p>
                     <a href="#wellness" onclick="window.openArticleModal(window._wellnessArticles[{{ $index }}])"

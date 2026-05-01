@@ -50,10 +50,10 @@
 
         /* Badges */
         .badge { display: inline-block; padding: 5px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .badge-pending { background: #FFF9DB; color: #F08C00; }
+        .badge-pending { background: #FFF9DB; color: #856404; }
         .badge-paid { background: #E7F5FF; color: #1971C2; }
         .badge-shipped { background: #F3F0FF; color: #6741D9; }
-        .badge-delivered { background: #E6FCF5; color: #099268; }
+        .badge-delivered { background: #E6FCF5; color: #087f5b; }
         .badge-canceled { background: #FFF5F5; color: #C92A2A; }
 
         /* Forms */
@@ -247,12 +247,20 @@
             @php $article = $wellnessArticles->first(); @endphp
             <script>window._dashboardArticle = {!! \Illuminate\Support\Js::from($article) !!};</script>
 
-            <div class="wellness-highlights" style="position: relative; overflow: hidden; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,118,214,0.1); height: 280px; background-image: linear-gradient(to right, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.4) 50%, transparent 100%), url('{{ asset($article->image_path) }}'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; padding: 40px;">
-                <div style="max-width: 450px; color: white; position: relative; z-index: 10;">
+            <div class="wellness-highlights" style="position: relative; overflow: hidden; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,118,214,0.1); height: 280px; background: #000; display: flex; flex-direction: column; justify-content: center;">
+                <img src="{{ asset($article->image_path) }}" 
+                     alt="{{ $article->title }}"
+                     loading="lazy"
+                     width="800" height="280"
+                     style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+                
+                <div style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.4) 50%, transparent 100%); z-index: 2;"></div>
+
+                <div style="max-width: 450px; color: white; position: relative; z-index: 10; padding: 40px;">
                     <div style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; color: #93c5fd;">Terkait Pesanan Anda</div>
                     <h3 style="font-size: 1.8rem; font-weight: 800; margin-top: 0; margin-bottom: 15px; line-height: 1.2;">{{ $article->title }}</h3>
                     <p style="font-size: 1rem; opacity: 0.9; line-height: 1.6; margin-bottom: 20px;">{{ Str::limit($article->content, 120) }}</p>
-                    <a href="javascript:void(0)" onclick="window.openArticleModal(window._dashboardArticle)" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; font-weight: 700; font-size: 0.9rem; border-bottom: 2px solid var(--primary-blue); cursor: pointer; position: relative;">Baca Selengkapnya <i class="fas fa-arrow-right" style="font-size: 0.7rem;"></i></a>
+                    <a href="#wellness" onclick="window.openArticleModal(window._dashboardArticle)" style="display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; font-weight: 700; font-size: 0.9rem; border-bottom: 2px solid var(--primary-blue); cursor: pointer; position: relative;">Baca Selengkapnya <i class="fas fa-arrow-right" style="font-size: 0.7rem;"></i></a>
                 </div>
             </div>
 
