@@ -9,19 +9,18 @@
     <title>@yield('title') - Pharmacare</title>
 
     <!-- Preconnect for Performance -->
+    <!-- Primary Fonts (Standard for better Lighthouse detection) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Non-blocking Fonts & Icons -->
+    <!-- Non-blocking Icons & Local Fonts -->
     <link rel="preload" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     
     <noscript>
         <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
     </noscript>
 
     <!-- Tailwind CDN (deferred, non-blocking) -->
@@ -280,7 +279,7 @@
 
         .btn-login-nav.filled {
             background: #E6F3FF;
-            color: var(--primary-blue);
+            color: #005FA3; /* Darker blue for 6.1:1 contrast ratio */
         }
 
         .btn-login-nav.filled:hover {
