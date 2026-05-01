@@ -1295,7 +1295,7 @@
             ratingComment: '',
 
             init() {
-                console.log('Alpine Storefront State Initialized.');
+
                 window.StoreUI = this;
 
                 // Auto-refresh cart on page load to ensure sync

@@ -5,7 +5,7 @@
 
 // Immediate initialization for maximum reliability
 (function() {
-    console.log('Pharmacare JS Loading (v2.4)...');
+
 
     /**
      * Quick View Delegated Trigger
@@ -83,7 +83,7 @@
     // Global Search & Initialization
     document.addEventListener('DOMContentLoaded', () => {
         initSearch();
-        console.log('Pharmacare Core Ready.');
+
     });
 })();
 
