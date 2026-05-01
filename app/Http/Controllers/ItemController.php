@@ -96,7 +96,7 @@ class ItemController extends Controller
             'unit_id' => 'required|exists:units,id',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'stock' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:-9999',
             'image' => 'nullable|image|max:2048',
         ]);
 
@@ -186,7 +186,7 @@ class ItemController extends Controller
             'unit_id' => 'required|exists:units,id',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'stock' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:-9999',
             'image' => 'nullable|image|max:2048',
         ]);
 

@@ -316,6 +316,12 @@
                                         <template x-if="item.requires_prescription">
                                             <span class="item-badge">Wajib Resep</span>
                                         </template>
+                                        <!-- Stok tersedia -->
+                                        <div style="margin-top: 6px; font-size: 0.75rem; font-weight: 600;" 
+                                             :style="item.stock <= 0 ? 'color: #ef4444;' : item.stock <= 5 ? 'color: #f59e0b;' : 'color: #10b981;'">
+                                            <i class="fas fa-box-open" style="margin-right: 4px;"></i>
+                                            <span x-text="item.stock <= 0 ? 'Stok habis' : 'Stok: ' + item.stock + ' tersedia'"></span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -324,9 +330,11 @@
                             </td>
                             <td :data-subtotal="formatIDR(item.price * item.qty)">
                                 <div class="qty-box">
-                                    <button type="button" class="qty-btn" @click="updateQty(item.id, -1)">−</button>
+                                    <button type="button" class="qty-btn" @click="updateQty(item.id, -1)" :disabled="item.qty <= 1">−</button>
                                     <input type="number" class="qty-input" x-model.number="item.qty" readonly>
-                                    <button type="button" class="qty-btn" @click="updateQty(item.id, 1)">+</button>
+                                    <button type="button" class="qty-btn" @click="updateQty(item.id, 1)" 
+                                            :disabled="item.qty >= item.stock"
+                                            :style="item.qty >= item.stock ? 'opacity: 0.4; cursor: not-allowed;' : ''">+</button>
                                 </div>
                             </td>
                             <td>
@@ -406,7 +414,8 @@
                 if (!item) return;
 
                 let newQty = item.qty + change;
-                if (newQty < 1 || newQty > 99) return;
+                // Jangan melebihi stok tersedia
+                if (newQty < 1 || newQty > 99 || newQty > item.stock) return;
 
                 // Optimistic UI Update
                 const oldQty = item.qty;

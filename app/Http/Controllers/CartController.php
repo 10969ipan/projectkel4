@@ -36,6 +36,7 @@ class CartController extends Controller
                     'price'                => $unitPrice,
                     'original_price'       => $item->price,
                     'qty'                  => $details['qty'],
+                    'stock'                => $item->stock, // Stok tersedia
                     'type'                 => $details['type'],
                     'interval'             => $details['interval'],
                     'subtotal'             => $subtotal,
@@ -66,6 +67,14 @@ class CartController extends Controller
         $interval = (int) $request->input('interval', 30);
         
         if ($qty < 1) $qty = 1;
+
+        // STOCK CHECK: Blokir jika stok habis (0 atau negatif)
+        if ($item->stock <= 0) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Stok ' . $item->name . ' sudah habis.'], 422);
+            }
+            return back()->with('error', 'Maaf, stok ' . $item->name . ' sudah habis.');
+        }
 
         // Allow adding to cart, we will enforce prescription upload at checkout
 
@@ -225,6 +234,7 @@ class CartController extends Controller
                     'name'       => $item->name,
                     'price'      => $unitPrice,
                     'qty'        => $details['qty'],
+                    'stock'      => $item->stock, // Stok tersedia
                     'type'       => $details['type'],
                     'subtotal'   => $subtotal,
                     'image_path' => $item->image_path,
