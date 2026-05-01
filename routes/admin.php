@@ -25,6 +25,14 @@ Route::middleware(['auth', 'backoffice'])->group(function () {
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update'); 
 
+    // Transactions (Accessible by Staff & Admin)
+    Route::resource('transactions', TransactionController::class)->only(['index', 'create', 'store']);
+
+    // PHARMACARE STORE ROUTES (Accessible by Staff & Admin)
+    Route::get('/pharmacare/transactions', [PharmacareAdminController::class, 'transactions'])->name('admin.pharmacare.transactions');
+    Route::get('/pharmacare/transaction-logs', [PharmacareAdminController::class, 'transactionLogs'])->name('admin.pharmacare.transaction-logs');
+    Route::put('/pharmacare/transactions/{id}', [PharmacareAdminController::class, 'updateTransaction'])->name('admin.pharmacare.transactions.update');
+
     // Admin Only Routes
     Route::middleware('admin')->group(function () {
         // User Management
@@ -49,13 +57,8 @@ Route::middleware(['auth', 'backoffice'])->group(function () {
             Route::get('/requests/download', [ReportController::class, 'downloadRequestReport'])->name('reports.requests.download');
         });
 
-        Route::resource('transactions', TransactionController::class)->only(['index', 'create', 'store']);
-
-        // PHARMACARE ADMIN ROUTES
+        // PHARMACARE ADMIN-ONLY ROUTES
         Route::get('/pharmacare', [PharmacareAdminController::class, 'index'])->name('admin.pharmacare.index');
-        Route::get('/pharmacare/transactions', [PharmacareAdminController::class, 'transactions'])->name('admin.pharmacare.transactions');
-        Route::get('/pharmacare/transaction-logs', [PharmacareAdminController::class, 'transactionLogs'])->name('admin.pharmacare.transaction-logs');
-        Route::put('/pharmacare/transactions/{id}', [PharmacareAdminController::class, 'updateTransaction'])->name('admin.pharmacare.transactions.update');
         Route::get('/pharmacare/customers', [PharmacareAdminController::class, 'customers'])->name('admin.pharmacare.customers');
         Route::put('/pharmacare/customers/{id}', [PharmacareAdminController::class, 'updateCustomer'])->name('admin.pharmacare.customers.update');
         Route::post('/pharmacare/approve/{userId}', [PharmacareAdminController::class, 'approvePrescription'])->name('admin.pharmacare.approve');

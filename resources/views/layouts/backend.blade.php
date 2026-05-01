@@ -296,7 +296,7 @@
                         <a href="{{ route('items.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('items.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                             <i class="fas fa-pills mr-3"></i> Obat
                         </a>
-                        @if (auth()->user()->isAdmin())
+                        @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
                             <a href="{{ route('transactions.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('transactions.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                 <i class="fas fa-exchange-alt mr-3"></i> Mutasi Stok
                             </a>
@@ -305,14 +305,18 @@
                             <i class="fas fa-file-medical mr-3"></i> Permintaan Obat
                         </a>
 
-                        @if (auth()->user()->isAdmin())
-                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3></div>
+                        @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
+                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaksi Toko</h3></div>
                             <a href="{{ route('admin.pharmacare.transactions') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                 <i class="fas fa-shopping-cart mr-3"></i> Transaksi Toko
                             </a>
                             <a href="{{ route('admin.pharmacare.transaction-logs') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                 <i class="fas fa-history mr-3"></i> Log Transaksi
                             </a>
+                        @endif
+
+                        @if (auth()->user()->isAdmin())
+                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3></div>
                             <a href="{{ route('admin.pharmacare.customers') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                 <i class="fas fa-users mr-3"></i> Manajemen Pelanggan
                             </a>
@@ -406,7 +410,7 @@
                                 <i class="fas fa-pills mr-3"></i>
                                 Obat
                             </a>
-                            @if (auth()->user()->isAdmin())
+                            @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
                                 <a href="{{ route('transactions.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('transactions.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                     <i class="fas fa-exchange-alt mr-3"></i>
@@ -419,9 +423,10 @@
                                 Permintaan Obat
                             </a>
 
-                            @if (auth()->user()->isAdmin())
+                            {{-- Transaksi Toko & Log: Admin + Staff --}}
+                            @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
                                 <div class="px-4 pt-6 pb-2">
-                                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3>
+                                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaksi Toko</h3>
                                 </div>
                                 <a href="{{ route('admin.pharmacare.transactions') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
@@ -433,6 +438,12 @@
                                     <i class="fas fa-history mr-3"></i>
                                     Log Transaksi
                                 </a>
+                            @endif
+
+                            @if (auth()->user()->isAdmin())
+                                <div class="px-4 pt-6 pb-2">
+                                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3>
+                                </div>
                                 <a href="{{ route('admin.pharmacare.customers') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                     <i class="fas fa-users mr-3"></i>

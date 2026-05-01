@@ -319,7 +319,7 @@
                                         <!-- Stok tersedia -->
                                         <div style="margin-top: 6px; font-size: 0.75rem; font-weight: 600;" 
                                              :style="item.stock <= 0 ? 'color: #ef4444;' : item.stock <= 5 ? 'color: #f59e0b;' : 'color: #10b981;'">
-                                            <i class="fas fa-box-open" style="margin-right: 4px;"></i>
+                                            <i style="margin-right: 4px;"></i>
                                             <span x-text="item.stock <= 0 ? 'Stok habis' : 'Stok: ' + item.stock + ' tersedia'"></span>
                                         </div>
                                     </div>
