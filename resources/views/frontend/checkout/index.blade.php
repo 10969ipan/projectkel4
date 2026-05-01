@@ -681,7 +681,7 @@
                 header.innerText = 'PEMBAYARAN QRIS';
                 html += `
                     <div style="background: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #eee;">
-                        <img src="{{ asset('assets/images/payments/qris_prototype.png') }}" 
+                        <img src="{{ asset('assets/images/payments/qris_prototype.webp') }}" 
                              style="width: 250px; height: auto; margin: 0 auto; display: block; border-radius: 8px;">
                         <div style="margin-top: 15px; font-weight: 700; color: #475569;">Pindai kode QR untuk membayar</div>
                     </div>

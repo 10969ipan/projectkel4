@@ -26,7 +26,7 @@
     <script defer src="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}"></script>
 
     <!-- Favicon (optimized) -->
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo-opt.png') }}">
+    <link rel="icon" type="image/webp" href="{{ asset('assets/images/branding/pharmacare-logo.webp') }}">
 
     <style>
         :root {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacare - {{ $item->name ?? 'Detail Obat' }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/branding/pharmacare-logo-opt.png') }}">
+    <link rel="icon" type="image/webp" href="{{ asset('assets/images/branding/pharmacare-logo.webp') }}">
     <style>
         /* Desktop-First Detail Page */
         :root {
