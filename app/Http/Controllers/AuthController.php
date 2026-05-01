@@ -35,10 +35,11 @@ class AuthController extends Controller
         if (Auth::validate($credentials)) {
             $user = \App\Models\User::where('email', $credentials['email'])->first();
 
-            // 2. Cek Role: Hanya Admin dan Staff yang boleh masuk Dashboard
+            // 2. Cek Role: Customer tidak dikenal di sistem Dashboard Admin
+            // Tampilkan pesan yang sama dengan login gagal (akun tidak dikenal)
             if ($user->role !== 'admin' && $user->role !== 'staff') {
                 return back()->withErrors([
-                    'email' => 'Akses ditolak. Akun Pelanggan tidak dapat mengakses Dashboard Admin.',
+                    'email' => 'Email atau password yang Anda masukkan salah.',
                 ])->withInput($request->only('email'));
             }
 
@@ -59,11 +60,7 @@ class AuthController extends Controller
             }
             session()->put('cart', $newCart);
 
-            if ($user->role === 'admin' || $user->role === 'staff') {
-                return redirect()->route('dashboard')->with('success', 'Berhasil masuk ke Dashboard!');
-            }
-
-            return redirect()->intended('/')->with('success', 'Berhasil masuk!');
+            return redirect()->route('dashboard')->with('success', 'Berhasil masuk ke Dashboard!');
         }
 
         // LOGIN GAGAL

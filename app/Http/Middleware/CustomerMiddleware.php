@@ -22,13 +22,21 @@ class CustomerMiddleware
 
         $user = auth()->user();
         
-        // JIKA sudah login sebagai Admin atau Staff, blokir akses ke SEMUA halaman toko
+        // Daftar rute yang HANYA boleh diakses Pelanggan (Transaksi/Profil)
+        $isProtectedRoute = $request->is('cart*', 'checkout*', 'account*', 'reviews*');
+
+        // Jika dia adalah Admin atau Staff
         if ($user->role === 'admin' || $user->role === 'staff') {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Akun Internal (Admin/Staff) tidak diperbolehkan mengakses fitur toko.'], 403);
+            if ($isProtectedRoute) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Admin/Staff tidak dapat melakukan transaksi di Store.'], 403);
+                }
+                // Kembalikan ke halaman utama Store (BUKAN ke dashboard)
+                return redirect()->route('store.index')->with('error', 'Fitur transaksi hanya untuk akun Pelanggan.');
             }
-            // Langsung lempar ke dashboard (Separasi Ketat)
-            return redirect()->route('dashboard')->with('error', 'Informasi: Anda saat ini login sebagai Admin/Staff. Fitur toko tidak dapat diakses.');
+            
+            // Biarkan browsing, UI akan menganggap dia Guest (karena pengecekan isCustomer di blade)
+            return $next($request);
         }
 
         // Jika dia login sebagai customer, biarkan lanjut

@@ -16,9 +16,9 @@ class StoreAuthController extends Controller
     {
         if (Auth::check()) {
             $user = Auth::user();
-            // Jika Admin/Staff nyasar ke login store, kembalikan ke dashboard mereka
+            // Jika Admin/Staff nyasar ke sini, biarkan mereka tetap di Store atau arahkan ke Beranda Store
             if ($user->role === 'admin' || $user->role === 'staff') {
-                return redirect()->route('dashboard')->with('info', 'Anda saat ini sudah login sebagai Admin/Staff.');
+                return redirect()->route('store.index');
             }
             return redirect()->route('store.index');
         }
@@ -37,10 +37,11 @@ class StoreAuthController extends Controller
         if (Auth::validate($credentials)) {
             $user = \App\Models\User::where('email', $credentials['email'])->first();
 
-            // 2. Cek Role: Admin dan Staff dilarang login di Store
+            // 2. Cek Role: Admin dan Staff tidak dikenal di sistem Store
+            // Tampilkan pesan yang sama dengan login gagal (akun tidak dikenal)
             if ($user->role === 'admin' || $user->role === 'staff') {
                 return back()->withErrors([
-                    'email' => 'Akses ditolak. Akun Admin/Staff hanya dapat digunakan di Dashboard Admin.',
+                    'email' => 'Email atau password yang Anda masukkan salah.',
                 ])->withInput($request->only('email'));
             }
 
