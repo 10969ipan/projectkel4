@@ -26,39 +26,24 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        // VALIDASI INPUT: Pastikan email dan password diisi dengan benar
         $credentials = $request->validate([
-            'email' => 'required|email',      // Email wajib diisi dan harus format email yang valid
-            'password' => 'required',          // Password wajib diisi
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
 
-        // PROSES AUTENTIKASI: Coba login dengan kredensial yang diberikan
-        // Auth::attempt() akan mengecek apakah email dan password cocok dengan database
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
+        // 1. Validasi kredensial TANPA login dulu
+        if (Auth::validate($credentials)) {
+            $user = \App\Models\User::where('email', $credentials['email'])->first();
 
-            // ROLE CHECK: Hanya admin dan staff yang boleh masuk ke Dashboard
+            // 2. Cek Role: Hanya Admin dan Staff yang boleh masuk Dashboard
             if ($user->role !== 'admin' && $user->role !== 'staff') {
-                Auth::logout();
                 return back()->withErrors([
-                    'email' => 'Akses ditolak. Akun ini tidak memiliki akses ke Dashboard Admin.',
+                    'email' => 'Akses ditolak. Akun Pelanggan tidak dapat mengakses Dashboard Admin.',
                 ])->withInput($request->only('email'));
             }
 
-            // MERGE GUEST CART TO DATABASE
-            $cart = session()->get('cart', []);
-            foreach ($cart as $id => $details) {
-                // Gunakan updateOrCreate untuk menghindari duplikasi
-                \App\Models\CartItem::updateOrCreate(
-                    ['user_id' => $user->id, 'item_id' => $details['id']],
-                    [
-                        'qty' => $details['qty'], 
-                        'type' => $details['type'] ?? 'once', 
-                        'interval_days' => $details['interval'] ?? 30
-                    ]
-                );
-            }
-
+            // 3. Jika oke, baru login
+            Auth::login($user, $request->has('remember'));
             $request->session()->regenerate();
 
             // PULL FULL CART FROM DATABASE TO SESSION

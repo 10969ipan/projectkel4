@@ -132,6 +132,16 @@ class User extends Authenticatable
         return $this->role === 'staff';
     }
 
+    /**
+     * CEK APAKAH USER ADALAH PELANGGAN TOKO
+     * 
+     * @return bool
+     */
+    public function isCustomer(): bool
+    {
+        return $this->store_role === 'customer';
+    }
+
     // ========================================================================
     // ELOQUENT RELATIONSHIPS
     // ========================================================================

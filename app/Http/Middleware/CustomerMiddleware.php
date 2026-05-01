@@ -15,24 +15,24 @@ class CustomerMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Jika tidak login, biarkan sebagai TAMU (Guest) melihat-lihat toko dulu
+        // Jika tidak login, biarkan sebagai TAMU (Guest)
         if (!auth()->check()) {
             return $next($request);
         }
 
         $user = auth()->user();
         
-        // JIKA sudah login, pastikan dia adalah akun Pelanggan
-        // Jika dia adalah Admin atau Staff, blokir akses ke halaman toko
+        // JIKA sudah login sebagai Admin atau Staff, blokir akses ke SEMUA halaman toko
         if ($user->role === 'admin' || $user->role === 'staff') {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Akun Internal (Admin/Staff) tidak diperbolehkan mengakses fitur toko.'], 403);
             }
-            return redirect()->route('dashboard')->with('error', 'Informasi: Anda saat ini login sebagai Admin/Staff. Untuk mengakses fitur toko, silakan logout terlebih dahulu dan gunakan akun Pelanggan terpisah.');
+            // Langsung lempar ke dashboard (Separasi Ketat)
+            return redirect()->route('dashboard')->with('error', 'Informasi: Anda saat ini login sebagai Admin/Staff. Fitur toko tidak dapat diakses.');
         }
 
         // Jika dia login sebagai customer, biarkan lanjut
-        if ($user->store_role === 'customer') {
+        if ($user->isCustomer()) {
             return $next($request);
         }
 

@@ -33,19 +33,27 @@ class StoreAuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
+        // 1. Validasi kredensial TANPA login dulu
+        if (Auth::validate($credentials)) {
+            $user = \App\Models\User::where('email', $credentials['email'])->first();
 
-            // ROLE CHECK: Admin dan Staff tidak boleh login di Store
+            // 2. Cek Role: Admin dan Staff dilarang login di Store
             if ($user->role === 'admin' || $user->role === 'staff') {
-                Auth::logout();
                 return back()->withErrors([
-                    'email' => 'Akun Admin/Staff tidak diperbolehkan login di Store. Silakan gunakan akun Pelanggan terpisah.',
+                    'email' => 'Akses ditolak. Akun Admin/Staff hanya dapat digunakan di Dashboard Admin.',
                 ])->withInput($request->only('email'));
             }
 
+            // 3. Jika oke, baru login
+            Auth::login($user, $request->has('remember'));
             $request->session()->regenerate();
-            // Redirect ke halaman yang dituju, default ke /store
+
+            // Pindahkan cart dari session ke database jika ada
+            $sessionCart = session()->get('cart', []);
+            foreach ($sessionCart as $id => $details) {
+                // Logika pemindahan cart bisa ditambahkan di sini jika diperlukan
+            }
+
             return redirect()->intended(route('store.index'))->with('success', 'Selamat datang di Pharmacare!');
         }
 
@@ -148,25 +156,26 @@ class StoreAuthController extends Controller
             }
         } else {
             // Selalu update avatar & nama agar sinkron dengan Google
-            $user->update([
-                'avatar' => $googleUser->getAvatar(),
-                'name'   => $googleUser->getName(),
-            ]);
+                // Selalu update avatar & nama agar sinkron dengan Google
+                $user->update([
+                    'avatar' => $googleUser->getAvatar(),
+                    'name'   => $googleUser->getName(),
+                ]);
+            }
+
+            // ROLE CHECK: Admin dan Staff dilarang login di Store via Google
+            if ($user->role === 'admin' || $user->role === 'staff') {
+                return redirect()->route('store.login')
+                    ->with('error', 'Akses ditolak. Akun Admin/Staff tidak diperbolehkan login di Store.');
+            }
+
+            // Login user
+            Auth::login($user, true);
+            request()->session()->regenerate();
+
+            return redirect()->intended(route('store.index'))->with('success', 'Berhasil masuk dengan Google!');
+        } catch (\Exception $e) {
+            return redirect()->route('store.login')->with('error', 'Gagal login dengan Google: ' . $e->getMessage());
         }
-
-        // Login user
-        Auth::login($user, true);
-
-        // ROLE CHECK: Admin dan Staff tidak boleh login di Store via Google
-        if ($user->role === 'admin' || $user->role === 'staff') {
-            Auth::logout();
-            return redirect()->route('store.login')
-                ->with('error', 'Akun Admin/Staff tidak diperbolehkan login di Store.');
-        }
-
-        request()->session()->regenerate();
-
-        return redirect()->route('store.index')
-            ->with('success', 'Selamat datang, ' . $user->name . '! Login Google berhasil 🎉');
     }
 }
