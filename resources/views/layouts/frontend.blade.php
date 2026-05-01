@@ -1549,8 +1549,8 @@
                             <button type="submit" class="mobile-nav-link" style="width: 100%; border: none; cursor: pointer; background: #fff0f0; color: #ef4444;"><i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Keluar</button>
                         </form>
                     @else
-                        <a href="javascript:void(0)" onclick="closeMobileDrawer(); setTimeout(()=>{ window.StoreUI && (window.StoreUI.showAuthModal=true, window.StoreUI.authTab='login') }, 300)" class="mobile-nav-link"><i class="fas fa-sign-in-alt"></i> Masuk</a>
-                        <a href="javascript:void(0)" onclick="closeMobileDrawer(); setTimeout(()=>{ window.StoreUI && (window.StoreUI.showAuthModal=true, window.StoreUI.authTab='register') }, 300)" class="mobile-nav-link" style="background: #E6F3FF; color: var(--primary-blue);"><i class="fas fa-user-plus"></i> Daftar</a>
+                        <a href="#login" @click.prevent="closeMobileDrawer(); setTimeout(()=>{ showAuthModal=true, authTab='login' }, 300)" class="mobile-nav-link"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Masuk</a>
+                        <a href="#register" @click.prevent="closeMobileDrawer(); setTimeout(()=>{ window.StoreUI && (window.StoreUI.showAuthModal=true, window.StoreUI.authTab='register') }, 300)" class="mobile-nav-link" style="background: #E6F3FF; color: var(--primary-blue);"><i class="fas fa-user-plus" aria-hidden="true"></i> Daftar</a>
                     @endif
                 </nav>
             </div>
@@ -1578,8 +1578,8 @@
 
                 @if(!Auth::check() || !Auth::user()->isCustomer())
                     @if(request()->routeIs('store.index'))
-                        <a href="javascript:void(0)" @click.prevent="showAuthModal = true; authTab = 'login'" class="btn-login-nav outline">Masuk</a>
-                        <a href="javascript:void(0)" @click.prevent="showAuthModal = true; authTab = 'register'" class="btn-login-nav filled">Daftar</a>
+                        <a href="#login" @click.prevent="showAuthModal = true; authTab = 'login'" class="btn-login-nav outline">Masuk</a>
+                        <a href="#register" @click.prevent="showAuthModal = true; authTab = 'register'" class="btn-login-nav filled">Daftar</a>
                     @else
                         <a href="{{ route('store.login') }}" class="btn-login-nav outline">Masuk</a>
                         <a href="{{ route('store.register') }}" class="btn-login-nav filled">Daftar</a>
@@ -1921,8 +1921,8 @@
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                  x-transition:leave-end="opacity-0 scale-95 translate-y-8"
                  id="quick-view-modal-content">
-                <button class="qv-close" @click="showQuickView = false">
-                    <i class="fas fa-times"></i>
+                <button class="qv-close" @click="showQuickView = false" aria-label="Tutup pratinjau produk">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
                 
                 <div class="qv-left">
@@ -1966,8 +1966,8 @@
              x-transition:leave-end="opacity-0"
              @click.self="showRatingModal = false">
             <div class="auth-modal-content" style="max-width: 480px; text-align: center; padding: 35px 30px;">
-                <button class="auth-modal-close" @click="showRatingModal = false">
-                    <i class="fas fa-times"></i>
+                <button class="auth-modal-close" @click="showRatingModal = false" aria-label="Tutup modal rating">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
                 
                 <div style="width: 70px; height: 70px; background: #FFF9DB; color: #F59E0B; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 16px;">
@@ -2041,8 +2041,8 @@
                     <h4><i class="fas fa-robot"></i> SIMA</h4>
                     <small><span class="status-dot"></span> Aktif & Siap Membantu 24 Jam    </small>
                 </div>
-                <button onclick="toggleChat()" class="chat-close-btn">
-                    <i class="fas fa-times"></i>
+                <button onclick="toggleChat()" class="chat-close-btn" aria-label="Tutup chat">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="chat-body" id="chatBody">
@@ -2062,10 +2062,10 @@
         <!-- Chat FAB Card Launcher -->
         <div class="chat-fab-card" onclick="toggleChat()">
             <div class="chat-fab-logo">
-                <i class="fas fa-robot"></i>
+                <i class="fas fa-robot" aria-hidden="true"></i>
             </div>
             <div class="chat-fab-text">
-                <h5>Chat SIMA</h5>
+                <h2 style="font-size: 0.9rem; font-weight: 800; margin: 0; color: #1e293b;">Chat SIMA</h2>
                 <p><span class="status-dot" style="margin-right: 4px;"></span> Online</p>
             </div>
         </div>

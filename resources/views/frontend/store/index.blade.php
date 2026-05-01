@@ -256,6 +256,7 @@
             <div class="wellness-nav-indicators" style="position: absolute; bottom: 40px; right: 60px; display: flex; gap: 12px; z-index: 10;">
                 @foreach($wellnessArticles as $index => $article)
                 <button @click="active = {{ $index }}" 
+                        aria-label="Lihat artikel kesehatan ke-{{ $index + 1 }}"
                         :style="active === {{ $index }} ? 'width: 40px; background: white;' : 'width: 12px; background: rgba(255,255,255,0.3);'" 
                         style="height: 6px; border-radius: 3px; cursor: pointer; border: none; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);"></button>
                 @endforeach

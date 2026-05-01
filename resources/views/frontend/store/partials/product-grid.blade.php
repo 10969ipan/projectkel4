@@ -28,7 +28,11 @@
         <a href="{{ route('store.show', $item->id) }}" style="text-decoration: none; color: inherit; display: block;">
             <div style="width: 100%; height: 160px; margin-bottom: 16px; background-color: #F8F9FB; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: 0.3s; position: relative;">
                 @if($item->image_path)
-                    <img src="{{ asset($item->image_path) }}" alt="{{ $item->name }}" width="160" height="160" style="height: 100%; width: 100%; object-fit: contain;" loading="lazy">
+                    <img src="{{ asset($item->image_path) }}" 
+                         alt="{{ $item->name }}" 
+                         width="160" height="160" 
+                         style="height: 100%; width: 100%; object-fit: contain;"
+                         @if($loop->index < 4) fetchpriority="high" @else loading="lazy" @endif>
                 @else
                     <span style="font-size: 3rem;">{{ $item->requires_prescription ? '⚕️' : '💊' }}</span>
                 @endif
