@@ -5,7 +5,7 @@
         @if($item->requires_prescription)
             <div style="position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #0076D6, #0055a5); border-radius: 8px; padding: 5px 9px; text-align: center; font-size: 0.5rem; font-weight: 900; line-height: 1.3; z-index: 15; box-shadow: 0 3px 8px rgba(0,118,214,0.4); letter-spacing: 0.3px;">
                 <div style="color: white; text-transform: uppercase;">PERINGATAN</div>
-                <div style="color: #ff0303ff; text-transform: uppercase;">DENGAN RESEP</div>
+                <div style="color: #ff4d4d; text-transform: uppercase;">DENGAN RESEP</div>
             </div>
         @endif
         

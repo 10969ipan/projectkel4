@@ -1404,8 +1404,8 @@
                         let badgeHtml = '';
                         if (data.requires_prescription) {
                             badgeHtml = `<div style="position: absolute; top: 15px; right: 15px; background-color: #0076D6; border-radius: 12px; padding: 4px 8px; text-align: center; font-size: 0.65rem; font-weight: 800; line-height: 1.2; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                                            <div style="color: white;">CONTROLLED</div>
-                                            <div style="color: #ff4d4d;">SUBSTANCE</div>
+                                            <div style="color: white;">PERINGATAN</div>
+                                            <div style="color: #ff4d4d;">DENGAN RESEP</div>
                                          </div>`;
                         }
                         imgContainer.innerHTML = `<div style="position: relative; width: 100%; height: 100%;">
