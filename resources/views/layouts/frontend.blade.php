@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SIMA-APOTEK: Sistem Manajemen Farmasi Terpadu dan Toko Obat Online Terpercaya. Solusi kesehatan cerdas untuk kebutuhan medis Anda.">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - Pharmacare</title>
 
@@ -1489,17 +1490,38 @@
         window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/speed-insights/script.js"></script>
+    <style>
+        /* Ensure skip link is focusable and visible on focus */
+        .skip-link:focus {
+            clip: auto !important;
+            height: auto !important;
+            width: auto !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            position: fixed !important;
+            top: 1rem !important;
+            left: 1rem !important;
+            z-index: 10000 !important;
+            padding: 1rem 2rem !important;
+            background: var(--primary-blue) !important;
+            color: white !important;
+            border-radius: 0.5rem !important;
+            text-decoration: none !important;
+            font-weight: 800 !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        }
+    </style>
 </head>
 
 <body>
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg">Lompat ke Konten</a>
+    <a href="#main-content" class="sr-only skip-link">Lompat ke Konten</a>
 
     <div class="container" x-data="PharmacareState" 
          @open-quickview.window="openQuickView($event.detail)"
          @add-to-cart.window="addToCart($event.detail.id, $event.detail.qty)"
          @open-wellness.window="openWellnessModal($event.detail)">
         <!-- Mobile Drawer -->
-        <div class="mobile-drawer" id="mobile-drawer" onclick="if(event.target===this||event.target.classList.contains('mobile-drawer-overlay')) closeMobileDrawer()">
+        <div class="mobile-drawer" id="mobile-drawer" role="dialog" aria-modal="true" aria-label="Menu Navigasi Mobile" onclick="if(event.target===this||event.target.classList.contains('mobile-drawer-overlay')) closeMobileDrawer()">
             <div class="mobile-drawer-overlay"></div>
             <div class="mobile-drawer-panel">
                 <div class="mobile-drawer-header">
@@ -1647,7 +1669,7 @@
                 @endif
 
                 <div class="cart-dropdown-container">
-                    <a href="javascript:void(0)" @click.prevent="showCartDropdown = !showCartDropdown; refreshCart()" 
+                    <a href="#cart" @click.prevent="showCartDropdown = !showCartDropdown; refreshCart()" 
                        class="cart-btn" 
                        aria-label="Buka keranjang belanja"
                        :aria-expanded="showCartDropdown"
@@ -1680,6 +1702,7 @@
                                 <div class="cart-dropdown-item">
                                     <div class="cart-dropdown-img">
                                         <img :src="item.image_path ? `{{ asset('') }}${item.image_path}` : 'https://via.placeholder.com/100?text=Obat'" 
+                                             :alt="item.name"
                                              style="width: 100%; height: 100%; object-fit: contain;">
                                     </div>
                                     <div class="cart-dropdown-info">
@@ -1705,7 +1728,7 @@
             </div>
         </div>
 
-        <main style="flex: 1;">
+        <main id="main-content" style="flex: 1;">
             @yield('content')
         </main>
 
@@ -1720,26 +1743,26 @@
                         Solusi kesehatan digital terpercaya di Indonesia. Kami menyediakan obat-obatan berkualitas dengan layanan konsultasi apoteker real-time.
                     </p>
                     <div class="social-icons">
-                        <a href="https://www.facebook.com/10969ipan" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                        <a href="https://www.instagram.com/10969ipan/" class="social-icon"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                        <a href="https://wa.me/6281234567890" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                        <a href="https://www.facebook.com/10969ipan" class="social-icon" aria-label="Kunjungi Facebook Kami"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+                        <a href="https://www.instagram.com/10969ipan/" class="social-icon" aria-label="Ikuti Instagram Kami"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                        <a href="#" class="social-icon" aria-label="Ikuti Twitter Kami"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                        <a href="https://wa.me/6281234567890" class="social-icon" aria-label="Hubungi via WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
                     </div>
                 </div>
 
                 <div class="footer-col">
-                    <h4>Layanan</h4>
+                    <h2 style="font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 20px;">Layanan</h2>
                     <ul class="footer-links">
                         <li><a href="{{ route('store.index') }}">Beranda Toko</a></li>
                         <li><a href="{{ route('ongkir.index') }}">Cek Ongkir</a></li>
-                        <li><a href="javascript:void(0)" onclick="toggleChat()">Konsultasi AI</a></li>
+                        <li><a href="#consultation" onclick="toggleChat()">Konsultasi AI</a></li>
                         <li><a href="{{ route('cart.index') }}">Keranjang</a></li>
                         <li><a href="{{ route('account.dashboard') }}">Akun Saya</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-col">
-                    <h4>Kontak Kami</h4>
+                    <h2 style="font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 20px;">Kontak Kami</h2>
                     <ul class="footer-links">
                         <li><a href="#"><i class="fas fa-phone-alt mr-2"></i> +62 812-3456-7890</a></li>
                         <li><a href="#"><i class="fas fa-envelope mr-2"></i> care@pharmacare.id</a></li>
@@ -1748,7 +1771,7 @@
                 </div>
 
                 <div class="footer-col">
-                    <h4>Alamat Toko</h4>
+                    <h2 style="font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 20px;">Alamat Toko</h2>
                     <p class="footer-info">
                         <i class="fas fa-map-marker-alt mr-2" style="color: var(--primary-blue);"></i>
                         Jl. Pelayanan Kesehatan No. 88, Kota Tekno, Jawa Barat 40123
@@ -1776,8 +1799,8 @@
                  x-transition:leave="transition ease-in duration-200" 
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0" 
                  x-transition:leave-end="opacity-0 scale-95 translate-y-6">
-                <button class="auth-modal-close" @click="showAuthModal = false">
-                    <i class="fas fa-times"></i>
+                <button class="auth-modal-close" @click="showAuthModal = false" aria-label="Tutup modal login">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
 
                 <!-- Tabs -->
@@ -1825,7 +1848,7 @@
                     </a>
 
                     <div style="margin-top: 20px; text-align: center; font-size: 0.9rem; color: #64748b;">
-                        Belum punya akun? <a href="javascript:void(0)" @click="authTab = 'register'" style="color: var(--primary-blue); font-weight: 800; text-decoration: none;">Daftar Sekarang</a>
+                        Belum punya akun? <a href="#register" @click.prevent="authTab = 'register'" style="color: var(--primary-blue); font-weight: 800; text-decoration: none;">Daftar Sekarang</a>
                     </div>
                 </div>
 
