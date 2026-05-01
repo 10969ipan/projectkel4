@@ -18,6 +18,16 @@ Route::get('/fix-roles', function() {
     return redirect()->route('store.index')->with('success', 'Database Pelanggan berhasil diperbaiki!');
 });
 
+// TEMPORARY MIGRATION ROUTE
+Route::get('/migrate-db', function() {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return "Migration sukses dijalankan! <br><br> Hasil: <pre>" . \Illuminate\Support\Facades\Artisan::output() . "</pre>";
+    } catch (\Exception $e) {
+        return "Gagal menjalankan migration: " . $e->getMessage();
+    }
+});
+
 // Home Redirection Logic
 Route::get('/', function () {
     if (auth()->check()) {
