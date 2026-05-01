@@ -12,20 +12,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Update all image_path entries in items table from .png to .webp
-        DB::table('items')
-            ->where('image_path', 'LIKE', '%.png')
-            ->update([
-                'image_path' => DB::raw("REPLACE(image_path, '.png', '.webp')")
-            ]);
+        // Update wellness_articles image_path to .webp
+        DB::table('wellness_articles')->get()->each(function ($article) {
+            $newPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $article->image_path);
+            if ($newPath !== $article->image_path) {
+                DB::table('wellness_articles')
+                    ->where('id', $article->id)
+                    ->update(['image_path' => $newPath]);
+            }
+        });
 
-        // Also update any potential .jpg or .jpeg entries if needed
-        DB::table('items')
-            ->where('image_path', 'LIKE', '%.jpg')
-            ->orWhere('image_path', 'LIKE', '%.jpeg')
-            ->update([
-                'image_path' => DB::raw("REPLACE(REPLACE(image_path, '.jpg', '.webp'), '.jpeg', '.webp')")
-            ]);
+        // Update items image_path to .webp
+        DB::table('items')->get()->each(function ($item) {
+            $newPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $item->image_path);
+            if ($newPath !== $item->image_path) {
+                DB::table('items')
+                    ->where('id', $item->id)
+                    ->update(['image_path' => $newPath]);
+            }
+        });
     }
 
     /**
@@ -33,11 +38,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert .webp back to .png if needed (optional)
-        DB::table('items')
-            ->where('image_path', 'LIKE', '%.webp')
-            ->update([
-                'image_path' => DB::raw("REPLACE(image_path, '.webp', '.png')")
-            ]);
+        // This is a bit tricky to reverse perfectly without knowing original extensions, 
+        // but we can assume common ones if needed. For now, we'll leave it as is or try to guess.
     }
 };
