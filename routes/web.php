@@ -28,6 +28,10 @@ Route::get('/migrate-db', function() {
     }
 });
 
+Route::get('/run-migrate', function() {
+    return redirect('/migrate-db');
+});
+
 // Home Redirection Logic
 Route::get('/', function () {
     if (auth()->check()) {
