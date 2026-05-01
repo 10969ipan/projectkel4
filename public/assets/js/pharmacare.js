@@ -31,7 +31,8 @@
             description: qvBtn.dataset.description,
             unit: qvBtn.dataset.unit,
             stock: qvBtn.dataset.stock,
-            image_url: qvBtn.dataset.image
+            image_url: qvBtn.dataset.image,
+            requires_prescription: qvBtn.dataset.requiresPrescription === '1'
         };
         
         // Show instantly if we have basic data
