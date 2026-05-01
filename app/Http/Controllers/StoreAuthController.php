@@ -15,6 +15,11 @@ class StoreAuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
+            $user = Auth::user();
+            // Jika Admin/Staff nyasar ke login store, kembalikan ke dashboard mereka
+            if ($user->role === 'admin' || $user->role === 'staff') {
+                return redirect()->route('dashboard')->with('info', 'Anda saat ini sudah login sebagai Admin/Staff.');
+            }
             return redirect()->route('store.index');
         }
         return view('store-login');
@@ -81,9 +86,16 @@ class StoreAuthController extends Controller
     /** Logout khusus toko (kembali ke halaman toko, bukan SIMA-APOTEK) */
     public function logout(Request $request)
     {
+        $user = Auth::user();
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // Jika yang logout adalah Admin/Staff (walau dari sisi Toko), arahkan ke login Admin
+        if ($user && ($user->role === 'admin' || $user->role === 'staff')) {
+            return redirect()->route('login')->with('success', 'Anda berhasil keluar dari sistem.');
+        }
+
         return redirect()->route('store.login')->with('success', 'Anda berhasil keluar dari Pharmacare.');
     }
 

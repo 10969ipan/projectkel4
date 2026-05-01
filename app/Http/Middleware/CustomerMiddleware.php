@@ -28,7 +28,7 @@ class CustomerMiddleware
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Akun Internal (Admin/Staff) tidak diperbolehkan mengakses fitur toko.'], 403);
             }
-            return redirect()->route('dashboard')->with('error', 'Informasi: Anda saat ini login sebagai Admin/Staff. Fitur toko hanya dapat diakses melalui akun Pelanggan terpisah (Guest atau login khusus Pelanggan).');
+            return redirect()->route('dashboard')->with('error', 'Informasi: Anda saat ini login sebagai Admin/Staff. Untuk mengakses fitur toko, silakan logout terlebih dahulu dan gunakan akun Pelanggan terpisah.');
         }
 
         // Jika dia login sebagai customer, biarkan lanjut

@@ -74,6 +74,10 @@ class AuthController extends Controller
             }
             session()->put('cart', $newCart);
 
+            if ($user->role === 'admin' || $user->role === 'staff') {
+                return redirect()->route('dashboard')->with('success', 'Berhasil masuk ke Dashboard!');
+            }
+
             return redirect()->intended('/')->with('success', 'Berhasil masuk!');
         }
 
