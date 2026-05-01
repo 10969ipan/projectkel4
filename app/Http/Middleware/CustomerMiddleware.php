@@ -15,24 +15,32 @@ class CustomerMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Jika tidak login, biarkan sebagai TAMU (Guest) melihat-lihat toko dulu
+        // Jika tidak login, biarkan sebagai TAMU (Guest)
         if (!auth()->check()) {
             return $next($request);
         }
 
         $user = auth()->user();
         
-        // JIKA sudah login, pastikan dia adalah akun Pelanggan
-        // Jika dia adalah Admin atau Staff, blokir akses ke halaman toko
+        // Daftar rute yang HANYA boleh diakses Pelanggan (Transaksi/Profil)
+        $isProtectedRoute = $request->is('cart*', 'checkout*', 'account*', 'reviews*');
+
+        // Jika dia adalah Admin atau Staff
         if ($user->role === 'admin' || $user->role === 'staff') {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Akun Internal (Admin/Staff) tidak diperbolehkan mengakses fitur toko.'], 403);
+            if ($isProtectedRoute) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Admin/Staff tidak dapat melakukan transaksi di Store.'], 403);
+                }
+                // Kembalikan ke halaman utama Store (BUKAN ke dashboard)
+                return redirect()->route('store.index')->with('error', 'Fitur transaksi hanya untuk akun Pelanggan.');
             }
-            return redirect()->route('dashboard')->with('error', 'Informasi: Anda saat ini login sebagai Admin/Staff. Fitur toko hanya dapat diakses melalui akun Pelanggan terpisah (Guest atau login khusus Pelanggan).');
+            
+            // Biarkan browsing, UI akan menganggap dia Guest (karena pengecekan isCustomer di blade)
+            return $next($request);
         }
 
         // Jika dia login sebagai customer, biarkan lanjut
-        if ($user->store_role === 'customer') {
+        if ($user->isCustomer()) {
             return $next($request);
         }
 

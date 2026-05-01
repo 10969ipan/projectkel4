@@ -1250,7 +1250,7 @@
 
         // Global State Definition for Early Loading
         window.PharmacareState = {
-            isAuthenticated: {{ Auth::check() ? 'true' : 'false' }},
+            isAuthenticated: {{ (Auth::check() && Auth::user()->isCustomer()) ? 'true' : 'false' }},
             showAuthModal: false,
             authTab: 'login',
             showCartDropdown: false,
@@ -1401,7 +1401,17 @@
 
                     const imgContainer = modal.querySelector('#qv-img-container');
                     if (imgContainer && data.image_url) {
-                        imgContainer.innerHTML = `<img src="${data.image_url}" style="width: 100%; height: 100%; object-fit: contain;">`;
+                        let badgeHtml = '';
+                        if (data.requires_prescription) {
+                            badgeHtml = `<div style="position: absolute; top: 15px; right: 15px; background-color: #0076D6; border-radius: 12px; padding: 4px 8px; text-align: center; font-size: 0.65rem; font-weight: 800; line-height: 1.2; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                            <div style="color: white;">CONTROLLED</div>
+                                            <div style="color: #ff4d4d;">SUBSTANCE</div>
+                                         </div>`;
+                        }
+                        imgContainer.innerHTML = `<div style="position: relative; width: 100%; height: 100%;">
+                            ${badgeHtml}
+                            <img src="${data.image_url}" style="width: 100%; height: 100%; object-fit: contain;">
+                        </div>`;
                     }
                 });
             },
@@ -1505,7 +1515,7 @@
                 <nav style="display: flex; flex-direction: column; gap: 8px;">
                     <a href="{{ route('store.index') }}" class="mobile-nav-link"><i class="fas fa-home"></i> Beranda</a>
                     <a href="{{ route('cart.index') }}" class="mobile-nav-link"><i class="fas fa-shopping-cart"></i> Keranjang</a>
-                    @auth
+                    @if(Auth::check() && Auth::user()->isCustomer())
                         <a href="{{ route('account.orders') }}" class="mobile-nav-link"><i class="fas fa-box"></i> Pesanan</a>
                         <a href="{{ route('account.profile') }}" class="mobile-nav-link"><i class="fas fa-user"></i> Profil</a>
                         <a href="{{ url('/account/wallet') }}" class="mobile-nav-link"><i class="fas fa-wallet"></i> Dompet</a>
@@ -1516,7 +1526,7 @@
                     @else
                         <a href="javascript:void(0)" onclick="closeMobileDrawer(); setTimeout(()=>{ window.StoreUI && (window.StoreUI.showAuthModal=true, window.StoreUI.authTab='login') }, 300)" class="mobile-nav-link"><i class="fas fa-sign-in-alt"></i> Masuk</a>
                         <a href="javascript:void(0)" onclick="closeMobileDrawer(); setTimeout(()=>{ window.StoreUI && (window.StoreUI.showAuthModal=true, window.StoreUI.authTab='register') }, 300)" class="mobile-nav-link" style="background: #E6F3FF; color: var(--primary-blue);"><i class="fas fa-user-plus"></i> Daftar</a>
-                    @endauth
+                    @endif
                 </nav>
             </div>
         </div>
@@ -1540,7 +1550,7 @@
             <div class="top-bar-right" style="display: flex; align-items: center; gap: 20px;">
                 @php $cartCount = collect(session()->get('cart', []))->sum('qty'); @endphp
 
-                @guest
+                @if(!Auth::check() || !Auth::user()->isCustomer())
                     @if(request()->routeIs('store.index'))
                         <a href="javascript:void(0)" @click.prevent="showAuthModal = true; authTab = 'login'" class="btn-login-nav outline">Masuk</a>
                         <a href="javascript:void(0)" @click.prevent="showAuthModal = true; authTab = 'register'" class="btn-login-nav filled">Daftar</a>
@@ -1628,7 +1638,7 @@
                                     type="submit">Keluar</button></form>
                         </div>
                     </div>
-                @endguest
+                @endif
 
                 <div class="cart-dropdown-container">
                     <a href="javascript:void(0)" @click.prevent="showCartDropdown = !showCartDropdown; refreshCart()" class="cart-btn" title="Keranjang">

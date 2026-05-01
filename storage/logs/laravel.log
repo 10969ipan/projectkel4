@@ -4,3 +4,23 @@
 #3 C:\\laragon\\www\\SIMASTOK\\app\\Http\\Controllers\\AccountController.php(342): Midtrans\\Snap::getSnapToken(Array)
 #4 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php(47): App\\Http\\Controllers\\AccountController->processPayment(Object(App\\Http\\Requests\\ProcessPaymentRequest), '54')
 #5 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\AccountContro"} 
+[2026-04-26 19:13:23] local.ERROR: Unexpected end of input {"exception":"[object] (InvalidArgumentException(code: 0): Unexpected end of input at C:\\laragon\\www\\SIMASTOK\\vendor\\psy\\psysh\\src\\Shell.php:891)
+[stacktrace]
+#0 C:\\laragon\\www\\SIMASTOK\\vendor\\psy\\psysh\\src\\Shell.php(1390): Psy\\Shell->setCode('echo App\\\\Models...', true)
+#1 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\tinker\\src\\Console\\TinkerCommand.php(76): Psy\\Shell->execute('echo App\\\\Models...')
+#2 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(36): Laravel\\Tinker\\Console\\TinkerCommand->handle()
+#3 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#4 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#5 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#6 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Container.php(696): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#7 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(213): Illuminate\\Container\\Container->call(Array)
+#8 C:\\laragon\\www\\SIMASTOK\\vendor\\symfony\\console\\Command\\Command.php(318): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#9 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#10 C:\\laragon\\www\\SIMASTOK\\vendor\\symfony\\console\\Application.php(1092): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#11 C:\\laragon\\www\\SIMASTOK\\vendor\\symfony\\console\\Application.php(341): Symfony\\Component\\Console\\Application->doRunCommand(Object(Laravel\\Tinker\\Console\\TinkerCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#12 C:\\laragon\\www\\SIMASTOK\\vendor\\symfony\\console\\Application.php(192): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#13 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#14 C:\\laragon\\www\\SIMASTOK\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#15 C:\\laragon\\www\\SIMASTOK\\artisan(13): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#16 {main}
+"} 

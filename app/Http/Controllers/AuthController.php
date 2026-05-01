@@ -26,30 +26,25 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        // VALIDASI INPUT: Pastikan email dan password diisi dengan benar
         $credentials = $request->validate([
-            'email' => 'required|email',      // Email wajib diisi dan harus format email yang valid
-            'password' => 'required',          // Password wajib diisi
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
 
-        // PROSES AUTENTIKASI: Coba login dengan kredensial yang diberikan
-        // Auth::attempt() akan mengecek apakah email dan password cocok dengan database
-        if (Auth::attempt($credentials)) {
-            // MERGE GUEST CART TO DATABASE
-            $cart = session()->get('cart', []);
-            $user = Auth::user();
-            foreach ($cart as $id => $details) {
-                // Gunakan updateOrCreate untuk menghindari duplikasi
-                \App\Models\CartItem::updateOrCreate(
-                    ['user_id' => $user->id, 'item_id' => $details['id']],
-                    [
-                        'qty' => $details['qty'], 
-                        'type' => $details['type'] ?? 'once', 
-                        'interval_days' => $details['interval'] ?? 30
-                    ]
-                );
+        // 1. Validasi kredensial TANPA login dulu
+        if (Auth::validate($credentials)) {
+            $user = \App\Models\User::where('email', $credentials['email'])->first();
+
+            // 2. Cek Role: Customer tidak dikenal di sistem Dashboard Admin
+            // Tampilkan pesan yang sama dengan login gagal (akun tidak dikenal)
+            if ($user->role !== 'admin' && $user->role !== 'staff') {
+                return back()->withErrors([
+                    'email' => 'Email atau password yang Anda masukkan salah.',
+                ])->withInput($request->only('email'));
             }
 
+            // 3. Jika oke, baru login
+            Auth::login($user, $request->has('remember'));
             $request->session()->regenerate();
 
             // PULL FULL CART FROM DATABASE TO SESSION
@@ -65,7 +60,7 @@ class AuthController extends Controller
             }
             session()->put('cart', $newCart);
 
-            return redirect()->intended('/')->with('success', 'Berhasil masuk!');
+            return redirect()->route('dashboard')->with('success', 'Berhasil masuk ke Dashboard!');
         }
 
         // LOGIN GAGAL
@@ -105,8 +100,8 @@ class AuthController extends Controller
         // CSRF (Cross-Site Request Forgery) adalah serangan yang memanfaatkan session aktif
         $request->session()->regenerateToken();
 
-        // LANGKAH 4: Redirect ke halaman home
-        // Arahkan user ke halaman utama setelah logout
-        return redirect('/');
+        // LANGKAH 4: Redirect ke halaman login admin
+        // Arahkan user ke halaman login dashboard setelah logout
+        return redirect()->route('login')->with('success', 'Anda telah berhasil keluar.');
     }
 }

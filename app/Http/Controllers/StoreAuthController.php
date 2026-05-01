@@ -15,6 +15,11 @@ class StoreAuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
+            $user = Auth::user();
+            // Jika Admin/Staff nyasar ke sini, biarkan mereka tetap di Store atau arahkan ke Beranda Store
+            if ($user->role === 'admin' || $user->role === 'staff') {
+                return redirect()->route('store.index');
+            }
             return redirect()->route('store.index');
         }
         return view('store-login');
@@ -28,9 +33,28 @@ class StoreAuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        // 1. Validasi kredensial TANPA login dulu
+        if (Auth::validate($credentials)) {
+            $user = \App\Models\User::where('email', $credentials['email'])->first();
+
+            // 2. Cek Role: Admin dan Staff tidak dikenal di sistem Store
+            // Tampilkan pesan yang sama dengan login gagal (akun tidak dikenal)
+            if ($user->role === 'admin' || $user->role === 'staff') {
+                return back()->withErrors([
+                    'email' => 'Email atau password yang Anda masukkan salah.',
+                ])->withInput($request->only('email'));
+            }
+
+            // 3. Jika oke, baru login
+            Auth::login($user, $request->has('remember'));
             $request->session()->regenerate();
-            // Redirect ke halaman yang dituju, default ke /store
+
+            // Pindahkan cart dari session ke database jika ada
+            $sessionCart = session()->get('cart', []);
+            foreach ($sessionCart as $id => $details) {
+                // Logika pemindahan cart bisa ditambahkan di sini jika diperlukan
+            }
+
             return redirect()->intended(route('store.index'))->with('success', 'Selamat datang di Pharmacare!');
         }
 
@@ -71,10 +95,17 @@ class StoreAuthController extends Controller
     /** Logout khusus toko (kembali ke halaman toko, bukan SIMA-APOTEK) */
     public function logout(Request $request)
     {
+        $user = Auth::user();
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('store.index')->with('success', 'Anda berhasil keluar dari Pharmacare.');
+
+        // Jika yang logout adalah Admin/Staff (walau dari sisi Toko), arahkan ke login Admin
+        if ($user && ($user->role === 'admin' || $user->role === 'staff')) {
+            return redirect()->route('login')->with('success', 'Anda berhasil keluar dari sistem.');
+        }
+
+        return redirect()->route('store.login')->with('success', 'Anda berhasil keluar dari Pharmacare.');
     }
 
     // =========================================================================
@@ -114,13 +145,13 @@ class StoreAuthController extends Controller
             } else {
                 // Buat akun baru sebagai customer
                 $user = User::create([
-                    'name'       => $googleUser->getName(),
-                    'email'      => $googleUser->getEmail(),
-                    'google_id'  => $googleUser->getId(),
-                    'avatar'     => $googleUser->getAvatar(),
-                    'password'   => Hash::make(Str::random(32)),
-                    'role'       => null,
-                    'store_role' => 'customer',
+                    'name'           => $googleUser->getName(),
+                    'email'          => $googleUser->getEmail(),
+                    'google_id'      => $googleUser->getId(),
+                    'avatar'         => $googleUser->getAvatar(),
+                    'password'       => Hash::make(Str::random(32)),
+                    'role'           => null,
+                    'store_role'     => 'customer',
                     'paylater_limit' => 0,
                 ]);
             }
@@ -132,11 +163,16 @@ class StoreAuthController extends Controller
             ]);
         }
 
+        // ROLE CHECK: Admin dan Staff tidak dikenal di sistem Store via Google
+        if ($user->role === 'admin' || $user->role === 'staff') {
+            return redirect()->route('store.login')
+                ->with('error', 'Email atau password yang Anda masukkan salah.');
+        }
+
         // Login user
         Auth::login($user, true);
         request()->session()->regenerate();
 
-        return redirect()->route('store.index')
-            ->with('success', 'Selamat datang, ' . $user->name . '! Login Google berhasil 🎉');
+        return redirect()->intended(route('store.index'))->with('success', 'Berhasil masuk dengan Google!');
     }
 }
