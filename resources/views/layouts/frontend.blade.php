@@ -23,7 +23,16 @@
         <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}">
     </noscript>
 
-    <!-- Tailwind CDN (deferred, non-blocking) -->
+    <!-- Tailwind CDN (with console warning suppression) -->
+    <script>
+        (function() {
+            const originalWarn = console.warn;
+            console.warn = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com')) return;
+                originalWarn.apply(console, arguments);
+            };
+        })();
+    </script>
     <script defer src="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}"></script>
 
     <!-- Favicon (optimized) -->
