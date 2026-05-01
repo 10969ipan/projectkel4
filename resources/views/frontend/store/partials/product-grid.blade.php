@@ -31,6 +31,7 @@
                     <img src="{{ asset($item->image_path) }}" 
                          alt="{{ $item->name }}" 
                          width="160" height="160" 
+                         decoding="async"
                          style="height: 100%; width: 100%; object-fit: contain;"
                          @if($loop->index < 4) fetchpriority="high" @else loading="lazy" @endif>
                 @else

@@ -11,17 +11,18 @@
     <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 
-    <!-- Non-blocking Font Awesome -->
+    <!-- Non-blocking Fonts & Icons -->
     <link rel="preload" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}"></noscript>
-
-    <!-- Local Fonts (non-blocking) -->
     <link rel="preload" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}"></noscript>
-
-    <!-- Primary Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    
+    <noscript>
+        <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
+    </noscript>
 
     <!-- Tailwind CDN (deferred, non-blocking) -->
     <script defer src="{{ asset('assets/vendor/tailwind/tailwind-cdn.js') }}"></script>
@@ -37,6 +38,17 @@
             --bg-glass: rgba(255, 255, 255, 0.85);
             --text-main: #1e293b;
             --text-muted: #64748b;
+        }
+
+        /* Performance & Mobile Optimizations */
+        .hero-doc-secondary { display: block; }
+        @media (max-width: 768px) {
+            .hero-doc-secondary { display: none !important; }
+            .store-hero-card { padding: 40px 25px !important; min-height: 320px !important; }
+            .store-hero-card h1 { font-size: 2rem !important; margin-bottom: 15px !important; }
+            .store-hero-card p { font-size: 0.95rem !important; margin-bottom: 25px !important; }
+            .hero-doc-primary { width: 280px !important; height: 280px !important; margin-right: -70px !important; }
+            .catalog-header h2 { font-size: 1.8rem !important; }
         }
 
         * {
