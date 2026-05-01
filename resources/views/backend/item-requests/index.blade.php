@@ -68,7 +68,7 @@
                     @forelse($requests as $request)
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ $request->item->name }}</td>
+                                {{ optional($request->item)->name ?? 'Item Terhapus' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $request->type === 'in' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800' }}">
                                     <i class="fas {{ $request->type === 'in' ? 'fa-plus-circle' : 'fa-minus-circle' }} mr-1"></i>
@@ -76,8 +76,8 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $request->quantity }}
-                                {{ $request->item->unit->symbol }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $request->user->name }}</td>
+                                {{ optional(optional($request->item)->unit)->symbol ?? '' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ optional($request->user)->name ?? 'User Terhapus' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 @if ($request->status === 'pending')
                                     <span
@@ -97,15 +97,15 @@
                                     <button type="button" 
                                         onclick="openDetailModal(this)"
                                         data-id="{{ $request->id }}"
-                                        data-item-name="{{ $request->item->name }}"
+                                        data-item-name="{{ optional($request->item)->name ?? 'N/A' }}"
                                         data-quantity="{{ $request->quantity }}"
-                                        data-unit="{{ $request->item->unit->symbol }}"
-                                        data-requester="{{ $request->user->name }}"
+                                        data-unit="{{ optional(optional($request->item)->unit)->symbol ?? '' }}"
+                                        data-requester="{{ optional($request->user)->name ?? 'N/A' }}"
                                         data-date="{{ $request->created_at->format('d M Y H:i') }}"
                                         data-type="{{ $request->type }}"
                                         data-status="{{ $request->status }}"
                                         data-reason="{{ $request->reason }}"
-                                        data-processed-by="{{ $request->processedBy->name ?? '-' }}"
+                                        data-processed-by="{{ optional($request->processedBy)->name ?? '-' }}"
                                         data-processed-at="{{ $request->processed_at ? $request->processed_at->format('d M Y H:i') : '-' }}"
                                         data-rejection-reason="{{ $request->rejection_reason ?? '-' }}"
                                         class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">

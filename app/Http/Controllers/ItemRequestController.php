@@ -49,16 +49,19 @@ class ItemRequestController extends Controller
         }
 
         // Simpan ke Database
-        ItemRequest::create([
-            'item_id' => $request->item_id,
-            'user_id' => auth()->id(),
-            'quantity' => $request->quantity,
-            'type' => $request->type,
-            'reason' => $request->reason,
-            'status' => 'pending',
-        ]);
-
-        return redirect()->route('item-requests.index')->with('success', 'Permintaan berhasil dikirim.');
+        try {
+            ItemRequest::create([
+                'item_id' => $request->item_id,
+                'user_id' => auth()->id(),
+                'quantity' => $request->quantity,
+                'type' => $request->type,
+                'reason' => $request->reason,
+                'status' => 'pending',
+            ]);
+            return redirect()->route('item-requests.index')->with('success', 'Permintaan berhasil dikirim.');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Gagal menyimpan permintaan: ' . $e->getMessage());
+        }
     }
 
     /**
