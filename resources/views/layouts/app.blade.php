@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="id" class="h-full">
 
 <head>
     <meta charset="UTF-8">
@@ -163,6 +163,7 @@
 </head>
 
 <body class="h-full" x-data="{ mobileMenuOpen: false, profileMenuOpen: false, pageLoading: true }" x-init="window.onload = () => { setTimeout(() => { pageLoading = false }, 400) }">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg">Lompat ke Konten</a>
     <div class="min-h-screen flex flex-col md:flex-row">
         <div class="hidden md:flex md:flex-shrink-0">
             <div class="flex flex-col w-64 bg-white border-r border-gray-200">
@@ -196,7 +197,7 @@
                         <nav class="flex-1 px-3 space-y-1">
                             <a href="{{ route('dashboard') }}"
                                 class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('dashboard') ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-chart-line mr-3 {{ request()->routeIs('dashboard') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}"></i>
+                                <i class="fas fa-chart-line mr-3 {{ request()->routeIs('dashboard') ? 'text-white' : 'text-gray-400 group-hover:text-primary-600' }}" aria-hidden="true"></i>
                                 Dashboard
                             </a>
                             <a href="{{ route('items.index') }}"
@@ -318,9 +319,10 @@
             class="fixed inset-y-0 left-0 z-40 flex flex-col w-full max-w-xs bg-white md:hidden">
             <div class="absolute top-0 right-0 -mr-12 pt-2">
                 <button @click="mobileMenuOpen = false"
+                    aria-label="Tutup menu sidebar"
                     class="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                     <span class="sr-only">Close sidebar</span>
-                    <i class="fas fa-times text-white text-xl"></i>
+                    <i class="fas fa-times text-white text-xl" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="flex items-center justify-center h-16 px-4 bg-primary-600 border-b border-primary-700">
@@ -464,8 +466,11 @@
                 <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
                     <div class="flex items-center">
                         <button @click="mobileMenuOpen = true"
+                            aria-label="Buka menu mobile"
+                            aria-expanded="false"
+                            :aria-expanded="mobileMenuOpen"
                             class="md:hidden text-gray-500 hover:text-gray-900 focus:outline-none">
-                            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
@@ -476,8 +481,10 @@
                         <div class="relative ml-3">
                             <div>
                                 <button @click="profileMenuOpen = !profileMenuOpen" type="button"
+                                    aria-label="Menu profil pengguna"
+                                    :aria-expanded="profileMenuOpen"
                                     class="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                                    id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                    id="user-menu-button" aria-haspopup="true">
                                     <span class="sr-only">Open user menu</span>
 
                                     {{-- LOGIKA BARU: Tampilkan Foto jika ada --}}
@@ -503,7 +510,7 @@
                                 <a href="{{ route('profile') }}"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem"
                                     tabindex="-1">
-                                    <i class="fas fa-user-edit mr-2"></i> Edit Profil
+                                    <i class="fas fa-user-edit mr-2" aria-hidden="true"></i> Edit Profil
                                 </a>
                                 {{-- ============================ --}}
 
@@ -512,7 +519,7 @@
                                     <button type="submit"
                                         class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                         role="menuitem" tabindex="-1" id="user-menu-item-2">
-                                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                                        <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i> Keluar
                                     </button>
                                 </form>
                             </div>
@@ -522,7 +529,7 @@
             </div>
 
             <div class="flex-1 overflow-y-auto">
-                <main class="p-4 sm:px-6 lg:px-8 relative">
+                <main id="main-content" class="p-4 sm:px-6 lg:px-8 relative">
                     <!-- Skeleton Loader -->
                     <div x-show="pageLoading" class="space-y-6">
                         <div class="flex justify-between items-center mb-8">

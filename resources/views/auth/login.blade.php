@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
@@ -106,7 +106,7 @@
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                         <div class="relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-envelope text-gray-400"></i>
+                                <i class="fas fa-envelope text-gray-400" aria-hidden="true"></i>
                             </div>
                             <input id="email" name="email" type="email" autocomplete="email" required
                                 class="input-field block w-full pl-10 py-3 px-4 rounded-md focus:outline-none sm:text-sm"
@@ -118,7 +118,7 @@
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <div class="relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-lock text-gray-400"></i>
+                                <i class="fas fa-lock text-gray-400" aria-hidden="true"></i>
                             </div>
                             <input id="password" name="password" type="password" autocomplete="current-password"
                                 required
@@ -132,7 +132,7 @@
                     <div>
                         <button type="submit"
                             class="btn-primary w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                            <i class="fas fa-sign-in-alt mr-2"></i> Masuk
+                            <i class="fas fa-sign-in-alt mr-2" aria-hidden="true"></i> Masuk
                         </button>
                     </div>
                 </form>

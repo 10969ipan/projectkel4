@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
@@ -1492,6 +1492,7 @@
 </head>
 
 <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg">Lompat ke Konten</a>
 
     <div class="container" x-data="PharmacareState" 
          @open-quickview.window="openQuickView($event.detail)"
@@ -1503,13 +1504,14 @@
             <div class="mobile-drawer-panel">
                 <div class="mobile-drawer-header">
                     <span style="font-size: 1.3rem; font-weight: 800; color: var(--primary-blue);">Pharma<span style="color: #333;">care</span></span>
-                    <button class="mobile-drawer-close" onclick="closeMobileDrawer()"><i class="fas fa-times"></i></button>
+                    <button class="mobile-drawer-close" onclick="closeMobileDrawer()" aria-label="Tutup menu sidebar"><i class="fas fa-times" aria-hidden="true"></i></button>
                 </div>
 
                 <!-- Mobile Search -->
                 <div style="position: relative;">
+                    <label for="mobile-search" class="sr-only">Cari produk obat</label>
                     <input type="text" class="search-input" id="mobile-search" placeholder="Cari obat..." autocomplete="off" style="padding-left: 40px;">
-                    <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8;" aria-hidden="true"></i>
                 </div>
 
                 <!-- Nav Links -->
@@ -1535,8 +1537,8 @@
         <!-- Top Bar Navigation -->
         <div class="top-bar">
             <!-- Hamburger (mobile only) -->
-            <button class="hamburger-btn" onclick="openMobileDrawer()" aria-label="Menu">
-                <i class="fas fa-bars"></i>
+            <button class="hamburger-btn" onclick="openMobileDrawer()" aria-label="Buka menu navigasi">
+                <i class="fas fa-bars" aria-hidden="true"></i>
             </button>
 
             <a href="{{ route('store.index') }}" style="text-decoration: none; flex-shrink: 0;">
@@ -1544,8 +1546,9 @@
             </a>
 
             <div class="search-container" style="flex: 1; max-width: 500px; margin: 0 30px;">
+                <label for="main-search" class="sr-only">Cari produk kesehatan</label>
                 <input type="text" class="search-input" id="main-search" placeholder="Cari obat..." autocomplete="off">
-                <div id="search-results" class="search-results-dropdown"></div>
+                <div id="search-results" class="search-results-dropdown" role="listbox"></div>
             </div>
 
             <div class="top-bar-right" style="display: flex; align-items: center; gap: 20px;">
@@ -1563,9 +1566,11 @@
                     <!-- Notifications Bell -->
                     <div class="relative" style="position: relative; z-index: 1000;" x-init="fetchNotifications()">
                         <button type="button" @click.stop="showNotifications = !showNotifications; if(showNotifications) markNotificationsAsRead()" 
+                                aria-label="Notifikasi"
+                                :aria-expanded="showNotifications"
                                 class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors relative"
                                 style="width: 50px; height: 50px; background: #E6F3FF; color: var(--primary-blue); border-radius: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                            <i class="fas fa-bell text-lg"></i>
+                            <i class="fas fa-bell text-lg" aria-hidden="true"></i>
                             <template x-if="unreadNotificationsCount > 0">
                                 <span class="absolute" 
                                       style="position: absolute; top: 10px; right: 12px; height: 10px; width: 10px; background-color: #EF5350; border-radius: 50%; border: 2px solid #E6F3FF;"></span>
@@ -1642,8 +1647,12 @@
                 @endif
 
                 <div class="cart-dropdown-container">
-                    <a href="javascript:void(0)" @click.prevent="showCartDropdown = !showCartDropdown; refreshCart()" class="cart-btn" title="Keranjang">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <a href="javascript:void(0)" @click.prevent="showCartDropdown = !showCartDropdown; refreshCart()" 
+                       class="cart-btn" 
+                       aria-label="Buka keranjang belanja"
+                       :aria-expanded="showCartDropdown"
+                       title="Keranjang">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                         </svg>
