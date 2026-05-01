@@ -24,11 +24,11 @@ Route::get('/force-webp', function() {
         $articlesCount = 0;
         $itemsCount = 0;
 
-        // Update wellness_articles
-        \Illuminate\Support\Facades\DB::table('wellness_articles')->get()->each(function ($article) use (&$articlesCount) {
+        // Update wellness_articles (HealthArticle)
+        \Illuminate\Support\Facades\DB::table('health_articles')->get()->each(function ($article) use (&$articlesCount) {
             $newPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $article->image_path);
             if ($newPath !== $article->image_path) {
-                \Illuminate\Support\Facades\DB::table('wellness_articles')
+                \Illuminate\Support\Facades\DB::table('health_articles')
                     ->where('id', $article->id)
                     ->update(['image_path' => $newPath]);
                 $articlesCount++;
