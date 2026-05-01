@@ -18,18 +18,38 @@ Route::get('/fix-roles', function() {
     return redirect()->route('store.index')->with('success', 'Database Pelanggan berhasil diperbaiki!');
 });
 
-// TEMPORARY MIGRATION ROUTE
-Route::get('/migrate-db', function() {
+// FORCE CONVERT IMAGES TO WEBP
+Route::get('/force-webp', function() {
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        return "Migration sukses dijalankan! <br><br> Hasil: <pre>" . \Illuminate\Support\Facades\Artisan::output() . "</pre>";
-    } catch (\Exception $e) {
-        return "Gagal menjalankan migration: " . $e->getMessage();
-    }
-});
+        $articlesCount = 0;
+        $itemsCount = 0;
 
-Route::get('/run-migrate', function() {
-    return redirect('/migrate-db');
+        // Update wellness_articles
+        \Illuminate\Support\Facades\DB::table('wellness_articles')->get()->each(function ($article) use (&$articlesCount) {
+            $newPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $article->image_path);
+            if ($newPath !== $article->image_path) {
+                \Illuminate\Support\Facades\DB::table('wellness_articles')
+                    ->where('id', $article->id)
+                    ->update(['image_path' => $newPath]);
+                $articlesCount++;
+            }
+        });
+
+        // Update items
+        \Illuminate\Support\Facades\DB::table('items')->get()->each(function ($item) use (&$itemsCount) {
+            $newPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $item->image_path);
+            if ($newPath !== $item->image_path) {
+                \Illuminate\Support\Facades\DB::table('items')
+                    ->where('id', $item->id)
+                    ->update(['image_path' => $newPath]);
+                $itemsCount++;
+            }
+        });
+
+        return "Konversi Berhasil! <br> - Artikel Wellness: $articlesCount file diupdate <br> - Produk: $itemsCount file diupdate";
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
 });
 
 // Home Redirection Logic
