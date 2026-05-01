@@ -946,8 +946,8 @@
         .qv-desc { color: #64748b; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px; flex: 1; }
         .qv-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; padding: 20px; background: #f8fafc; border-radius: 16px; }
         .qv-meta-item { display: flex; flex-direction: column; gap: 4px; }
-        .qv-meta-label { font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-        .qv-meta-val { font-size: 1rem; color: #1e293b; font-weight: 700; }
+        .qv-meta-label { font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+        .qv-meta-val { font-size: 0.88rem; color: #1e293b; font-weight: 600; }
 
         @media (max-width: 768px) {
             .qv-modal-content { grid-template-columns: 1fr; max-height: 90vh; overflow-y: auto; }
@@ -1390,7 +1390,8 @@
                     modal.querySelector('#qv-category').innerText = data.category;
                     modal.querySelector('#qv-price').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data.price);
                     modal.querySelector('#qv-unit').innerText = data.unit || 'Pcs';
-                    modal.querySelector('#qv-stock').innerText = `Stok: ${data.stock}`;
+                    modal.querySelector('#qv-stock').innerText = data.stock <= 0 ? 'Stok Habis' : `Stok: ${data.stock} tersedia`;
+                    modal.querySelector('#qv-stock').style.color = data.stock <= 0 ? '#ef4444' : data.stock <= 5 ? '#f59e0b' : '#10b981';
                     
                     // Logic for description
                     let desc = data.description;
