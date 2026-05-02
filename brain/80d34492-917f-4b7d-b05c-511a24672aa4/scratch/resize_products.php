@@ -9,20 +9,20 @@ foreach ($files as $file) {
         $width = imagesx($img);
         $height = imagesy($img);
         
-        // Target 200x200 for grid
-        if ($width > 200 || $height > 200) {
-            $newImg = imagecreatetruecolor(200, 200);
+        // Target 400x400 for grid (Retina & Quick View support)
+        if ($width != 400 || $height != 400) {
+            $newImg = imagecreatetruecolor(400, 400);
             
             // Preserve transparency if any
             imagealphablending($newImg, false);
             imagesavealpha($newImg, true);
             $transparent = imagecolorallocatealpha($newImg, 255, 255, 255, 127);
-            imagefilledrectangle($newImg, 0, 0, 200, 200, $transparent);
+            imagefilledrectangle($newImg, 0, 0, 400, 400, $transparent);
             
-            imagecopyresampled($newImg, $img, 0, 0, 0, 0, 200, 200, $width, $height);
-            imagewebp($newImg, $file, 80); // Save back to same file with 80 quality
+            imagecopyresampled($newImg, $img, 0, 0, 0, 0, 400, 400, $width, $height);
+            imagewebp($newImg, $file, 85); // Save back with 85 quality
             imagedestroy($newImg);
-            echo "Resized: $file\n";
+            echo "Resized: $file (400x400)\n";
         }
         imagedestroy($img);
     }
