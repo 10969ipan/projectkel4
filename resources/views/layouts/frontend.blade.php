@@ -2124,18 +2124,6 @@
     <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>
     <script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}" defer></script>
     <script src="{{ asset('assets/js/pharmacare.js') }}?v=3.1" defer></script>
-    <script>
-        window.addEventListener('load', () => {
-            // Further delay non-critical chatbot script
-            setTimeout(() => {
-                const chatbotScript = document.createElement('script');
-                chatbotScript.src = "{{ asset('build/assets/chatbot_widget.js') }}"; // Adjusted to common build path or similar
-                chatbotScript.defer = true;
-                // document.body.appendChild(chatbotScript); 
-                // Wait, I'll just keep the @vite but maybe it's better to just leave it defer
-            }, 2000);
-        });
-    </script>
     @vite(['resources/js/frontend/chatbot_widget.js'])
     @stack('scripts')
 
