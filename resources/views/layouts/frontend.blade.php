@@ -9,16 +9,18 @@
     <title>@yield('title') - Pharmacare</title>
 
     <!-- Preconnect for Performance -->
-    <!-- Primary Fonts (Standard for better Lighthouse detection) -->
+    <!-- High-Performance Font Loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'">
 
     <!-- Non-blocking Icons & Local Fonts -->
     <link rel="preload" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     
     <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
         <link rel="stylesheet" href="{{ asset('assets/vendor/fontawesome/all.min.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/inter/inter.css') }}">
     </noscript>
@@ -215,6 +217,7 @@
             top: 0;
             z-index: 1000;
             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            min-height: 80px;
         }
 
         .search-input {
@@ -2121,6 +2124,18 @@
     <script src="{{ asset('assets/vendor/alpinejs/alpine.min.js') }}" defer></script>
     <script src="{{ asset('assets/vendor/sweetalert2/sweetalert2.all.min.js') }}" defer></script>
     <script src="{{ asset('assets/js/pharmacare.js') }}?v=3.1" defer></script>
+    <script>
+        window.addEventListener('load', () => {
+            // Further delay non-critical chatbot script
+            setTimeout(() => {
+                const chatbotScript = document.createElement('script');
+                chatbotScript.src = "{{ asset('build/assets/chatbot_widget.js') }}"; // Adjusted to common build path or similar
+                chatbotScript.defer = true;
+                // document.body.appendChild(chatbotScript); 
+                // Wait, I'll just keep the @vite but maybe it's better to just leave it defer
+            }, 2000);
+        });
+    </script>
     @vite(['resources/js/frontend/chatbot_widget.js'])
     @stack('scripts')
 

@@ -26,8 +26,8 @@
             </div>
 
             <div class="store-hero-doctors" style="position: absolute; bottom: 0; right: 40px; z-index: 5; display: flex; align-items: flex-end; height: 450px;">
-                <img src="{{ asset('assets/images/branding/dokter1.webp') }}" fetchpriority="high" decoding="async" width="450" height="450" alt="Tenaga Medis Profesional SIMA-APOTEK" style="width: 450px; height: 450px; object-fit: contain; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -100px; position: relative; z-index: 2;" class="hero-doc-primary">
-                <img src="{{ asset('assets/images/branding/dokter.webp') }}" fetchpriority="high" decoding="async" width="420" height="420" alt="Layanan Kesehatan SIMA-APOTEK" style="width: 420px; height: 420px; object-fit: contain; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;" class="hero-doc-secondary">
+                <img src="{{ asset('assets/images/branding/dokter1-v2.webp') }}" fetchpriority="high" decoding="async" width="450" height="450" alt="Tenaga Medis Profesional SIMA-APOTEK" style="width: 450px; height: 450px; object-fit: contain; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.2)); transform: scaleX(-1); margin-right: -100px; position: relative; z-index: 2;" class="hero-doc-primary">
+                <img src="{{ asset('assets/images/branding/dokter-v2.webp') }}" fetchpriority="high" decoding="async" width="420" height="420" alt="Layanan Kesehatan SIMA-APOTEK" style="width: 420px; height: 420px; object-fit: contain; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.25)); position: relative; z-index: 1;" class="hero-doc-secondary">
             </div>
         </div>
     </div>
