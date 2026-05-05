@@ -102,7 +102,12 @@
             justify-content: center; 
             overflow-y:auto; 
             padding: 50px 20px; 
+            /* Hide scrollbar for overlay */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
+        #paymentModal::-webkit-scrollbar { display: none; }
+
         #paymentModal > div { 
             background:white; 
             border-radius:28px; 
@@ -113,7 +118,7 @@
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 30px 60px rgba(0,0,0,0.25);
-            /* Hide scrollbar */
+            /* Hide scrollbar for content */
             -ms-overflow-style: none;
             scrollbar-width: none;
         }

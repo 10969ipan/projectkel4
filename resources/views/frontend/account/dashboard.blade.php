@@ -84,7 +84,14 @@
             justify-content: center; 
             overflow-y:auto; 
             padding: 50px 20px; 
+            /* Hide scrollbar for overlay */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
+        #orderDetailModal::-webkit-scrollbar, 
+        #addressModal::-webkit-scrollbar, 
+        #paymentModal::-webkit-scrollbar { display: none; }
+
         #orderDetailModal > div, #addressModal > div, #paymentModal > div { 
             background:white; 
             border-radius:28px; 
@@ -95,7 +102,14 @@
             overflow-y: auto;
             box-shadow: 0 30px 60px rgba(0,0,0,0.25);
             margin: 0 auto; /* To ensure it stays centered if flex fails */
+            /* Hide scrollbar for content */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
+        #orderDetailModal > div::-webkit-scrollbar, 
+        #addressModal > div::-webkit-scrollbar, 
+        #paymentModal > div::-webkit-scrollbar { display: none; }
+
         #paymentModal > div { max-width: 450px; }
         #addressModal > div { max-width: 500px; }
         #orderDetailModal > div { max-width: 680px; }
@@ -650,7 +664,7 @@
                 'sub_total'       => $order->sub_total,
                 'grand_total'     => $order->grand_total,
                 'tracking_number' => $order->tracking_number,
-                'status'          => $order->order_status,
+                'city_id'         => $order->address->city_id ?? null,
                 'items'           => $mapItems,
             ];
         @endphp
@@ -672,7 +686,7 @@
             'sub_total'       => $justPaidOrder->sub_total,
             'grand_total'     => $justPaidOrder->grand_total,
             'tracking_number' => $justPaidOrder->tracking_number,
-            'status'          => $justPaidOrder->order_status,
+            'city_id'         => $justPaidOrder->address->city_id ?? null,
             'items'           => collect($justPaidOrder->items)->map(fn($oi) => [
                 'name'     => $oi->item->name ?? 'Item Dihapus',
                 'qty'      => $oi->quantity,
@@ -775,23 +789,27 @@
                         </div>
 
                         <div class="pay-section" style="padding: 12px 15px;">
-                            <div class="pay-title">Durasi Pengiriman Terpilih</div>
-                            <div id="shipping-options-container">
-                                <label><input type="radio" name="shipping_method" value="instant" onchange="calcTotal()">
-                                    <div class="pay-method-card">
-                                        <strong>Instant Delivery</strong>
-                                        <div style="font-size:0.6rem; color:#64748b; margin-top: 2px;">2 Jam Sampai (Rp 15.000)</div>
-                                    </div>
-                                </label>
-                                <label><input type="radio" name="shipping_method" value="regular" onchange="calcTotal()">
-                                    <div class="pay-method-card">
-                                        <strong>JNE / J&T Reguler</strong>
-                                        <div style="font-size:0.6rem; color:#64748b; margin-top: 2px;">2-3 Hari Kerja (Rp 10.000)</div>
-                                    </div>
-                                </label>
+                            <div class="pay-title">Pilih Durasi Pengiriman</div>
+                            
+                            <input type="hidden" id="dashboard-city-id" value="">
+                            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                <select id="dashboard-courier" class="form-control" style="flex: 1; padding: 8px 12px; font-size: 0.8rem; height: auto; border: 1.5px solid #e2e8f0; border-radius: 10px;">
+                                    <option value="">-- Pilih Kurir --</option>
+                                    <option value="jne">JNE</option>
+                                    <option value="pos">POS</option>
+                                    <option value="tiki">TIKI</option>
+                                </select>
+                                <button type="button" id="btn-cek-ongkir-dash" onclick="cekOngkirDashboard()" style="padding: 8px 12px; background: #0076D6; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">
+                                    Cek
+                                </button>
                             </div>
-                            <div id="order-shipping-option" style="display:none;">
-                                <!-- Dynamic shipping from DB will go here -->
+
+                            <div id="dashboard-ro-results" class="method-list">
+                                <div style="text-align:center; font-size:0.75rem; color:#94a3b8; padding: 5px 0;">Cek tarif untuk melihat pilihan kurir.</div>
+                            </div>
+
+                            <div id="order-shipping-option" style="margin-top: 10px;">
+                                <!-- Selected shipping from DB will go here if not changed -->
                             </div>
                         </div>
 
@@ -1086,29 +1104,26 @@
             document.getElementById('pay-order-number').innerText = data.number;
             document.getElementById('pay-subtotal').innerText = 'Rp ' + data.subtotal.toLocaleString('id-ID');
             document.getElementById('paymentForm').action = data.url;
+            document.getElementById('dashboard-city-id').value = data.city_id || '';
+
+            // Reset results
+            document.getElementById('dashboard-ro-results').innerHTML = '<div style="text-align:center; font-size:0.75rem; color:#94a3b8; padding: 5px 0;">Cek tarif untuk melihat pilihan kurir.</div>';
 
             // Sync shipping method from database
-            const container = document.getElementById('shipping-options-container');
             const extraContainer = document.getElementById('order-shipping-option');
             extraContainer.innerHTML = '';
-            extraContainer.style.display = 'none';
 
             if (data.shipping_method) {
-                let radio = document.querySelector(`input[name="shipping_method"][value="${data.shipping_method}"]`);
-                if (radio) {
-                    radio.checked = true;
-                } else {
-                    // Create dynamic option for courier from checkout
-                    extraContainer.innerHTML = `
-                        <label><input type="radio" name="shipping_method" value="${data.shipping_method}" data-cost="${data.shipping_cost}" checked onchange="calcTotal()">
-                            <div class="pay-method-card" style="border-color:var(--primary-blue); background:#E6F3FF;">
-                                <strong>${data.shipping_method}</strong><br>
-                                <span style="font-size:0.8rem; color:#666;">Metode dari Checkout (Rp ${data.shipping_cost.toLocaleString('id-ID')})</span>
-                            </div>
-                        </label>
-                    `;
-                    extraContainer.style.display = 'block';
-                }
+                // Create dynamic option for courier from checkout as current selection
+                extraContainer.innerHTML = `
+                    <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 5px; font-weight: 700;">METODE SAAT INI:</div>
+                    <label><input type="radio" name="shipping_method" value="${data.shipping_method}" data-cost="${data.shipping_cost}" checked onchange="calcTotal()">
+                        <div class="pay-method-card" style="border-color:var(--primary-blue); background:#E6F3FF;">
+                            <strong>${data.shipping_method}</strong><br>
+                            <span style="font-size:0.8rem; color:#666;">Pilihan Checkout (Rp ${data.shipping_cost.toLocaleString('id-ID')})</span>
+                        </div>
+                    </label>
+                `;
             }
 
             // Prescription logic
@@ -1118,18 +1133,15 @@
 
             warnBox.style.display = 'none';
             successBox.style.display = 'none';
-            btn.disabled = false;
-            btn.style.opacity = '1';
 
             if (data.reqPres) {
-                if (!data.hasPres) {
+                if (data.hasPres) {
+                    successBox.style.display = 'block';
+                } else {
                     warnBox.style.display = 'block';
                     btn.disabled = true;
                     btn.style.opacity = '0.5';
                     btn.innerText = 'Resep Diperlukan';
-                } else {
-                    successBox.style.display = 'block';
-                    btn.innerText = 'Konfirmasi & Bayar';
                 }
             } else {
                 btn.innerText = 'Konfirmasi & Bayar';
@@ -1150,11 +1162,16 @@
                     cost = selectedRadio.value === 'instant' ? 15000 : 10000;
                 }
             }
-            
+
             const total = currentSubtotal + cost;
-            document.getElementById('pay-shipping').innerText = 'Rp ' + cost.toLocaleString('id-ID');
-            document.getElementById('pay-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
-            document.getElementById('input-shipping-cost').value = cost;
+            const costInput = document.getElementById('input-shipping-cost');
+            if (costInput) costInput.value = cost;
+            
+            const shippingEl = document.getElementById('pay-shipping');
+            if (shippingEl) shippingEl.innerText = 'Rp ' + cost.toLocaleString('id-ID');
+            
+            const totalEl = document.getElementById('pay-total');
+            if (totalEl) totalEl.innerText = 'Rp ' + total.toLocaleString('id-ID');
 
             // Enable/disable confirm button based on shipping selection
             const btn = document.getElementById('pay-confirm-btn');
