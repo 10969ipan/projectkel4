@@ -666,6 +666,7 @@
                 'tracking_number' => $order->tracking_number,
                 'city_id'         => $order->address->city_id ?? null,
                 'items'           => $mapItems,
+                'status'          => $order->order_status,
             ];
         @endphp
         {{ $order->id }}: {!! json_encode($orderData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
@@ -694,6 +695,7 @@
                 'subtotal' => $oi->sub_total,
                 'image'    => $oi->item->image_path ?? null,
             ])->toArray(),
+            'status'          => $justPaidOrder->order_status,
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
         @endif
     };
