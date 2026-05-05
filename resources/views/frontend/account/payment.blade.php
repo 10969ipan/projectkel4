@@ -121,7 +121,26 @@
                 </div>
 
                 <div class="section-title">🚚 Pilih Durasi Pengiriman</div>
-                <div class="method-list">
+                
+                <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="15000">
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.1rem;">📍</span>
+                    <div style="font-size: 0.8rem; color: #64748b;">Tujuan: <strong style="color: #1e293b;">{{ $order->address->full_address ?? 'Alamat tidak ditemukan' }}</strong></div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <select id="ro-courier" class="form-control" style="flex: 1; padding: 12px; font-size: 0.9rem; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; height: auto;">
+                        <option value="">-- Pilih Kurir --</option>
+                        <option value="jne">JNE (Jalur Nugraha Ekakurir)</option>
+                        <option value="pos">POS Indonesia</option>
+                        <option value="tiki">TIKI (Citra Van Titipan Kilat)</option>
+                    </select>
+                    <button type="button" id="btn-cek-ongkir" onclick="cekOngkirPayment()" style="padding: 10px 15px; background: #0076D6; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.75rem;">
+                        Cek Tarif
+                    </button>
+                </div>
+
+                <div id="ro-results" class="method-list">
                     <label class="method-label">
                         <input type="radio" name="shipping_method" value="instant" checked onchange="updatePrices()">
                         <div class="method-card">
@@ -132,17 +151,7 @@
                             </div>
                         </div>
                     </label>
-
-                    <label class="method-label">
-                        <input type="radio" name="shipping_method" value="regular" onchange="updatePrices()">
-                        <div class="method-card">
-                            <div class="method-icon">🚚</div>
-                            <div>
-                                <div class="method-name">JNE / J&T Reguler</div>
-                                <div class="method-desc">Estimasi Tiba: 2-3 Hari Kerja (Rp 10.000)</div>
-                            </div>
-                        </div>
-                    </label>
+                    <div style="text-align:center; font-size:0.8rem; color:#94a3b8; padding: 10px 0;">Atau pilih kurir ekspedisi di atas.</div>
                 </div>
             </div>
 
@@ -213,12 +222,111 @@
     const grandTotalDisplay = document.getElementById('grandTotalDisplay');
 
     function updatePrices() {
-        const method = document.querySelector('input[name="shipping_method"]:checked').value;
-        const cost = method === 'instant' ? 15000 : 10000;
-        const total = subtotal + cost;
+        const checkedInput = document.querySelector('input[name="shipping_method"]:checked');
+        if (!checkedInput) return;
 
+        let cost = 15000;
+        const method = checkedInput.value;
+
+        // If it's a RajaOngkir result, it should have a data-cost attribute
+        if (checkedInput.dataset.cost) {
+            cost = parseInt(checkedInput.dataset.cost);
+        } else {
+            // Fallback for hardcoded
+            cost = method === 'instant' ? 15000 : 10000;
+        }
+
+        document.getElementById('input-shipping-cost').value = cost;
         shippingDisplay.innerText = 'Rp ' + cost.toLocaleString('id-ID');
-        grandTotalDisplay.innerText = 'Rp ' + total.toLocaleString('id-ID');
+        grandTotalDisplay.innerText = 'Rp ' + (subtotal + cost).toLocaleString('id-ID');
+    }
+
+    async function cekOngkirPayment() {
+        const courier = document.getElementById('ro-courier').value;
+        const btn = document.getElementById('btn-cek-ongkir');
+        const resultsDiv = document.getElementById('ro-results');
+        const destId = "{{ $order->address->city_id ?? 151 }}"; // Fallback to Jakarta Barat if missing
+
+        if (!courier) {
+            Swal.fire('Info', 'Silakan pilih kurir terlebih dahulu.', 'info');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display:inline-block; animation: spin 1s linear infinite;">↻</span>';
+        resultsDiv.innerHTML = '<div style="text-align:center; padding: 20px;"><div class="spinner"></div><p style="font-size:0.8rem; color:#64748b; margin-top:10px;">Mencari tarif...</p></div>';
+
+        try {
+            const response = await fetch('/cost', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    origin: '151', // Jakarta Barat (Apotek)
+                    destination: destId,
+                    weight: 1000,
+                    courier: courier
+                })
+            });
+
+            const data = await response.json();
+            btn.disabled = false;
+            btn.innerHTML = 'Cek Tarif';
+
+            if (data.rajaongkir && data.rajaongkir.status.code === 200) {
+                const costs = data.rajaongkir.results[0].costs;
+                if (costs.length === 0) {
+                    resultsDiv.innerHTML = '<div style="text-align:center; font-size:0.85rem; color:#ef4444; padding: 20px 0;">Layanan tidak tersedia untuk kurir ini ke lokasi Anda.</div>';
+                    return;
+                }
+
+                let html = '';
+                costs.forEach((c, idx) => {
+                    const costVal = c.cost[0].value;
+                    const etd = c.cost[0].etd ? c.cost[0].etd + ' Hari' : 'Segera';
+                    const methodValue = courier.toUpperCase() + ' - ' + c.service;
+                    
+                    html += `
+                        <label class="method-label">
+                            <input type="radio" name="shipping_method" value="${methodValue}" data-cost="${costVal}" onchange="updatePrices()">
+                            <div class="method-card">
+                                <div class="method-icon">📦</div>
+                                <div>
+                                    <div class="method-name">${courier.toUpperCase()} - ${c.service}</div>
+                                    <div class="method-desc">Estimasi: ${etd} (Rp ${costVal.toLocaleString('id-ID')})</div>
+                                </div>
+                            </div>
+                        </label>
+                    `;
+                });
+                
+                // Add back Instant as option
+                html += `
+                    <div style="border-top: 1px dashed #e2e8f0; margin: 10px 0; padding-top: 10px;">
+                        <label class="method-label">
+                            <input type="radio" name="shipping_method" value="instant" onchange="updatePrices()">
+                            <div class="method-card">
+                                <div class="method-icon">⚡</div>
+                                <div>
+                                    <div class="method-name">Instant Delivery</div>
+                                    <div class="method-desc">Estimasi Tiba: 2 Jam (Rp 15.000)</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                `;
+
+                resultsDiv.innerHTML = html;
+            } else {
+                throw new Error('Gagal mengambil data');
+            }
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerHTML = 'Cek Tarif';
+            resultsDiv.innerHTML = '<div style="text-align:center; font-size:0.85rem; color:#ef4444; padding: 20px 0;">Gagal memuat tarif. Silakan coba kurir lain.</div>';
+        }
     }
 
     const Toast = Swal.mixin({
