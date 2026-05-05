@@ -113,7 +113,11 @@
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+            /* Hide scrollbar */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
+        #paymentModal > div::-webkit-scrollbar { display: none; }
 
         .pay-modal-grid { display: flex; flex-direction: column; gap: 15px; }
         .pay-section { padding: 12px 15px; border-radius: 16px; background: #ffffff; border: 1.5px solid #f8fafc; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 0; text-align: left; }
@@ -839,10 +843,12 @@
 
             content.innerHTML = html;
             document.getElementById('simPaymentModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
 
         function backToSelection() {
             document.getElementById('simPaymentModal').style.display = 'none';
+            document.body.style.overflow = ''; // Will be set back by toggleModal if needed
             toggleModal('paymentModal');
         }
 
@@ -1041,6 +1047,13 @@
             const modal = document.getElementById(modalId);
             const isClosing = modal.style.display === 'flex' || modal.style.display === 'block';
             modal.style.display = isClosing ? 'none' : 'flex';
+            
+            // Toggle body scroll
+            if (!isClosing) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
         }
 
         function closePaymentModal() {
