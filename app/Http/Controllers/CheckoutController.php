@@ -128,6 +128,13 @@ class CheckoutController extends Controller
             ];
         }
 
+        if (!$request->address_id) {
+            if ($request->ajax()) {
+                return response()->json(['error' => 'Silakan pilih alamat pengiriman di daftar alamat.'], 422);
+            }
+            return back()->with('error', 'Silakan pilih alamat pengiriman.');
+        }
+
         if ($hasPrescriptionItem && !$request->hasFile('prescription') && !$user->is_prescription_approved) {
             if ($request->ajax()) {
                 return response()->json(['error' => 'Item ini membutuhkan resep dokter. Silakan unggah resep manual untuk melanjutkan.'], 422);
@@ -137,65 +144,85 @@ class CheckoutController extends Controller
 
         $prescriptionPath = null;
         if ($request->hasFile('prescription')) {
-            $file = $request->file('prescription');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('storage/prescriptions'), $filename);
-            $prescriptionPath = 'prescriptions/' . $filename;
+            try {
+                $file = $request->file('prescription');
+                $filename = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
+                
+                // Use Storage for better compatibility (Vercel/S3/etc)
+                $path = $file->storeAs('prescriptions', $filename, 'public');
+                $prescriptionPath = $path;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Prescription Upload Error: ' . $e->getMessage());
+                if ($request->ajax()) {
+                    return response()->json(['error' => 'Gagal mengunggah resep: ' . $e->getMessage()], 500);
+                }
+                return back()->with('error', 'Gagal mengunggah resep.');
+            }
         }
 
         $orderNumber = 'ORD-' . strtoupper(uniqid());
 
-        // CREATE REAL ORDER IN DATABASE (DRAFT/PENDING)
-        $order = \Illuminate\Support\Facades\DB::transaction(function() use ($user, $orderNumber, $request, $subTotal, $prescriptionPath, $cart, $itemsMap, $checkoutDetails) {
-            $newOrder = StoreOrder::create([
-                'user_id'        => $user->id,
-                'order_number'   => $orderNumber,
-                'address_id'     => $request->address_id,
-                'shipping_method'=> 'instant', // Default, will be updated in modal
-                'shipping_cost'  => 15000,     // Default, will be updated in modal
-                'payment_method' => 'midtrans', // Default, will be updated in modal
-                'payment_status' => 'pending',
-                'order_status'   => 'ordered',
-                'sub_total'      => $subTotal,
-                'grand_total'    => $subTotal + 15000,
-                'prescription_path' => $prescriptionPath,
-            ]);
+        try {
+            $order = \Illuminate\Support\Facades\DB::transaction(function() use ($user, $orderNumber, $request, $subTotal, $prescriptionPath, $cart, $itemsMap, $checkoutDetails) {
+                $newOrder = StoreOrder::create([
+                    'user_id'        => $user->id,
+                    'order_number'   => $orderNumber,
+                    'address_id'     => $request->address_id,
+                    'shipping_method'=> 'instant', // Default, will be updated in modal
+                    'shipping_cost'  => 15000,     // Default, will be updated in modal
+                    'payment_method' => 'midtrans', // Default, will be updated in modal
+                    'payment_status' => 'pending',
+                    'order_status'   => 'ordered',
+                    'sub_total'      => $subTotal,
+                    'grand_total'    => $subTotal + 15000,
+                    'prescription_path' => $prescriptionPath,
+                ]);
 
-            foreach ($cart as $key => $details) {
-                $item = $itemsMap->get($details['id']);
-                if ($item) {
-                    $override = $checkoutDetails[$item->id] ?? null;
-                    $type = $override ? $override['type'] : $details['type'];
-                    $interval = $override ? $override['interval'] : ($details['interval'] ?? 30);
-                    $unitPrice = $override ? $override['price'] : ($type === 'subscription' ? $item->price * 0.9 : $item->price);
+                foreach ($cart as $key => $details) {
+                    $item = $itemsMap->get($details['id']);
+                    if ($item) {
+                        // Check stock before decrementing
+                        if ($item->stock < $details['qty']) {
+                            throw new \Exception("Stok untuk item '{$item->name}' tidak mencukupi (Tersisa: {$item->stock}).");
+                        }
 
-                    if ($type === 'subscription') {
-                        // Create Subscription Record
-                        \App\Models\Subscription::create([
-                            'user_id' => $user->id,
-                            'item_id' => $item->id,
-                            'quantity' => $details['qty'],
-                            'interval_days' => (int)$interval,
-                            'discount_percentage' => 10.00,
-                            'next_delivery_date' => now()->addDays((int)$interval),
-                            'status' => 'active'
+                        $override = $checkoutDetails[$item->id] ?? null;
+                        $type = $override ? $override['type'] : $details['type'];
+                        $interval = $override ? $override['interval'] : ($details['interval'] ?? 30);
+                        $unitPrice = $override ? $override['price'] : ($type === 'subscription' ? $item->price * 0.9 : $item->price);
+
+                        if ($type === 'subscription') {
+                            \App\Models\Subscription::create([
+                                'user_id' => $user->id,
+                                'item_id' => $item->id,
+                                'quantity' => $details['qty'],
+                                'interval_days' => (int)$interval,
+                                'discount_percentage' => 10.00,
+                                'next_delivery_date' => now()->addDays((int)$interval),
+                                'status' => 'active'
+                            ]);
+                        }
+
+                        StoreOrderItem::create([
+                            'store_order_id' => $newOrder->id,
+                            'item_id'        => $item->id,
+                            'quantity'       => $details['qty'],
+                            'price'          => $unitPrice,
+                            'sub_total'      => $unitPrice * $details['qty'],
                         ]);
+
+                        $item->decrement('stock', $details['qty']);
                     }
-
-                    StoreOrderItem::create([
-                        'store_order_id' => $newOrder->id,
-                        'item_id'        => $item->id,
-                        'quantity'       => $details['qty'],
-                        'price'          => $unitPrice,
-                        'sub_total'      => $unitPrice * $details['qty'],
-                    ]);
-
-                    // Decrement stock immediately to reserve items
-                    $item->decrement('stock', $details['qty']);
                 }
+                return $newOrder;
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Order Creation Error: ' . $e->getMessage());
+            if ($request->ajax()) {
+                return response()->json(['error' => 'Gagal membuat pesanan: ' . $e->getMessage()], 500);
             }
-            return $newOrder;
-        });
+            return back()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage());
+        }
 
         // Clear cart session and DB after order is successfully created in DB
         session()->forget('cart');
