@@ -27,18 +27,22 @@ class RajaOngkirController extends Controller
             return $this->mockProvinces();
         }
 
-        $response = Http::withHeaders([
-            'key' => $apiKey
-        ])->get($baseUrl . '/province');
+        try {
+            $response = Http::withHeaders([
+                'key' => $apiKey
+            ])->timeout(5)->get($baseUrl . '/province');
 
-        $data = $response->json();
-        
-        // MOCK DATA IF API IS DEAD (410 GONE)
-        if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir'])) {
+            $data = $response->json();
+            
+            if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir'])) {
+                return $this->mockProvinces();
+            }
+
+            return response()->json($data);
+        } catch (\Exception $e) {
+            \Log::error('RajaOngkir getProvinces Error: ' . $e->getMessage());
             return $this->mockProvinces();
         }
-
-        return response()->json($data);
     }
 
     private function mockProvinces()
@@ -73,20 +77,24 @@ class RajaOngkirController extends Controller
             return $this->mockCities($provinceId);
         }
 
-        $response = Http::withHeaders([
-            'key' => $apiKey
-        ])->get($baseUrl . '/city', [
-            'province' => $provinceId
-        ]);
+        try {
+            $response = Http::withHeaders([
+                'key' => $apiKey
+            ])->timeout(5)->get($baseUrl . '/city', [
+                'province' => $provinceId
+            ]);
 
-        $data = $response->json();
+            $data = $response->json();
 
-        // MOCK DATA IF API IS DEAD
-        if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir'])) {
+            if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir'])) {
+                return $this->mockCities($provinceId);
+            }
+
+            return response()->json($data);
+        } catch (\Exception $e) {
+            \Log::error('RajaOngkir getCities Error: ' . $e->getMessage());
             return $this->mockCities($provinceId);
         }
-
-        return response()->json($data);
     }
 
     private function mockCities($provinceId)
@@ -153,23 +161,27 @@ class RajaOngkirController extends Controller
             return $this->mockCost($origin, $destination, $weight, $courier);
         }
 
-        $response = Http::withHeaders([
-            'key' => $apiKey
-        ])->post($baseUrl . '/cost', [
-            'origin' => $origin,
-            'destination' => $destination,
-            'weight' => $weight,
-            'courier' => $courier,
-        ]);
+        try {
+            $response = Http::withHeaders([
+                'key' => $apiKey
+            ])->timeout(5)->post($baseUrl . '/cost', [
+                'origin' => $origin,
+                'destination' => $destination,
+                'weight' => $weight,
+                'courier' => $courier,
+            ]);
 
-        $data = $response->json();
+            $data = $response->json();
 
-        // MOCK DATA IF API IS DEAD
-        if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir']) || isset($data['rajaongkir']['status']['code']) && $data['rajaongkir']['status']['code'] != 200) {
+            if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir']) || isset($data['rajaongkir']['status']['code']) && $data['rajaongkir']['status']['code'] != 200) {
+                return $this->mockCost($origin, $destination, $weight, $courier);
+            }
+
+            return response()->json($data);
+        } catch (\Exception $e) {
+            \Log::error('RajaOngkir getCost Error: ' . $e->getMessage());
             return $this->mockCost($origin, $destination, $weight, $courier);
         }
-
-        return response()->json($data);
     }
 
     private function mockCost($origin, $destination, $weight, $courier)
