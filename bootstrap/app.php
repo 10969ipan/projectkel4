@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
         ]);
 
+        $middleware->web(append: [
+            \Illuminate\Session\Middleware\AuthenticateSession::class,
+        ]);
+
         // Exclude AI Reply from CSRF to prevent 419 on stale sessions
         $middleware->validateCsrfTokens(except: [
             'consultation/ai-reply',
@@ -54,5 +58,9 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->renderable(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('store/*')) {
+                return back()->with('error', 'Terlalu banyak percobaan. Silakan tunggu 1 menit sebelum mencoba lagi.');
+            }
+        });
     })->create();

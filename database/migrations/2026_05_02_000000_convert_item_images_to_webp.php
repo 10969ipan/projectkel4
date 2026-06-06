@@ -13,14 +13,16 @@ return new class extends Migration
     public function up(): void
     {
         // Update wellness_articles image_path to .webp
-        DB::table('wellness_articles')->get()->each(function ($article) {
-            $newPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $article->image_path);
-            if ($newPath !== $article->image_path) {
-                DB::table('wellness_articles')
-                    ->where('id', $article->id)
-                    ->update(['image_path' => $newPath]);
-            }
-        });
+        if (Schema::hasTable('wellness_articles')) {
+            DB::table('wellness_articles')->get()->each(function ($article) {
+                $newPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $article->image_path);
+                if ($newPath !== $article->image_path) {
+                    DB::table('wellness_articles')
+                        ->where('id', $article->id)
+                        ->update(['image_path' => $newPath]);
+                }
+            });
+        }
 
         // Update items image_path to .webp
         DB::table('items')->get()->each(function ($item) {

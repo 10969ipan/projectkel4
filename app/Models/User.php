@@ -65,6 +65,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',             // Nama lengkap user
         'email',            // Email untuk login
+        'phone',            // Nomor HP (WhatsApp)
         'password',         // Password (akan di-hash otomatis)
         'role',             // Peran: 'admin' atau 'staff'
         'profile_photo',    // Path foto profil (contoh: profile-photos/abc123.jpg)

@@ -30,10 +30,19 @@ Route::middleware(['customer'])->group(function () {
     
     // Store Auth (Login / Register Pharmacare)
     Route::get('/store/login', [StoreAuthController::class, 'showLogin'])->name('store.login');
-    Route::post('/store/login', [StoreAuthController::class, 'login'])->name('store.login.post');
+    Route::post('/store/login', [StoreAuthController::class, 'login'])->middleware('throttle:5,1')->name('store.login.post');
     Route::get('/store/register', [StoreAuthController::class, 'showRegister'])->name('store.register');
     Route::post('/store/register', [StoreAuthController::class, 'register'])->name('store.register.store');
     Route::post('/store/logout', [StoreAuthController::class, 'logout'])->name('store.logout');
+
+    // Forgot Password (WhatsApp OTP)
+    Route::get('/store/forgot-password', [\App\Http\Controllers\StoreForgotPasswordController::class, 'showForgotForm'])->name('store.password.request');
+    Route::post('/store/forgot-password/send-otp', [\App\Http\Controllers\StoreForgotPasswordController::class, 'sendOtp'])->middleware('throttle:5,1')->name('store.password.email'); // keep typical laravel name or custom
+    Route::get('/store/forgot-password/verify', [\App\Http\Controllers\StoreForgotPasswordController::class, 'showVerifyForm'])->name('store.password.verify');
+    Route::post('/store/forgot-password/verify', [\App\Http\Controllers\StoreForgotPasswordController::class, 'verifyOtp'])->name('store.password.verify.post');
+    Route::get('/store/reset-password', [\App\Http\Controllers\StoreForgotPasswordController::class, 'showResetForm'])->name('store.password.reset.form');
+    Route::post('/store/reset-password', [\App\Http\Controllers\StoreForgotPasswordController::class, 'resetPassword'])->name('store.password.update');
+
 
     // Telemedicine Directory & AI (Public access but role-checked)
     Route::get('/telemedicine', [ConsultationController::class, 'index'])->name('telemedicine.index');

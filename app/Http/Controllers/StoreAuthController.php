@@ -75,10 +75,15 @@ class StoreAuthController extends Controller
     /** Proses registrasi akun baru */
     public function register(\App\Http\Requests\StoreRegisterRequest $request)
     {
+        // $request sudah divalidasi oleh StoreRegisterRequest, namun kita perlu update StoreRegisterRequest
+        // Jika StoreRegisterRequest belum menerima phone, kita biarkan atau kita manual tambahkan di Request tersebut.
+        // Di sini langsung ambil dari request.
+        
         // Buat user baru dengan role customer
         $user = User::create([
             'name'       => $request->name,
             'email'      => $request->email,
+            'phone'      => $request->phone,
             'password'   => Hash::make($request->password),
             'role'       => null,           // Bukan staff internal
             'store_role' => 'customer',     // role untuk toko

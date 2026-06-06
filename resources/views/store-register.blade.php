@@ -157,6 +157,12 @@
                 <input type="email" name="email" class="form-control" placeholder="user@email.com" value="{{ old('email') }}" required>
             </div>
 
+            <div class="form-group">
+                <label class="form-label">Nomor WhatsApp</label>
+                <input type="text" name="phone" class="form-control" placeholder="081234567890" value="{{ old('phone') }}" required>
+                <small style="color: var(--text-light); font-size: 0.8rem; margin-top: 4px; display: block;">Gunakan format 08... (Contoh: 081234567890)</small>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Password</label>

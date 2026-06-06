@@ -157,7 +157,7 @@
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
-                    <a href="#" style="font-size: 0.85rem; color: var(--primary-blue); text-decoration: none; font-weight: 600;">Lupa Password?</a>
+                    <a href="{{ route('store.password.request') }}" style="font-size: 0.85rem; color: var(--primary-blue); text-decoration: none; font-weight: 600;">Lupa Password?</a>
                 </div>
                 <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
             </div>

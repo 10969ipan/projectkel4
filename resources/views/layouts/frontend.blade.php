@@ -492,6 +492,21 @@
             position: relative;
             box-shadow: 0 25px 70px rgba(0,0,0,0.15);
             animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .auth-modal-content.register-mode {
+            max-width: 680px;
+        }
+
+        .register-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 18px;
+        }
+
+        @media (max-width: 640px) {
+            .register-grid { grid-template-columns: 1fr; gap: 0; }
         }
 
         @keyframes modalScaleUp {
@@ -1815,13 +1830,20 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click.self="showAuthModal = false">
-            <div class="auth-modal-content"
+            <div class="auth-modal-content" :class="{ 'register-mode': authTab === 'register' }"
                  x-transition:enter="transition ease-out duration-300" 
                  x-transition:enter-start="opacity-0 scale-95 translate-y-6" 
                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                  x-transition:leave="transition ease-in duration-200" 
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0" 
                  x-transition:leave-end="opacity-0 scale-95 translate-y-6">
+                
+                @if($errors->has('name') || $errors->has('phone') || old('name'))
+                    <div x-init="$nextTick(() => { showAuthModal = true; authTab = 'register'; })"></div>
+                @elseif($errors->has('email') || $errors->has('password'))
+                    <div x-init="$nextTick(() => { showAuthModal = true; authTab = 'login'; })"></div>
+                @endif
+
                 <button class="auth-modal-close" @click="showAuthModal = false" aria-label="Tutup modal login">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
@@ -1842,14 +1864,21 @@
                         @csrf
                         <div class="form-group">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-input" placeholder="contoh@email.com" required>
+                            <input type="email" name="email" class="form-input" placeholder="contoh@email.com" value="{{ old('email') }}" required>
+                            @error('email') <small style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: block;">{{ $message }}</small> @enderror
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" x-data="{ show: false }">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                 <label class="form-label" style="margin-bottom: 0;">Password</label>
-                                <a href="#" style="font-size: 0.8rem; color: var(--primary-blue); text-decoration: none; font-weight: 700;">Lupa Password?</a>
+                                <a href="{{ route('store.password.request') }}" style="font-size: 0.8rem; color: var(--primary-blue); text-decoration: none; font-weight: 700;">Lupa Password?</a>
                             </div>
-                            <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                            <div style="position: relative;">
+                                <input :type="show ? 'text' : 'password'" name="password" class="form-input" placeholder="••••••••" style="padding-right: 40px;" required>
+                                <button type="button" @click="show = !show" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1rem;">
+                                    <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                </button>
+                            </div>
+                            @error('password') <small style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: block;">{{ $message }}</small> @enderror
                         </div>
                         <button type="submit" class="btn-auth-submit">Masuk ke Akun</button>
                     </form>
@@ -1883,22 +1912,40 @@
                     </div>
                     <form action="{{ route('store.register.store') }}" method="POST">
                         @csrf
-                        <div class="form-group">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" name="name" class="form-input" placeholder="Irfan Arfian" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Alamat Email</label>
-                            <input type="email" name="email" class="form-input" placeholder="user@email.com" required>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="register-grid">
                             <div class="form-group">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                                <label class="form-label">Nama Lengkap</label>
+                                <input type="text" name="name" class="form-input" placeholder="Irfan Arfian" value="{{ old('name') }}" required>
+                                @error('name') <small style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: block;">{{ $message }}</small> @enderror
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Konfirmasi</label>
-                                <input type="password" name="password_confirmation" class="form-input" placeholder="••••••••" required>
+                                <label class="form-label">Alamat Email</label>
+                                <input type="email" name="email" class="form-input" placeholder="user@email.com" value="{{ old('email') }}" required>
+                                @error('email') <small style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: block;">{{ $message }}</small> @enderror
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nomor WhatsApp</label>
+                                <input type="text" name="phone" class="form-input" placeholder="081234567890" value="{{ old('phone') }}" required>
+                                @error('phone') <small style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: block;">{{ $message }}</small> @else <small style="color: #64748b; font-size: 0.75rem; margin-top: 4px; display: block;">Gunakan format 08... (Contoh: 081234567890)</small> @enderror
+                            </div>
+                            <div class="form-group" x-data="{ show: false }">
+                                <label class="form-label">Password</label>
+                                <div style="position: relative;">
+                                    <input :type="show ? 'text' : 'password'" name="password" class="form-input" placeholder="••••••••" style="padding-right: 40px;" required>
+                                    <button type="button" @click="show = !show" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1rem;">
+                                        <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
+                                @error('password') <small style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: block;">{{ $message }}</small> @enderror
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 5px;" x-data="{ show: false }">
+                            <label class="form-label">Konfirmasi Password</label>
+                            <div style="position: relative;">
+                                <input :type="show ? 'text' : 'password'" name="password_confirmation" class="form-input" placeholder="••••••••" style="padding-right: 40px;" required>
+                                <button type="button" @click="show = !show" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1rem;">
+                                    <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                </button>
                             </div>
                         </div>
                         <button type="submit" class="btn-auth-submit">Buat Akun Sekarang</button>
@@ -2189,7 +2236,7 @@
     @if (session('success')) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('success', '{{ session('success') }}'));</script> @endif
     @if (session('warning')) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('warning', '{{ session('warning') }}'));</script> @endif
     @if (session('error')) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('error', '{{ session('error') }}'));</script> @endif
-    @if ($errors->any()) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('error', '{{ $errors->first() }}'));</script> @endif
+    @if ($errors->any() && !($errors->has('email') || $errors->has('password') || $errors->has('phone') || $errors->has('name'))) <script>window.addEventListener('DOMContentLoaded', () => window.showToast('error', '{{ $errors->first() }}'));</script> @endif
 </body>
 
 </html>
