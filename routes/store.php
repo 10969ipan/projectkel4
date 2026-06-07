@@ -63,9 +63,9 @@ Route::middleware(['customer'])->group(function () {
     Route::post('/api/notifications/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     // RajaOngkir API Integration (Minggu Ke-7)
     Route::get('/cek-ongkir', [\App\Http\Controllers\RajaOngkirController::class, 'index'])->name('ongkir.index');
-    Route::get('/provinces', [\App\Http\Controllers\RajaOngkirController::class, 'getProvinces'])->name('ongkir.provinces');
-    Route::get('/cities', [\App\Http\Controllers\RajaOngkirController::class, 'getCities'])->name('ongkir.cities');
+    Route::get('/search-destinations', [\App\Http\Controllers\RajaOngkirController::class, 'searchDestinations'])->name('ongkir.search');
     Route::post('/cost', [\App\Http\Controllers\RajaOngkirController::class, 'getCost'])->name('ongkir.cost');
+
 });
 
 Route::middleware(['auth', 'customer'])->group(function () {

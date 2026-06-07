@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class RajaOngkirController extends Controller
 {
@@ -16,212 +17,138 @@ class RajaOngkirController extends Controller
     }
 
     /**
-     * Mendapatkan daftar provinsi dari API RajaOngkir (Mocked).
+     * Mencari destinasi domestik (Kecamatan/Kota) menggunakan Komerce API V2.
      */
-    public function getProvinces()
+    public function searchDestinations(Request $request)
     {
+        $search = $request->input('search');
+        if (!$search || strlen($search) < 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pencarian minimal 3 karakter.'
+            ], 400);
+        }
+
         $apiKey = env('RAJAONGKIR_API_KEY');
         $baseUrl = env('RAJAONGKIR_BASE_URL');
-
-        if (!$apiKey || !$baseUrl) {
-            return $this->mockProvinces();
-        }
 
         try {
             $response = Http::withHeaders([
                 'key' => $apiKey
-            ])->timeout(5)->get($baseUrl . '/province');
-
-            $data = $response->json();
-            
-            if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir'])) {
-                return $this->mockProvinces();
-            }
-
-            return response()->json($data);
-        } catch (\Exception $e) {
-            \Log::error('RajaOngkir getProvinces Error: ' . $e->getMessage());
-            return $this->mockProvinces();
-        }
-    }
-
-    private function mockProvinces()
-    {
-        return response()->json([
-            'rajaongkir' => [
-                'status' => ['code' => 200, 'description' => 'OK (Mocked)'],
-                'results' => [
-                    ['province_id' => "1", 'province' => "Bali"],
-                    ['province_id' => "2", 'province' => "Bangka Belitung"],
-                    ['province_id' => "3", 'province' => "Banten"],
-                    ['province_id' => "5", 'province' => "DI Yogyakarta"],
-                    ['province_id' => "6", 'province' => "DKI Jakarta"],
-                    ['province_id' => "9", 'province' => "Jawa Barat"],
-                    ['province_id' => "10", 'province' => "Jawa Tengah"],
-                    ['province_id' => "11", 'province' => "Jawa Timur"],
-                ]
-            ]
-        ]);
-    }
-
-    /**
-     * Mendapatkan daftar kota berdasarkan province_id (Mocked).
-     */
-    public function getCities(Request $request)
-    {
-        $provinceId = $request->input('province_id');
-        $apiKey = env('RAJAONGKIR_API_KEY');
-        $baseUrl = env('RAJAONGKIR_BASE_URL');
-
-        if (!$apiKey || !$baseUrl) {
-            return $this->mockCities($provinceId);
-        }
-
-        try {
-            $response = Http::withHeaders([
-                'key' => $apiKey
-            ])->timeout(5)->get($baseUrl . '/city', [
-                'province' => $provinceId
+            ])->timeout(10)->get($baseUrl . '/destination/domestic-destination', [
+                'search' => $search
             ]);
 
             $data = $response->json();
 
-            if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir'])) {
-                return $this->mockCities($provinceId);
+            if (isset($data['code']) && $data['code'] !== 200) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $data['message'] ?? 'Gagal mengambil data destinasi.'
+                ], 400);
             }
 
-            return response()->json($data);
+            return response()->json([
+                'success' => true,
+                'data' => $data['data'] ?? []
+            ]);
         } catch (\Exception $e) {
-            \Log::error('RajaOngkir getCities Error: ' . $e->getMessage());
-            return $this->mockCities($provinceId);
+            Log::error('RajaOngkir searchDestinations Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem saat menghubungi Komerce API.'
+            ], 500);
         }
     }
 
-    private function mockCities($provinceId)
-    {
-        $allCities = [
-            "1" => [['city_id' => "17", 'city_name' => "Denpasar"]],
-            "2" => [['city_id' => "18", 'city_name' => "Pangkal Pinang"]],
-            "3" => [
-                ['city_id' => "10", 'city_name' => "Kota Tangerang"],
-                ['city_id' => "11", 'city_name' => "Tangerang Selatan"],
-            ],
-            "5" => [
-                ['city_id' => "12", 'city_name' => "Yogyakarta"],
-                ['city_id' => "13", 'city_name' => "Sleman"],
-                ['city_id' => "14", 'city_name' => "Bantul"],
-            ],
-            "6" => [
-                ['city_id' => "5", 'city_name' => "Jakarta Selatan"],
-                ['city_id' => "6", 'city_name' => "Jakarta Pusat"],
-                ['city_id' => "7", 'city_name' => "Jakarta Barat"],
-                ['city_id' => "8", 'city_name' => "Jakarta Timur"],
-                ['city_id' => "9", 'city_name' => "Jakarta Utara"],
-            ],
-            "9" => [
-                ['city_id' => "1", 'city_name' => "Kota Bandung"],
-                ['city_id' => "2", 'city_name' => "Kota Bekasi"],
-                ['city_id' => "3", 'city_name' => "Kota Bogor"],
-                ['city_id' => "4", 'city_name' => "Kota Depok"],
-            ],
-            "10" => [
-                ['city_id' => "19", 'city_name' => "Semarang"],
-                ['city_id' => "20", 'city_name' => "Surakarta"],
-            ],
-            "11" => [
-                ['city_id' => "15", 'city_name' => "Surabaya"],
-                ['city_id' => "16", 'city_name' => "Malang"],
-            ]
-        ];
-
-        $results = isset($allCities[$provinceId]) ? $allCities[$provinceId] : [];
-
-        return response()->json([
-            'rajaongkir' => [
-                'status' => ['code' => 200, 'description' => 'OK (Mocked)'],
-                'results' => $results
-            ]
-        ]);
-    }
-
     /**
-     * Menghitung ongkos kirim (Mocked).
+     * Menghitung ongkos kirim menggunakan Komerce API V2.
      */
     public function getCost(Request $request)
     {
-        $origin = $request->input('origin');
-        $destination = $request->input('destination');
-        $weight = $request->input('weight');
-        $courier = $request->input('courier');
+        $origin = $request->input('origin', '4816'); // Default origin: BANDUNG, Jawa Barat (sesuaikan dengan toko Anda)
+        $destination = $request->input('destination'); // Ini harus destination_id dari pencarian
+        $weight = $request->input('weight', 1000); // Default 1kg
+        $courier = $request->input('courier', 'jne'); // JNE, SICEPAT, JNT, dll (sesuai API Komerce)
+
+        if (!$destination) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Destinasi belum dipilih dengan benar.'
+            ], 400);
+        }
 
         $apiKey = env('RAJAONGKIR_API_KEY');
         $baseUrl = env('RAJAONGKIR_BASE_URL');
 
-        if (!$apiKey || !$baseUrl) {
-            return $this->mockCost($origin, $destination, $weight, $courier);
-        }
-
         try {
             $response = Http::withHeaders([
-                'key' => $apiKey
-            ])->timeout(5)->post($baseUrl . '/cost', [
+                'key' => $apiKey,
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ])->asForm()->timeout(15)->post($baseUrl . '/calculate/domestic-cost', [
                 'origin' => $origin,
                 'destination' => $destination,
                 'weight' => $weight,
-                'courier' => $courier,
+                'courier' => strtolower($courier),
             ]);
 
             $data = $response->json();
 
-            if (isset($data['code']) && $data['code'] == 410 || !isset($data['rajaongkir']) || isset($data['rajaongkir']['status']['code']) && $data['rajaongkir']['status']['code'] != 200) {
-                return $this->mockCost($origin, $destination, $weight, $courier);
+            // Log the request to debug API issues
+            Log::info('Komerce Cost Check', ['request' => $request->all(), 'response' => $data]);
+
+            if (!isset($data['meta']) || $data['meta']['code'] != 200) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $data['meta']['message'] ?? 'Layanan ekspedisi tidak tersedia atau terjadi kesalahan.'
+                ], 400);
             }
 
-            return response()->json($data);
-        } catch (\Exception $e) {
-            \Log::error('RajaOngkir getCost Error: ' . $e->getMessage());
-            return $this->mockCost($origin, $destination, $weight, $courier);
-        }
-    }
+            // Komerce API mengembalikan $data['data'] berupa array services
+            // Kita akan membungkusnya dalam struktur yang dimengerti oleh frontend (Mirip struktur lama atau disesuaikan)
+            // Di frontend, sebelumnya kita mencari `data.rajaongkir.results[0].costs`
+            // Namun karena kita memperbarui frontend juga nanti, kita bisa kembalikan data Komerce langsung.
+            
+            // Format fallback agar kompatibel (jika masih butuh format lama)
+            // Komerce: {"name":"JNE","code":"jne","service":"REG","cost":8000,"etd":"1 day"}
+            
+            $formattedCosts = [];
+            foreach ($data['data'] as $cost) {
+                $formattedCosts[] = [
+                    'service' => $cost['service'],
+                    'description' => $cost['description'] ?? $cost['name'],
+                    'cost' => [
+                        [
+                            'value' => $cost['cost'],
+                            'etd' => $cost['etd'],
+                            'note' => ''
+                        ]
+                    ]
+                ];
+            }
 
-    private function mockCost($origin, $destination, $weight, $courier)
-    {
-        // Generate a fake but deterministic base price based on origin and destination
-        $originId = intval($origin) ?: 1;
-        $destId = intval($destination) ?: 1;
-        $distanceFactor = abs($destId - $originId) * 1500;
-        $baseCost = 10000 + $distanceFactor;
-
-        if ($courier === 'jne') {
-            $costs = [
-                ['service' => 'OKE', 'description' => 'Ongkos Kirim Ekonomis', 'cost' => [['value' => $baseCost, 'etd' => '3-4']]],
-                ['service' => 'REG', 'description' => 'Layanan Reguler', 'cost' => [['value' => $baseCost + 5000, 'etd' => '2-3']]],
-                ['service' => 'YES', 'description' => 'Yakin Esok Sampai', 'cost' => [['value' => $baseCost + 15000, 'etd' => '1-1']]],
-            ];
-        } else if ($courier === 'tiki') {
-            $costs = [
-                ['service' => 'ECO', 'description' => 'Economy Service', 'cost' => [['value' => $baseCost - 1000, 'etd' => '4-5']]],
-                ['service' => 'REG', 'description' => 'Regular Service', 'cost' => [['value' => $baseCost + 4000, 'etd' => '2-3']]],
-                ['service' => 'ONS', 'description' => 'Over Night Service', 'cost' => [['value' => $baseCost + 14000, 'etd' => '1-1']]],
-            ];
-        } else {
-            $costs = [
-                ['service' => 'Paket Kilat Khusus', 'description' => 'Paket Kilat Khusus', 'cost' => [['value' => $baseCost + 2000, 'etd' => '2-4']]],
-                ['service' => 'Express', 'description' => 'Express', 'cost' => [['value' => $baseCost + 12000, 'etd' => '1-2']]],
-            ];
-        }
-
-        return response()->json([
-            'rajaongkir' => [
-                'status' => ['code' => 200, 'description' => 'OK (Mocked API)'],
-                'results' => [
-                    [
-                        'code' => $courier,
-                        'name' => strtoupper($courier),
-                        'costs' => $costs
+            // Kita kirim respons format Komerce asli, ditambah mock RajaOngkir agar kompatibel jika belum diganti
+            return response()->json([
+                'success' => true,
+                'komerce' => $data['data'],
+                'rajaongkir' => [
+                    'status' => ['code' => 200],
+                    'results' => [
+                        [
+                            'code' => $courier,
+                            'name' => strtoupper($courier),
+                            'costs' => $formattedCosts
+                        ]
                     ]
                 ]
-            ]
-        ]);
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('RajaOngkir getCost Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghitung ongkos kirim: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

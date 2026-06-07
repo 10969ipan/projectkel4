@@ -1014,7 +1014,7 @@
                         'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
                     },
                     body: JSON.stringify({
-                        origin: 6, // JAKARTA PUSAT
+                        origin: 17596, // JAKARTA PUSAT (Komerce ID)
                         destination: city,
                         weight: 1000, // Fixed 1kg for now
                         courier: courier

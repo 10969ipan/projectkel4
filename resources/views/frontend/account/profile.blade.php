@@ -221,16 +221,13 @@
                 <input type="text" name="label" class="form-control" placeholder="Cth: Rumah, Kantor, Kos..." required>
             </div>
             <div class="form-group">
-                <label class="form-label">Provinsi</label>
-                <select name="province_id" id="modal-province" class="form-control" onchange="loadCitiesProfile()" required>
-                    <option value="">Pilih Provinsi</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Kota / Kabupaten</label>
-                <select name="city_id" id="modal-city" class="form-control" required disabled>
-                    <option value="">Pilih Kota</option>
-                </select>
+                <label class="form-label">Kecamatan / Kota Tujuan</label>
+                <div style="position: relative;">
+                    <input type="text" id="destination_search" class="form-control" placeholder="Ketik nama kecamatan atau kota..." autocomplete="off" required>
+                    <input type="hidden" name="city_id" id="destination_id" required>
+                    <input type="hidden" name="province_id" value="-">
+                    <div id="destination_results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 5px;"></div>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Alamat Lengkap</label>
@@ -321,9 +318,63 @@
             window.history.replaceState({}, '', newUrl);
         }
 
-        // RajaOngkir Logic for Profile
-        loadProvincesProfile();
-        
+        // Autocomplete Destinasi Komerce
+        const searchInput = document.getElementById('destination_search');
+        const resultsBox = document.getElementById('destination_results');
+        const hiddenId = document.getElementById('destination_id');
+        let debounceTimer;
+
+        if(searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value.trim();
+                
+                if (query.length < 3) {
+                    resultsBox.style.display = 'none';
+                    return;
+                }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`/search-destinations?search=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            resultsBox.innerHTML = '';
+                            if (data.success && data.data.length > 0) {
+                                data.data.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.style.padding = '10px 15px';
+                                    div.style.cursor = 'pointer';
+                                    div.style.borderBottom = '1px solid #eee';
+                                    div.innerHTML = `<div style="font-weight: bold; color: #1e293b;">${item.district_name}, ${item.city_name}</div>
+                                                     <div style="font-size: 0.8rem; color: #64748b;">${item.province_name} - ${item.zip_code}</div>`;
+                                    div.addEventListener('mouseover', () => div.style.background = '#f8fafc');
+                                    div.addEventListener('mouseout', () => div.style.background = 'white');
+                                    div.addEventListener('click', () => {
+                                        searchInput.value = item.label;
+                                        hiddenId.value = item.id;
+                                        resultsBox.style.display = 'none';
+                                    });
+                                    resultsBox.appendChild(div);
+                                });
+                                resultsBox.style.display = 'block';
+                            } else {
+                                resultsBox.innerHTML = '<div style="padding: 10px 15px; color: #94a3b8;">Tidak ditemukan.</div>';
+                                resultsBox.style.display = 'block';
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                        });
+                }, 500);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+                    resultsBox.style.display = 'none';
+                }
+            });
+        }
+
         const Toast = Swal.mixin({
             toast: true, position: 'top-end',
             showConfirmButton: false, timer: 3000, timerProgressBar: true
@@ -339,45 +390,6 @@
             Toast.fire({ icon: 'error', title: '{{ $errors->first() }}' });
         @endif
     });
-
-    async function loadProvincesProfile() {
-        try {
-            const response = await fetch('/provinces');
-            const data = await response.json();
-            if (data.rajaongkir && data.rajaongkir.status.code === 200) {
-                const select = document.getElementById('modal-province');
-                data.rajaongkir.results.forEach(prov => {
-                    const option = document.createElement('option');
-                    option.value = prov.province_id;
-                    option.textContent = prov.province;
-                    select.appendChild(option);
-                });
-            }
-        } catch (error) { console.error('Error:', error); }
-    }
-
-    async function loadCitiesProfile() {
-        const provId = document.getElementById('modal-province').value;
-        const citySelect = document.getElementById('modal-city');
-        if (!provId) { citySelect.disabled = true; return; }
-        
-        citySelect.innerHTML = '<option value="">Memuat...</option>';
-        citySelect.disabled = true;
-        try {
-            const response = await fetch(`/cities?province_id=${provId}`);
-            const data = await response.json();
-            if (data.rajaongkir && data.rajaongkir.status.code === 200) {
-                citySelect.innerHTML = '<option value="">Pilih Kota</option>';
-                data.rajaongkir.results.forEach(city => {
-                    const option = document.createElement('option');
-                    option.value = city.city_id;
-                    option.textContent = city.city_name;
-                    citySelect.appendChild(option);
-                });
-                citySelect.disabled = false;
-            }
-        } catch (error) { console.error('Error:', error); }
-    }
 </script>
 </body>
 </html>
