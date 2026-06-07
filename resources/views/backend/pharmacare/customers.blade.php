@@ -120,7 +120,7 @@
                                 <i class="fas fa-shopping-bag mr-1"></i> {{ $customer->storeOrders->count() }}
                             </button>
                             <button type="button"
-                                onclick="openEditModal({{ $customer->id }}, '{{ addslashes($customer->name) }}', '{{ addslashes($customer->email) }}', '{{ $primaryAddress ? addslashes($primaryAddress->full_address) : '' }}', {{ $customer->wallet_balance }}, {{ $customer->paylater_limit }}, {{ $customer->is_prescription_approved ? 1 : 0 }})"
+                                onclick="openEditModal({{ $customer->id }}, '{{ addslashes($customer->name) }}', '{{ addslashes($customer->email) }}', '{{ addslashes($customer->phone ?? '') }}', '{{ $primaryAddress ? addslashes($primaryAddress->full_address) : '' }}', {{ $customer->wallet_balance }}, {{ $customer->paylater_limit }}, {{ $customer->is_prescription_approved ? 1 : 0 }})"
                                 class="inline-flex items-center px-2 py-1 bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold rounded-md shadow-sm transition-all">
                                 <i class="fas fa-edit mr-1"></i> Edit
                             </button>
@@ -158,6 +158,10 @@
             <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">Email</label>
                 <input type="email" name="email" id="edit_email" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1">Nomor WhatsApp</label>
+                <input type="text" name="phone" id="edit_phone" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none" placeholder="081234567890">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -274,10 +278,11 @@
     });
 
     // ============ MODAL EDIT ============
-    function openEditModal(id, name, email, address, wallet, paylater, isVerified) {
+    function openEditModal(id, name, email, phone, address, wallet, paylater, isVerified) {
         document.getElementById('editForm').action = `/admin/pharmacare/customers/${id}`;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_email').value = email;
+        document.getElementById('edit_phone').value = phone;
         document.getElementById('edit_address').value = address;
         document.getElementById('edit_wallet_balance').value = wallet;
         document.getElementById('edit_paylater_limit').value = paylater;

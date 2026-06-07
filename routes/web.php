@@ -12,15 +12,7 @@ use App\Http\Controllers\AuthController;
 // Midtrans Webhook Callback
 Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::class, 'callback']);
 
-// Jalur rahasia untuk eksekusi migrasi di server Vercel
-Route::get('/secret-migrate-force', function () {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        return 'Sukses migrasi! Log: ' . \Illuminate\Support\Facades\Artisan::output();
-    } catch (\Exception $e) {
-        return 'Gagal: ' . $e->getMessage();
-    }
-});
+
 
 
 // Home Redirection Logic

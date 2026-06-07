@@ -124,6 +124,7 @@ class PharmacareAdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
+            'phone' => 'nullable|string|min:10|max:20|unique:users,phone,' . $id,
             'password' => 'nullable|min:6',
             'address' => 'nullable|string',
             'wallet_balance' => 'required|numeric|min:0',
@@ -133,6 +134,7 @@ class PharmacareAdminController extends Controller
 
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->phone = $request->phone;
         $user->wallet_balance = $request->wallet_balance;
         $user->paylater_limit = $request->paylater_limit;
         $user->is_prescription_approved = $request->has('is_prescription_approved');
