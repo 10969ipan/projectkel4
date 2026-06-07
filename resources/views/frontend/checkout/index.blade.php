@@ -247,7 +247,10 @@
                                     <strong>{{ $addr->label }}</strong>
                                     @if($addr->is_primary) <span style="color: var(--primary-blue); font-size: 0.75rem; font-weight: 800;">UTAMA</span> @endif
                                 </div>
-                                <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">{{ $addr->full_address }}</p>
+                                <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 5px;">{{ $addr->full_address }}</p>
+                                @if($addr->province_id && $addr->province_id !== '-' && !is_numeric($addr->province_id))
+                                    <p style="font-size: 0.85rem; color: #64748b; font-weight: 600;"><i class="fas fa-map-marker-alt"></i> {{ $addr->province_id }}</p>
+                                @endif
                             </div>
                         </label>
                         @endforeach
@@ -1214,6 +1217,8 @@
                                         div.addEventListener('click', () => {
                                             searchInput.value = item.label;
                                             hiddenId.value = item.id;
+                                            const provinceInput = searchInput.closest('form').querySelector('input[name="province_id"]');
+                                            if (provinceInput) provinceInput.value = item.label;
                                             resultsBox.style.display = 'none';
                                         });
                                         resultsBox.appendChild(div);

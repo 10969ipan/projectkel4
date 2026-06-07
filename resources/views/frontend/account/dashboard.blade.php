@@ -476,7 +476,12 @@
                                 <span style="position: absolute; top: 15px; right: 15px; background: var(--primary-blue); color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 800;">UTAMA</span>
                             @endif
                             <div style="font-weight: 800; font-size: 1.1rem; margin-bottom: 10px;">{{ $addr->label }}</div>
-                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; min-height: 40px;">{{ $addr->full_address }}</p>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 5px; min-height: 20px;">{{ $addr->full_address }}</p>
+                            @if($addr->province_id && $addr->province_id !== '-' && !is_numeric($addr->province_id))
+                                <p style="font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 20px;"><i class="fas fa-map-marker-alt"></i> {{ $addr->province_id }}</p>
+                            @else
+                                <div style="margin-bottom: 20px;"></div>
+                            @endif
                             
                             <div style="display: flex; gap: 10px;">
                                 @if(!$addr->is_primary)
@@ -1327,6 +1332,8 @@
                                         div.addEventListener('click', () => {
                                             searchInput.value = item.label;
                                             hiddenId.value = item.id;
+                                            const provinceInput = searchInput.closest('form').querySelector('input[name="province_id"]');
+                                            if (provinceInput) provinceInput.value = item.label;
                                             resultsBox.style.display = 'none';
                                         });
                                         resultsBox.appendChild(div);

@@ -158,7 +158,10 @@
                                 <span class="badge-primary">UTAMA</span>
                             @endif
                             <div class="address-label">{{ $addr->label }}</div>
-                            <p class="address-text">{{ $addr->full_address }}</p>
+                            <p class="address-text" style="margin-bottom: 5px;">{{ $addr->full_address }}</p>
+                            @if($addr->province_id && $addr->province_id !== '-' && !is_numeric($addr->province_id))
+                                <p style="font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 10px;"><i class="fas fa-map-marker-alt"></i> {{ $addr->province_id }}</p>
+                            @endif
                             <div class="address-actions">
                                 @if(!$addr->is_primary)
                                 <form action="{{ route('account.address.primary', $addr->id) }}" method="POST" style="display:inline;">
@@ -352,6 +355,8 @@
                                     div.addEventListener('click', () => {
                                         searchInput.value = item.label;
                                         hiddenId.value = item.id;
+                                        const provinceInput = searchInput.closest('form').querySelector('input[name="province_id"]');
+                                        if (provinceInput) provinceInput.value = item.label;
                                         resultsBox.style.display = 'none';
                                     });
                                     resultsBox.appendChild(div);
