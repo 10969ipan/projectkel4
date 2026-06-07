@@ -251,12 +251,12 @@
                             </div>
                         </label>
                         @endforeach
-                        <a href="{{ route('account.profile', ['tab' => 'addresses', 'add_address' => 1]) }}" style="text-align: center; color: var(--primary-blue); font-size: 0.9rem; font-weight: 600; text-decoration: none; margin-top: 10px;">+ Kelola Alamat Lainnya</a>
+                        <button type="button" onclick="document.getElementById('addressModal').style.display='flex'" style="width: 100%; padding: 12px; background: transparent; border: 2px dashed var(--primary-blue); color: var(--primary-blue); border-radius: 12px; font-weight: 700; cursor: pointer; text-align: center; margin-top: 10px; transition: 0.2s;">+ Tambah Alamat Baru</button>
                     </div>
                 @else
                     <div style="text-align: center; padding: 20px; background: #FFF9DB; border-radius: 12px; border: 1px solid #FFD43B;">
                         <p style="margin-bottom: 15px;">Anda belum menambahkan alamat pengiriman.</p>
-                        <a href="{{ route('account.profile', ['tab' => 'addresses', 'add_address' => 1]) }}" class="btn-banner" style="display: inline-block; padding: 10px 20px; font-size: 0.9rem;">Tambah Alamat Sekarang</a>
+                        <button type="button" onclick="document.getElementById('addressModal').style.display='flex'" style="display: inline-block; padding: 10px 20px; font-size: 0.9rem; font-weight: 700; background: var(--primary-blue); color: white; border: none; border-radius: 8px; cursor: pointer;">+ Tambah Alamat Sekarang</button>
                     </div>
                 @endif
             </div>
@@ -1035,7 +1035,12 @@
 
                     let html = '';
                     costs.forEach((c, i) => {
-                        const isChecked = i === 0 ? 'checked' : '';
+                        // Skip JTR (JNE Trucking) because it's for heavy cargo
+                        if (c.service.toUpperCase().includes('JTR') || c.service.toUpperCase().includes('TRUCK')) {
+                            return;
+                        }
+
+                        const isChecked = html === '' ? 'checked' : '';
                         const serviceName = `${data.rajaongkir.results[0].code.toUpperCase()} - ${c.service}`;
                         html += `
                             <label style="display: block; margin-bottom: 10px;">
@@ -1097,6 +1102,99 @@
                 title: '{{ $errors->first() }}'
             });
         @endif
+    </script>
+
+    <!-- MODAL TAMBAH ALAMAT -->
+    <div id="addressModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index:999999; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background:white; border-radius:24px; width:100%; max-width:500px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">Tambah Alamat Baru</h3>
+                <button onclick="document.getElementById('addressModal').style.display='none'" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; color: #64748b; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+            
+            <form action="{{ route('account.address.store') }}" method="POST">
+                @csrf
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 0.9rem; font-weight: 700; color: #475569; margin-bottom: 8px;">Label Alamat</label>
+                    <input type="text" name="label" class="form-control" style="padding: 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; width: 100%; outline: none;" placeholder="Cth: Rumah, Kantor, Kos..." required>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label class="form-label" style="font-size: 0.9rem; font-weight: 700; color: #475569; margin-bottom: 8px;">Kecamatan / Kota Tujuan</label>
+                    <div style="position: relative;">
+                        <input type="text" id="destination_search" class="form-control" style="padding: 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; width: 100%; outline: none;" placeholder="Ketik nama kecamatan atau kota..." autocomplete="off" required>
+                        <input type="hidden" name="city_id" id="destination_id" required>
+                        <input type="hidden" name="province_id" value="-">
+                        <div id="destination_results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-top: 5px;"></div>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label class="form-label" style="font-size: 0.9rem; font-weight: 700; color: #475569; margin-bottom: 8px;">Alamat Lengkap</label>
+                    <textarea name="full_address" class="form-control" rows="3" style="padding: 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 0.95rem; width: 100%; outline: none; resize: vertical;" placeholder="Jalan, No. Rumah, Kelurahan, RT/RW..." required></textarea>
+                </div>
+                <div style="display:flex; gap:12px; margin-top:25px;">
+                    <button type="button" onclick="document.getElementById('addressModal').style.display='none'" style="flex:1; padding:14px; border-radius:12px; border:none; background:#f1f5f9; color:#475569; font-weight:700; cursor:pointer;">Batal</button>
+                    <button type="submit" style="flex:1; padding:14px; border-radius:12px; border:none; background:var(--primary-blue); color:white; font-weight:700; cursor:pointer;">Simpan Alamat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('destination_search');
+            const resultsBox = document.getElementById('destination_results');
+            const hiddenId = document.getElementById('destination_id');
+            let debounceTimer;
+
+            if(searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    const query = this.value.trim();
+                    
+                    if (query.length < 3) {
+                        resultsBox.style.display = 'none';
+                        return;
+                    }
+
+                    debounceTimer = setTimeout(() => {
+                        fetch(`/search-destinations?search=${encodeURIComponent(query)}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                resultsBox.innerHTML = '';
+                                if (data.success && data.data.length > 0) {
+                                    data.data.forEach(item => {
+                                        const div = document.createElement('div');
+                                        div.style.padding = '12px 15px';
+                                        div.style.cursor = 'pointer';
+                                        div.style.borderBottom = '1px solid #f1f5f9';
+                                        div.innerHTML = `<div style="font-weight: 700; color: #1e293b; font-size: 0.9rem;">${item.district_name}, ${item.city_name}</div>
+                                                         <div style="font-size: 0.8rem; color: #64748b;">${item.province_name} - ${item.zip_code}</div>`;
+                                        div.addEventListener('mouseover', () => div.style.background = '#f8fafc');
+                                        div.addEventListener('mouseout', () => div.style.background = 'white');
+                                        div.addEventListener('click', () => {
+                                            searchInput.value = item.label;
+                                            hiddenId.value = item.id;
+                                            resultsBox.style.display = 'none';
+                                        });
+                                        resultsBox.appendChild(div);
+                                    });
+                                    resultsBox.style.display = 'block';
+                                } else {
+                                    resultsBox.innerHTML = '<div style="padding: 12px 15px; color: #94a3b8; font-size: 0.9rem;">Tidak ditemukan.</div>';
+                                    resultsBox.style.display = 'block';
+                                }
+                            })
+                            .catch(err => console.error(err));
+                    }, 500);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+                        resultsBox.style.display = 'none';
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
