@@ -281,7 +281,7 @@
 
     // ============ MODAL EDIT ============
     function openEditModal(id, name, email, phone, address, wallet, paylater, isVerified) {
-        document.getElementById('editForm').action = `/admin/pharmacare/customers/${id}`;
+        document.getElementById('editForm').action = "{{ route('admin.pharmacare.customers.update', '') }}/" + id;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_email').value = email;
         document.getElementById('edit_phone').value = phone;
