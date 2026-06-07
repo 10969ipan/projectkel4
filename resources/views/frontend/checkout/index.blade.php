@@ -530,8 +530,18 @@
             }
         });
 
+        window.createdOrderData = null;
+
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
             e.preventDefault();
+
+            // Jika order sudah pernah dibuat di sesi ini (dan cart mungkin sudah kosong di backend),
+            // langsung buka kembali modal pembayaran dengan data yang sama.
+            if (window.createdOrderData) {
+                openPaymentModal(window.createdOrderData);
+                return false;
+            }
+
             const form = this;
             const btn = form.querySelector('.btn-pay');
             const originalText = btn.innerText;
@@ -575,6 +585,7 @@
 
                 if (data.success) {
                     // Update the already open modal with real data
+                    window.createdOrderData = data.order;
                     openPaymentModal(data.order);
                 } else {
                     toggleModal('paymentModal'); // Hide modal on error
@@ -1063,13 +1074,7 @@
 
         function closePaymentModal() {
             toggleModal('paymentModal');
-            // If we are closing the payment modal and an order has already been created,
-            // redirect to the order dashboard to avoid "empty cart" confusion on checkout page
-            const orderNumElem = document.getElementById('order-number');
-            const orderNum = orderNumElem ? orderNumElem.innerText : '-';
-            if (orderNum && orderNum !== '-' && !orderNum.includes('PROSES')) {
-                window.location.href = "{{ route('account.orders') }}";
-            }
+            // Menghapus redirect ke account.orders agar user tetap berada di halaman checkout
         }
 
         @if (session('success'))
