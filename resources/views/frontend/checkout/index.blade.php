@@ -1034,20 +1034,60 @@
                     }
 
                     let html = '';
+                    const allowedServices = {
+                        'JNE': {
+                            'REG': 'Reguler (Layanan standar 1-3 hari)',
+                            'YES': 'Yakin Esok Sampai (Besok sampai)',
+                            'SPS': 'Super Speed (Lebih cepat dari YES)'
+                        },
+                        'TIKI': {
+                            'REG': 'Reguler (Layanan standar 1-3 hari)',
+                            'ONS': 'Over Night Service (Besok sampai)',
+                            'ECO': 'Economy (Harga lebih hemat)'
+                        },
+                        'POS': {
+                            'POS REGULER': 'Pos Reguler (Layanan standar)',
+                            'POS NEXTDAY': 'Pos Nextday (Besok sampai)',
+                            'KILAT KHUSUS': 'Pos Kilat Khusus (Layanan kilat)'
+                        }
+                    };
+
                     costs.forEach((c, i) => {
-                        // Skip JTR (JNE Trucking) because it's for heavy cargo
-                        if (c.service.toUpperCase().includes('JTR') || c.service.toUpperCase().includes('TRUCK')) {
-                            return;
+                        const courierCode = data.rajaongkir.results[0].code.toUpperCase();
+                        const serviceCode = c.service.toUpperCase();
+                        let description = '';
+
+                        if (allowedServices[courierCode]) {
+                            let matched = false;
+                            for (const [key, desc] of Object.entries(allowedServices[courierCode])) {
+                                if (serviceCode === key || serviceCode.includes(key)) {
+                                    description = desc;
+                                    matched = true;
+                                    break;
+                                }
+                            }
+                            // Jika layanan tidak ada di daftar izinkan (seperti Kargo/TRC/dll), skip!
+                            if (!matched) return;
+                        } else {
+                            if (serviceCode.includes('TRUCK') || serviceCode.includes('JTR') || serviceCode.includes('CARGO') || serviceCode.includes('TRC') || serviceCode.includes('T60')) return;
                         }
 
                         const isChecked = html === '' ? 'checked' : '';
-                        const serviceName = `${data.rajaongkir.results[0].code.toUpperCase()} - ${c.service}`;
+                        const serviceName = `${courierCode} - ${c.service}`;
+                        
+                        // Gunakan keterangan API Komerce jika ada, jika tidak gunakan deskripsi kita
+                        const finalDesc = description || c.description || 'Layanan Standar';
+
                         html += `
                             <label style="display: block; margin-bottom: 10px;">
                                 <input type="radio" name="shipping_method" value="${serviceName}" data-cost="${c.cost[0].value}" ${isChecked} onchange="calcTotal()">
                                 <div class="pay-method-card">
-                                    <strong>${serviceName}</strong><br>
-                                    <span style="font-size:0.8rem; color:#666;">Estimasi ${c.cost[0].etd} Hari (Rp ${new Intl.NumberFormat('id-ID').format(c.cost[0].value)})</span>
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <strong>${serviceName}</strong>
+                                        <span style="font-weight:700; color:var(--primary-blue);">Rp ${new Intl.NumberFormat('id-ID').format(c.cost[0].value)}</span>
+                                    </div>
+                                    <div style="font-size:0.85rem; color:#475569; margin-top:4px;">${finalDesc}</div>
+                                    <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Estimasi pengiriman: ${c.cost[0].etd} Hari</div>
                                 </div>
                             </label>
                         `;
