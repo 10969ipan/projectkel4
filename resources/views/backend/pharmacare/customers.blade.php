@@ -24,21 +24,6 @@
     .modal-overlay.is-open .modal-box {
         transform: scale(1) translateY(0); opacity: 1;
     }
-
-    /* Minimalist Pagination Override */
-    nav[role="navigation"] { border: none !important; padding: 0 !important; }
-    nav[role="navigation"] .hidden.sm\:flex-1 { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-    nav[role="navigation"] p.text-sm.text-gray-700 { font-size: 0.75rem; color: #64748b; margin: 0; }
-    nav[role="navigation"] span.relative.z-0.inline-flex { box-shadow: none !important; display: flex; gap: 0.25rem; }
-    nav[role="navigation"] span.relative.z-0.inline-flex > span,
-    nav[role="navigation"] span.relative.z-0.inline-flex > a {
-        background: transparent !important; border: none !important; color: #64748b !important; padding: 0 !important; border-radius: 0.5rem !important; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem; transition: all 0.2s;
-    }
-    nav[role="navigation"] span.relative.z-0.inline-flex > a:hover { background: #f1f5f9 !important; color: #0f172a !important; }
-    nav[role="navigation"] span[aria-current="page"] > span {
-        background: #0d9488 !important; color: white !important; font-weight: 800; box-shadow: 0 2px 4px rgba(13, 148, 136, 0.2);
-    }
-    nav[role="navigation"] svg { width: 1rem; height: 1rem; stroke-width: 3px; }
 </style>
 @endpush
 
@@ -159,17 +144,18 @@
 
 <!-- ===================== MODAL EDIT ===================== -->
 <div id="editModalOverlay" class="modal-overlay" onclick="handleOverlayClick(event, 'editModalOverlay')">
-    <div class="modal-box" style="max-width: 28rem;" onclick="event.stopPropagation()">
-        <div class="bg-teal-600 px-6 py-4 flex justify-between items-center text-white">
+    <div class="modal-box flex flex-col overflow-hidden" style="max-width: 28rem; max-height: 90vh;" onclick="event.stopPropagation()">
+        <div class="bg-teal-600 px-6 py-4 flex-shrink-0 flex justify-between items-center text-white">
             <h3 class="text-base font-bold">Edit Data Pelanggan</h3>
             <button onclick="closeModal('editModalOverlay')" class="text-white/80 hover:text-white text-xl leading-none">&times;</button>
         </div>
-        <form id="editForm" method="POST" class="p-6 space-y-4">
+        <form id="editForm" method="POST" class="flex flex-col flex-1 overflow-hidden">
             @csrf @method('PUT')
-            <div>
-                <label class="block text-xs font-bold text-gray-600 mb-1">Nama Lengkap</label>
-                <input type="text" name="name" id="edit_name" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none">
-            </div>
+            <div class="p-6 space-y-4 flex-1 overflow-y-auto">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Nama Lengkap</label>
+                    <input type="text" name="name" id="edit_name" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none">
+                </div>
             <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">Email</label>
                 <input type="email" name="email" id="edit_email" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none">
@@ -200,8 +186,9 @@
                 <label class="block text-xs font-bold text-gray-600 mb-1">Alamat Utama</label>
                 <textarea name="address" id="edit_address" rows="2" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none" placeholder="Alamat lengkap..."></textarea>
             </div>
-            <div class="pt-4 mt-2 flex gap-3 border-t border-gray-100">
-                <button type="button" onclick="closeModal('editModalOverlay')" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold rounded-lg transition-colors">Batal</button>
+            </div>
+            <div class="p-4 flex-shrink-0 flex gap-3 border-t border-gray-100 bg-gray-50">
+                <button type="button" onclick="closeModal('editModalOverlay')" class="flex-1 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-sm font-bold rounded-lg transition-colors">Batal</button>
                 <button type="submit" class="flex-1 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors">Simpan Perubahan</button>
             </div>
         </form>

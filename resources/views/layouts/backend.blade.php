@@ -84,47 +84,20 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
-        .pagination {
-            display: flex;
-            justify-content: center;
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        /* Minimalist White Pagination (Tailwind Override) */
+        nav[role="navigation"] { border: none !important; padding: 0 !important; }
+        nav[role="navigation"] > div.hidden.sm\:flex-1 { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        nav[role="navigation"] p.text-sm.text-gray-700 { font-size: 0.75rem; color: #64748b; margin: 0; }
+        nav[role="navigation"] span.relative.z-0.inline-flex { box-shadow: none !important; display: flex; gap: 0.35rem; }
+        nav[role="navigation"] span.relative.z-0.inline-flex > span,
+        nav[role="navigation"] span.relative.z-0.inline-flex > a {
+            background: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #64748b !important; padding: 0 !important; border-radius: 0.5rem !important; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; height: 2.25rem; transition: all 0.2s ease;
         }
-
-        .pagination li {
-            margin: 0 2px;
+        nav[role="navigation"] span.relative.z-0.inline-flex > a:hover { background: #f8fafc !important; color: #0ea5e9 !important; border-color: #cbd5e1 !important; }
+        nav[role="navigation"] span[aria-current="page"] > span {
+            background: #ffffff !important; color: #0ea5e9 !important; font-weight: 800; border: 2px solid #0ea5e9 !important; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.1);
         }
-
-        .pagination li a,
-        .pagination li span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            padding: 0 8px;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #374151;
-            transition: all 0.2s ease;
-        }
-
-        .pagination li a:hover {
-            background-color: #e0f2fe;
-            color: #0369a1;
-        }
-
-        .pagination li.active span {
-            background-color: #0ea5e9;
-            color: white;
-        }
-
-        .pagination li.disabled span {
-            color: #9ca3af;
-            cursor: not-allowed;
-        }
+        nav[role="navigation"] svg { width: 1rem; height: 1rem; stroke-width: 3px; }
 
         select,
         input[type="date"],
