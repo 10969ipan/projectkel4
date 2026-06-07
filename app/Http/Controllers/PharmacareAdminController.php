@@ -113,7 +113,7 @@ class PharmacareAdminController extends Controller
             ->orWhere('role', 'pelanggan')
             ->with(['addresses', 'storeOrders', 'subscriptions.item', 'walletTransactions'])
             ->latest()
-            ->paginate(15);
+            ->paginate(10);
         return view('backend.pharmacare.customers', compact('customers'));
     }
 

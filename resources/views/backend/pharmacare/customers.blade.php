@@ -151,7 +151,7 @@
         </div>
         <form id="editForm" method="POST" class="flex flex-col flex-1 overflow-hidden" style="min-height: 0;">
             @csrf @method('PUT')
-            <div class="p-6 space-y-4 flex-1 overflow-y-auto" style="min-height: 0;">
+            <div class="p-6 space-y-4 flex-1 overflow-y-auto" style="min-height: 0; max-height: 55vh;">
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Nama Lengkap</label>
                     <input type="text" name="name" id="edit_name" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none">
