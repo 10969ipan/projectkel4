@@ -1926,7 +1926,12 @@
                             <div class="form-group">
                                 <label class="form-label">Nomor WhatsApp</label>
                                 <input type="text" name="phone" class="form-input" placeholder="081234567890" value="{{ old('phone') }}" required>
-                                @error('phone') <small style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: block;">{{ $message }}</small> @else <small style="color: #64748b; font-size: 0.75rem; margin-top: 4px; display: block;">Gunakan format 08... (Contoh: 081234567890)</small> @enderror
+                                @error('phone') 
+                                    <small style="color: #ef4444; font-size: 0.75rem; font-weight: 600; margin-top: 4px; display: block;">{{ $message }}</small> 
+                                @enderror
+                                @if(!$errors->has('phone'))
+                                    <small style="color: #64748b; font-size: 0.75rem; margin-top: 4px; display: block;">Gunakan format 08... (Contoh: 081234567890)</small>
+                                @endif
                             </div>
                             <div class="form-group" x-data="{ show: false }">
                                 <label class="form-label">Password</label>
