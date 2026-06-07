@@ -25,8 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
         ]);
 
+        // AuthenticateSession dinonaktifkan sementara karena menyebabkan 
+        // 500 Error di Vercel jika menggunakan session driver 'file' atau 'cookie'.
         $middleware->web(append: [
-            \Illuminate\Session\Middleware\AuthenticateSession::class,
+            // \Illuminate\Session\Middleware\AuthenticateSession::class,
         ]);
 
         // Exclude AI Reply from CSRF to prevent 419 on stale sessions
