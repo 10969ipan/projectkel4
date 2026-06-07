@@ -1660,7 +1660,7 @@
                                 <template x-for="notif in notifications" :key="notif.id">
                                     <div :style="notif.is_read ? 'padding: 12px; border-radius: 12px; margin-bottom: 8px; transition: background 0.2s; border-bottom: 1px solid #f8fafc; cursor: pointer; opacity: 0.7; background: #f8fafc;' : 'padding: 12px; border-radius: 12px; margin-bottom: 8px; transition: background 0.2s; border-bottom: 1px solid #f8fafc; cursor: pointer; background: white;'" 
                                          class="hover:bg-gray-100"
-                                         @click="if(notif.data.needs_rating && typeof window.openRatingModal !== 'undefined') { openRatingModal(notif.data.order_id) } else { window.location.href = '{{ route('account.orders') }}' }">
+                                         @click="if(notif.data.needs_rating && typeof window.openRatingModal !== 'undefined') { openRatingModal(notif.data.order_id) } else { window.location.href = '/account/orders/' + notif.data.order_id + '/invoice' }">
                                         <div style="display: flex; gap: 12px;">
                                             <div style="width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
                                                  :class="notif.data.status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'">
