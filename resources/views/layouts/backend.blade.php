@@ -86,18 +86,29 @@
 
         /* Minimalist White Pagination (Tailwind Override) */
         nav[role="navigation"] { border: none !important; padding: 0 !important; }
-        nav[role="navigation"] > div.hidden.sm\:flex-1 { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        nav[role="navigation"] p.text-sm.text-gray-700 { font-size: 0.75rem; color: #64748b; margin: 0; }
+        nav[role="navigation"] > div.hidden { display: flex !important; align-items: center; justify-content: space-between; width: 100%; }
+        nav[role="navigation"] p { font-size: 0.75rem !important; color: #64748b !important; margin: 0 !important; }
         nav[role="navigation"] span.relative.z-0.inline-flex { box-shadow: none !important; display: flex; gap: 0.35rem; }
-        nav[role="navigation"] span.relative.z-0.inline-flex > span,
-        nav[role="navigation"] span.relative.z-0.inline-flex > a {
-            background: #ffffff !important; border: 1px solid #e2e8f0 !important; color: #64748b !important; padding: 0 !important; border-radius: 0.5rem !important; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; height: 2.25rem; transition: all 0.2s ease;
+        
+        nav[role="navigation"] span.relative.z-0.inline-flex * {
+            background: #ffffff !important; border-color: #e2e8f0 !important; color: #64748b !important; border-radius: 0.5rem !important; box-shadow: none !important;
         }
-        nav[role="navigation"] span.relative.z-0.inline-flex > a:hover { background: #f8fafc !important; color: #0ea5e9 !important; border-color: #cbd5e1 !important; }
-        nav[role="navigation"] span[aria-current="page"] > span {
-            background: #ffffff !important; color: #0ea5e9 !important; font-weight: 800; border: 2px solid #0ea5e9 !important; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.1);
+        
+        nav[role="navigation"] span.relative.z-0.inline-flex > a,
+        nav[role="navigation"] span.relative.z-0.inline-flex > span {
+            border: 1px solid #e2e8f0 !important; padding: 0 !important; min-width: 2.25rem; height: 2.25rem; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;
         }
-        nav[role="navigation"] svg { width: 1rem; height: 1rem; stroke-width: 3px; }
+        
+        nav[role="navigation"] span.relative.z-0.inline-flex > a:hover,
+        nav[role="navigation"] span.relative.z-0.inline-flex > a:hover * {
+            background: #f8fafc !important; color: #0ea5e9 !important; border-color: #cbd5e1 !important;
+        }
+        
+        nav[role="navigation"] span[aria-current="page"] > span,
+        nav[role="navigation"] span[aria-current="page"] > span * {
+            color: #0ea5e9 !important; font-weight: 800 !important; border: 2px solid #0ea5e9 !important;
+        }
+        nav[role="navigation"] svg { width: 1rem; height: 1rem; background: transparent !important; border: none !important; }
 
         select,
         input[type="date"],

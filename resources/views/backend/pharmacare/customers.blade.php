@@ -143,15 +143,15 @@
 </div>
 
 <!-- ===================== MODAL EDIT ===================== -->
-<div id="editModalOverlay" class="modal-overlay" onclick="handleOverlayClick(event, 'editModalOverlay')">
-    <div class="modal-box flex flex-col overflow-hidden" style="max-width: 28rem; max-height: 90vh;" onclick="event.stopPropagation()">
+<div id="editModalOverlay" class="modal-overlay !items-start sm:!items-center overflow-y-auto py-10" onclick="handleOverlayClick(event, 'editModalOverlay')">
+    <div class="modal-box flex flex-col overflow-hidden my-auto mx-auto" style="max-width: 28rem; max-height: calc(100vh - 4rem);" onclick="event.stopPropagation()">
         <div class="bg-teal-600 px-6 py-4 flex-shrink-0 flex justify-between items-center text-white">
             <h3 class="text-base font-bold">Edit Data Pelanggan</h3>
             <button onclick="closeModal('editModalOverlay')" class="text-white/80 hover:text-white text-xl leading-none">&times;</button>
         </div>
-        <form id="editForm" method="POST" class="flex flex-col flex-1 overflow-hidden">
+        <form id="editForm" method="POST" class="flex flex-col flex-1 overflow-hidden" style="min-height: 0;">
             @csrf @method('PUT')
-            <div class="p-6 space-y-4 flex-1 overflow-y-auto">
+            <div class="p-6 space-y-4 flex-1 overflow-y-auto" style="min-height: 0;">
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Nama Lengkap</label>
                     <input type="text" name="name" id="edit_name" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none">
