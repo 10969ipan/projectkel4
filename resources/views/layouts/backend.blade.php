@@ -266,6 +266,13 @@
                             <div class="absolute inset-0 rounded-full bg-primary-600 flex items-center justify-center text-white font-black shadow-sm">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </div>
+                            @if(auth()->user()->profile_photo)
+                                <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                    src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                    alt="{{ auth()->user()->name }}"
+                                    onerror="this.style.display='none'"
+                                    loading="lazy">
+                            @endif
                         </div>
                         <div class="ml-3 overflow-hidden">
                             <p class="text-sm font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
@@ -407,7 +414,7 @@
                                 <div class="absolute inset-0 rounded-full bg-primary-600 flex items-center justify-center text-white font-black shadow-sm">
                                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                 </div>
-                                @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
+                                @if(auth()->user()->profile_photo)
                                     <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
                                         src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                         alt="{{ auth()->user()->name }}"
@@ -589,7 +596,7 @@
                         <button @click="profileMenuOpen = !profileMenuOpen" class="flex items-center focus:outline-none">
                             <div class="relative h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200 overflow-hidden">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
+                                @if(auth()->user()->profile_photo)
                                     <img class="absolute inset-0 h-full w-full object-cover"
                                         src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                         alt="{{ auth()->user()->name }}"

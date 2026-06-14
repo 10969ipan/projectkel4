@@ -129,7 +129,7 @@
                                     <div class="absolute inset-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200">
                                         {{ strtoupper(substr($user->name, 0, 1)) }}
                                     </div>
-                                    @if($user->profile_photo && ($user->isAdmin() || $user->isStaff() || $user->role !== 'customer'))
+                                    @if($user->profile_photo)
                                         <img class="absolute inset-0 h-12 w-12 rounded-full object-cover border border-white" 
                                             src="{{ asset('storage/' . $user->profile_photo) }}" 
                                             alt="{{ $user->name }}"

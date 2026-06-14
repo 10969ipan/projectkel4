@@ -181,7 +181,7 @@
                                         <div class="absolute inset-0 rounded-full bg-primary-600 flex items-center justify-center text-white font-black shadow-sm">
                                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                         </div>
-                                        @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
+                                        @if(auth()->user()->profile_photo)
                                             <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
                                                 src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                                 alt="{{ auth()->user()->name }}"
@@ -190,7 +190,15 @@
                                     </div>
                                     <div class="ml-3 overflow-hidden">
                                         <p class="text-sm font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                                        <p class="text-[10px] font-bold text-primary-500 uppercase tracking-tighter">{{ auth()->user()->role === 'admin' ? 'Administrator' : 'Staf Farmasi' }}</p>
+                                        <p class="text-[10px] font-bold text-primary-500 uppercase tracking-tighter">
+                                            @if (auth()->user()->role === 'admin')
+                                                Administrator
+                                            @elseif (auth()->user()->role === 'owner')
+                                                Owner
+                                            @else
+                                                {{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}
+                                            @endif
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -492,7 +500,7 @@
                                         <div class="absolute inset-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200">
                                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                         </div>
-                                        @if(auth()->user()->profile_photo && (auth()->user()->isAdmin() || auth()->user()->isStaff()))
+                                        @if(auth()->user()->profile_photo)
                                             <img class="absolute inset-0 h-8 w-8 rounded-full object-cover border-2 border-white"
                                                 src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
                                                 alt="{{ auth()->user()->name }}"
