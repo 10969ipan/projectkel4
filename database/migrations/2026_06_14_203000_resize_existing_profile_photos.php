@@ -16,6 +16,17 @@ return new class extends Migration
         DB::table('users')->whereNotNull('profile_photo')->get()->each(function ($user) {
             $photo = $user->profile_photo;
             if (str_starts_with($photo, 'data:image/')) {
+                // Check if GD library is available
+                if (!function_exists('imagecreatefromstring')) {
+                    // GD not available. If the image is large (> 200KB), clear it to prevent 500 error
+                    if (strlen($photo) > 200000) {
+                        DB::table('users')->where('id', $user->id)->update([
+                            'profile_photo' => null
+                        ]);
+                    }
+                    return;
+                }
+
                 // Parse base64
                 try {
                     $parts = explode(',', $photo);
@@ -69,7 +80,7 @@ return new class extends Migration
                     DB::table('users')->where('id', $user->id)->update([
                         'profile_photo' => $newBase64
                     ]);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     // Fail-safe: if something fails during image processing, we clear the profile_photo
                     // to prevent payload too large errors
                     DB::table('users')->where('id', $user->id)->update([

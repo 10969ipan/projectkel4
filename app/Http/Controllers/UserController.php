@@ -88,7 +88,7 @@ class UserController extends Controller
 
         if ($request->hasFile('profile_photo')) {
             $file = $request->file('profile_photo');
-            $data['profile_photo'] = 'data:' . $file->getMimeType() . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+            $data['profile_photo'] = $this->resizeAndCompressImageToHtml($file);
         }
 
         // Simpan user baru ke database
@@ -169,7 +169,7 @@ class UserController extends Controller
                 Storage::disk('public')->delete($user->profile_photo);
             }
             $file = $request->file('profile_photo');
-            $data['profile_photo'] = 'data:' . $file->getMimeType() . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+            $data['profile_photo'] = $this->resizeAndCompressImageToHtml($file);
         }
 
         // Update data user di database
@@ -275,7 +275,7 @@ class UserController extends Controller
                 Storage::disk('public')->delete($user->profile_photo);
             }
             $file = $request->file('profile_photo');
-            $data['profile_photo'] = 'data:' . $file->getMimeType() . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+            $data['profile_photo'] = $this->resizeAndCompressImageToHtml($file);
         }
 
         // Update data profil di database
@@ -286,5 +286,70 @@ class UserController extends Controller
         return redirect()
             ->route('dashboard')
             ->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Resizes and compresses an uploaded image file to a small base64 string
+     *
+     * @param \Illuminate\Http\UploadedFile $file
+     * @param int $maxWidth
+     * @param int $maxHeight
+     * @param int $quality
+     * @return string
+     */
+    private function resizeAndCompressImageToHtml($file, $maxWidth = 150, $maxHeight = 150, $quality = 75)
+    {
+        $imagePath = $file->getRealPath();
+        $mime = $file->getMimeType();
+
+        try {
+            $data = file_get_contents($imagePath);
+
+            // Check if GD library is available
+            if (!function_exists('imagecreatefromstring')) {
+                return 'data:' . $mime . ';base64,' . base64_encode($data);
+            }
+
+            $srcImage = @imagecreatefromstring($data);
+
+            if (!$srcImage) {
+                return 'data:' . $mime . ';base64,' . base64_encode($data);
+            }
+
+            $width = imagesx($srcImage);
+            $height = imagesy($srcImage);
+            $ratio = $width / $height;
+
+            if ($width > $maxWidth || $height > $maxHeight) {
+                if ($maxWidth / $maxHeight > $ratio) {
+                    $newHeight = $maxHeight;
+                    $newWidth = $maxHeight * $ratio;
+                } else {
+                    $newWidth = $maxWidth;
+                    $newHeight = $maxWidth / $ratio;
+                }
+            } else {
+                $newWidth = $width;
+                $newHeight = $height;
+            }
+
+            $dstImage = imagecreatetruecolor($newWidth, $newHeight);
+            
+            $white = imagecolorallocate($dstImage, 255, 255, 255);
+            imagefilledrectangle($dstImage, 0, 0, $newWidth, $newHeight, $white);
+
+            imagecopyresampled($dstImage, $srcImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+            ob_start();
+            imagejpeg($dstImage, null, $quality);
+            $imageData = ob_get_clean();
+
+            imagedestroy($srcImage);
+            imagedestroy($dstImage);
+
+            return 'data:image/jpeg;base64,' . base64_encode($imageData);
+        } catch (\Throwable $e) {
+            return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($imagePath));
+        }
     }
 }
