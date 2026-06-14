@@ -32,8 +32,8 @@ class UserController extends Controller
         // Tampilkan semua user manajemen (Admin, Staff, dan Peran Kustom lainnya) kecuali Pelanggan Toko
         $users = User::where(function ($query) {
             $query->whereNull('store_role')
-                  ->where('role', '!=', 'customer')
-                  ->where('role', '!=', 'pelanggan');
+                ->where('role', '!=', 'customer')
+                ->where('role', '!=', 'pelanggan');
         })->get();
 
         return view('backend.users.index', compact('users'));
