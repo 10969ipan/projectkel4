@@ -268,7 +268,7 @@
                             </div>
                             @if(auth()->user()->profile_photo)
                                 <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
-                                    src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                    src="{{ (str_starts_with(auth()->user()->profile_photo, 'data:image/') || str_starts_with(auth()->user()->profile_photo, 'http://') || str_starts_with(auth()->user()->profile_photo, 'https://')) ? auth()->user()->profile_photo : asset('storage/' . auth()->user()->profile_photo) }}"
                                     alt="{{ auth()->user()->name }}"
                                     onerror="this.style.display='none'"
                                     loading="lazy">
@@ -416,7 +416,7 @@
                                 </div>
                                 @if(auth()->user()->profile_photo)
                                     <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
-                                        src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                        src="{{ (str_starts_with(auth()->user()->profile_photo, 'data:image/') || str_starts_with(auth()->user()->profile_photo, 'http://') || str_starts_with(auth()->user()->profile_photo, 'https://')) ? auth()->user()->profile_photo : asset('storage/' . auth()->user()->profile_photo) }}"
                                         alt="{{ auth()->user()->name }}"
                                         onerror="this.style.display='none'"
                                         loading="lazy">
@@ -598,7 +598,7 @@
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                 @if(auth()->user()->profile_photo)
                                     <img class="absolute inset-0 h-full w-full object-cover"
-                                        src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                        src="{{ (str_starts_with(auth()->user()->profile_photo, 'data:image/') || str_starts_with(auth()->user()->profile_photo, 'http://') || str_starts_with(auth()->user()->profile_photo, 'https://')) ? auth()->user()->profile_photo : asset('storage/' . auth()->user()->profile_photo) }}"
                                         alt="{{ auth()->user()->name }}"
                                         onerror="this.style.display='none'"
                                         loading="lazy">

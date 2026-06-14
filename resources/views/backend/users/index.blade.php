@@ -37,7 +37,7 @@
                                     </div>
                                     @if($user->profile_photo)
                                         <img class="absolute inset-0 h-10 w-10 rounded-full object-cover border border-white" 
-                                            src="{{ asset('storage/' . $user->profile_photo) }}" 
+                                            src="{{ (str_starts_with($user->profile_photo, 'data:image/') || str_starts_with($user->profile_photo, 'http://') || str_starts_with($user->profile_photo, 'https://')) ? $user->profile_photo : asset('storage/' . $user->profile_photo) }}" 
                                             alt="{{ $user->name }}"
                                             onerror="this.style.display='none'"
                                             loading="lazy">

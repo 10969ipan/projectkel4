@@ -76,7 +76,7 @@
                                 <span class="sr-only">Open user menu</span>
                                 {{-- FOTO PROFIL --}}
                                 @if(auth()->user()->profile_photo)
-                                    <img class="h-8 w-8 rounded-full object-cover" src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="{{ auth()->user()->name }}">
+                                    <img class="h-8 w-8 rounded-full object-cover" src="{{ (str_starts_with(auth()->user()->profile_photo, 'data:image/') || str_starts_with(auth()->user()->profile_photo, 'http://') || str_starts_with(auth()->user()->profile_photo, 'https://')) ? auth()->user()->profile_photo : asset('storage/' . auth()->user()->profile_photo) }}" alt="{{ auth()->user()->name }}">
                                 @else
                                     <div class="h-8 w-8 rounded-full bg-blue-300 flex items-center justify-center text-blue-800 font-bold">
                                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -168,7 +168,7 @@
                         {{-- LINK PROFILE MOBILE (Bisa diklik) --}}
                         <a href="{{ route('profile') }}">
                             @if(auth()->user()->profile_photo)
-                                <img class="h-10 w-10 rounded-full object-cover border-2 border-white" src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="{{ auth()->user()->name }}">
+                                <img class="h-10 w-10 rounded-full object-cover border-2 border-white" src="{{ (str_starts_with(auth()->user()->profile_photo, 'data:image/') || str_starts_with(auth()->user()->profile_photo, 'http://') || str_starts_with(auth()->user()->profile_photo, 'https://')) ? auth()->user()->profile_photo : asset('storage/' . auth()->user()->profile_photo) }}" alt="{{ auth()->user()->name }}">
                             @else
                                 <div class="h-10 w-10 rounded-full bg-blue-300 flex items-center justify-center text-blue-800 font-bold border-2 border-white">
                                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}

@@ -86,14 +86,9 @@ class UserController extends Controller
             'menu_permissions' => $request->menu_permissions ?? [],
         ];
 
-        // PROSES UPLOAD FOTO PROFIL (jika ada)
         if ($request->hasFile('profile_photo')) {
-            // Simpan foto ke storage/app/public/profile-photos
-            // Laravel akan generate nama file unik otomatis
-            $path = $request->file('profile_photo')->store('profile-photos', 'public');
-
-            // Simpan path foto ke database
-            $data['profile_photo'] = $path;
+            $file = $request->file('profile_photo');
+            $data['profile_photo'] = 'data:' . $file->getMimeType() . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
         }
 
         // Simpan user baru ke database
@@ -169,17 +164,12 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-        // PROSES UPDATE FOTO PROFIL (jika ada file baru)
         if ($request->hasFile('profile_photo')) {
-
-            // LANGKAH 1: Hapus foto lama dari storage (jika ada)
-            if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
+            if ($user->profile_photo && !str_starts_with($user->profile_photo, 'data:image/') && Storage::disk('public')->exists($user->profile_photo)) {
                 Storage::disk('public')->delete($user->profile_photo);
             }
-
-            // LANGKAH 2: Upload foto baru
-            $path = $request->file('profile_photo')->store('profile-photos', 'public');
-            $data['profile_photo'] = $path;
+            $file = $request->file('profile_photo');
+            $data['profile_photo'] = 'data:' . $file->getMimeType() . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
         }
 
         // Update data user di database
@@ -280,17 +270,12 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-        // PROSES UPDATE FOTO PROFIL (jika ada file baru)
         if ($request->hasFile('profile_photo')) {
-
-            // Hapus foto lama dari storage (jika ada)
-            if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
+            if ($user->profile_photo && !str_starts_with($user->profile_photo, 'data:image/') && Storage::disk('public')->exists($user->profile_photo)) {
                 Storage::disk('public')->delete($user->profile_photo);
             }
-
-            // Upload foto baru
-            $path = $request->file('profile_photo')->store('profile-photos', 'public');
-            $data['profile_photo'] = $path;
+            $file = $request->file('profile_photo');
+            $data['profile_photo'] = 'data:' . $file->getMimeType() . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
         }
 
         // Update data profil di database
