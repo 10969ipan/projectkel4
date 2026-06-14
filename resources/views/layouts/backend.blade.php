@@ -269,7 +269,15 @@
                         </div>
                         <div class="ml-3 overflow-hidden">
                             <p class="text-sm font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                            <p class="text-[10px] font-bold text-primary-500 uppercase tracking-tighter">{{ auth()->user()->role === 'admin' ? 'Administrator' : 'Staf Farmasi' }}</p>
+                            <p class="text-[10px] font-bold text-primary-500 uppercase tracking-tighter">
+                                @if (auth()->user()->role === 'admin')
+                                    Administrator
+                                @elseif (auth()->user()->role === 'owner')
+                                    Owner
+                                @else
+                                    {{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}
+                                @endif
+                            </p>
                         </div>
                     </div>
 
@@ -409,7 +417,15 @@
                             </div>
                             <div class="ml-3 overflow-hidden">
                                 <p class="text-sm font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                                <p class="text-[10px] font-bold text-primary-500 uppercase tracking-tighter">{{ auth()->user()->role === 'admin' ? 'Administrator' : 'Staf Farmasi' }}</p>
+                                <p class="text-[10px] font-bold text-primary-500 uppercase tracking-tighter">
+                                    @if (auth()->user()->role === 'admin')
+                                        Administrator
+                                    @elseif (auth()->user()->role === 'owner')
+                                        Owner
+                                    @else
+                                        {{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}
+                                    @endif
+                                </p>
                             </div>
                         </div>
 
