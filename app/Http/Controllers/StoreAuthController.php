@@ -17,7 +17,7 @@ class StoreAuthController extends Controller
         if (Auth::check()) {
             $user = Auth::user();
             // Jika Admin/Staff nyasar ke sini, biarkan mereka tetap di Store atau arahkan ke Beranda Store
-            if ($user->role === 'admin' || $user->role === 'staff') {
+            if ($user->isInternal()) {
                 return redirect()->route('store.index');
             }
             return redirect()->route('store.index');
@@ -39,7 +39,7 @@ class StoreAuthController extends Controller
 
             // 2. Cek Role: Admin dan Staff tidak dikenal di sistem Store
             // Tampilkan pesan yang sama dengan login gagal (akun tidak dikenal)
-            if ($user->role === 'admin' || $user->role === 'staff') {
+            if ($user->isInternal()) {
                 return back()->withErrors([
                     'email' => 'Email atau password yang Anda masukkan salah.',
                 ])->withInput($request->only('email'));
@@ -106,7 +106,7 @@ class StoreAuthController extends Controller
         $request->session()->regenerateToken();
 
         // Jika yang logout adalah Admin/Staff (walau dari sisi Toko), arahkan ke login Admin
-        if ($user && ($user->role === 'admin' || $user->role === 'staff')) {
+        if ($user && $user->isInternal()) {
             return redirect()->route('login')->with('success', 'Anda berhasil keluar dari sistem.');
         }
 
@@ -169,7 +169,7 @@ class StoreAuthController extends Controller
         }
 
         // ROLE CHECK: Admin dan Staff tidak dikenal di sistem Store via Google
-        if ($user->role === 'admin' || $user->role === 'staff') {
+        if ($user->isInternal()) {
             return redirect()->route('store.login')
                 ->with('error', 'Email atau password yang Anda masukkan salah.');
         }

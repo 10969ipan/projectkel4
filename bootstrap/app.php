@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff' => \App\Http\Middleware\StaffMiddleware::class,
             'backoffice' => \App\Http\Middleware\BackOfficeMiddleware::class,
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
+            'menu_permission' => \App\Http\Middleware\CheckMenuPermission::class,
         ]);
 
         // AuthenticateSession dinonaktifkan sementara karena menyebabkan 

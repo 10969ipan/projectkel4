@@ -95,6 +95,7 @@ Route::middleware(['auth', 'customer'])->group(function () {
     // Wallet & Subscriptions
     Route::get('/account/wallet', [AccountController::class, 'showWallet'])->name('account.wallet');
     Route::post('/account/wallet/topup', [AccountController::class, 'topUp'])->name('account.wallet.topup');
+    Route::post('/account/subscriptions/{id}/cancel', [AccountController::class, 'cancelSubscription'])->name('account.subscriptions.cancel');
 
     // Order Payment & Cancellation
     Route::get('/account/orders/{id}/pay', [AccountController::class, 'showPayment'])->name('account.orders.pay');

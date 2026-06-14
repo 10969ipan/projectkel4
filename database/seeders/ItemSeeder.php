@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Item;
-use App\Models\ItemSize;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +11,6 @@ class ItemSeeder extends Seeder
     public function run(): void
     {
         // Hapus data lama untuk menghindari duplikasi saat seeding ulang
-        DB::table('item_sizes')->delete();
         DB::table('items')->delete();
 
         $itemsData = [

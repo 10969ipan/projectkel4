@@ -3,15 +3,20 @@
 @section('title', 'Tambah Transaksi Baru')
 
 @section('header')
-    <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Tambah Transaksi Baru</h1>
-        <div>
-            <a href="{{ route('transactions.index') }}"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                <i class="fas fa-arrow-left mr-2"></i> Kembali
-            </a>
-        </div>
+    <div>
+        <nav class="flex mb-1" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1">
+                <li><a href="{{ route('transactions.index') }}" class="text-xs text-blue-500 hover:text-blue-700 font-medium">Mutasi Stok</a></li>
+                <li><span class="text-gray-300 mx-1.5 text-xs">/</span></li>
+                <li><span class="text-xs text-gray-400">Tambah Transaksi</span></li>
+            </ol>
+        </nav>
+        <h1 class="text-xl font-bold text-gray-800 tracking-tight">Tambah Transaksi Baru</h1>
+        <p class="text-xs text-gray-400 mt-0.5">Catat mutasi masuk atau keluar stok obat secara manual</p>
     </div>
+    <a href="{{ route('transactions.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 py-1.5 px-3 rounded-lg transition">
+        <i class="fas fa-arrow-left text-[10px]"></i> Kembali
+    </a>
 @endsection
 
 @section('content')

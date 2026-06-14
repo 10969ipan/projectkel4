@@ -35,9 +35,9 @@ class AuthController extends Controller
         if (Auth::validate($credentials)) {
             $user = \App\Models\User::where('email', $credentials['email'])->first();
 
-            // 2. Cek Role: Customer tidak dikenal di sistem Dashboard Admin
+            // 2. Cek Role: Pelanggan tidak diizinkan masuk ke Dashboard Admin
             // Tampilkan pesan yang sama dengan login gagal (akun tidak dikenal)
-            if ($user->role !== 'admin' && $user->role !== 'staff') {
+            if (!$user->isInternal()) {
                 return back()->withErrors([
                     'email' => 'Email atau password yang Anda masukkan salah.',
                 ])->withInput($request->only('email'));

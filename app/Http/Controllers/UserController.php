@@ -29,9 +29,12 @@ class UserController extends Controller
      */
     public function index(): View
     {
-        // Tampilkan semua Admin dan Staff (Akses Penuh)
-        // Kita gunakan whereIn untuk memastikan semua level manajemen terlihat
-        $users = User::whereIn('role', ['admin', 'staff'])->get();
+        // Tampilkan semua user manajemen (Admin, Staff, dan Peran Kustom lainnya) kecuali Pelanggan Toko
+        $users = User::where(function ($query) {
+            $query->whereNull('store_role')
+                  ->where('role', '!=', 'customer')
+                  ->where('role', '!=', 'pelanggan');
+        })->get();
 
         return view('backend.users.index', compact('users'));
     }
@@ -67,6 +70,9 @@ class UserController extends Controller
             'name' => 'required|string|max:255',                                    // Nama wajib diisi
             'email' => 'required|email|unique:users',                               // Email wajib, format email, dan harus unik
             'password' => 'required|string|min:8',                                  // Password minimal 8 karakter
+            'role' => 'required|string|max:50',                             // Peran user: admin, staff, atau kustom lainnya
+            'menu_permissions' => 'nullable|array',                                 // Izin navigasi
+            'menu_permissions.*' => 'string',
             'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',   // Foto opsional, max 2MB
         ]);
 
@@ -75,11 +81,9 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             // KEAMANAN: Hash password menggunakan bcrypt sebelum disimpan
-            // Password tidak pernah disimpan dalam bentuk plain text
             'password' => Hash::make($request->password),
-            // ROLE: Semua user baru dibuat sebagai 'staff' secara default
-            // Admin hanya bisa dibuat melalui seeder atau database langsung
-            'role' => 'staff',
+            'role' => $request->role,
+            'menu_permissions' => $request->menu_permissions ?? [],
         ];
 
         // PROSES UPLOAD FOTO PROFIL (jika ada)
@@ -130,15 +134,23 @@ class UserController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         // VALIDASI INPUT
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             // Email harus unik, tapi abaikan email user ini sendiri
-            // Ini memungkinkan user tetap menggunakan email yang sama
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             // Password opsional (nullable) - hanya diupdate jika diisi
             'password' => 'nullable|string|min:8',
             'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        ];
+
+        // Hanya validasi role dan permissions jika tidak sedang mengedit diri sendiri
+        if (auth()->id() !== $user->id) {
+            $rules['role'] = 'required|string|max:50';
+            $rules['menu_permissions'] = 'nullable|array';
+            $rules['menu_permissions.*'] = 'string';
+        }
+
+        $request->validate($rules);
 
         // Siapkan data yang akan diupdate
         $data = [
@@ -146,8 +158,13 @@ class UserController extends Controller
             'email' => $request->email,
         ];
 
+        // Hanya update role dan permissions jika tidak sedang mengedit diri sendiri (keamanan lockout)
+        if (auth()->id() !== $user->id) {
+            $data['role'] = $request->role;
+            $data['menu_permissions'] = $request->menu_permissions ?? [];
+        }
+
         // UPDATE PASSWORD (hanya jika diisi)
-        // Jika field password kosong, password lama tetap digunakan
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
@@ -156,7 +173,6 @@ class UserController extends Controller
         if ($request->hasFile('profile_photo')) {
 
             // LANGKAH 1: Hapus foto lama dari storage (jika ada)
-            // Ini penting untuk menghemat space storage
             if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
                 Storage::disk('public')->delete($user->profile_photo);
             }

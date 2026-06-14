@@ -439,13 +439,21 @@
                                         <span class="badge badge-delivered" style="background: #ecfdf5; color: #059669; padding: 4px 10px;">{{ strtoupper($sub->status) }}</span>
                                     </div>
                                 </div>
-                                <div class="sub-footer" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                                <div class="sub-footer" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                                     <div style="font-size: 0.85rem; color: #475569; line-height: 1.4;">
                                         <span style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 2px;"><i class="far fa-calendar-alt"></i> Pengiriman Berikutnya:</span>
                                         <strong>{{ \Carbon\Carbon::parse($sub->next_delivery_date)->format('d M Y') }}</strong>
                                     </div>
-                                    <div style="color: #059669; font-weight: 800; font-size: 0.9rem; text-align: right; background: #f0fdf4; padding: 6px 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                                        Hemat 10%
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="color: #059669; font-weight: 800; font-size: 0.9rem; text-align: right; background: #f0fdf4; padding: 6px 12px; border-radius: 8px; border: 1px solid #bbf7d0; flex-shrink: 0;">
+                                            Hemat 10%
+                                        </div>
+                                        <form action="{{ route('account.subscriptions.cancel', $sub->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan langganan obat ini?')">
+                                            @csrf
+                                            <button type="submit" style="background: #FFF5F5; color: #C92A2A; border: 1px solid #ffa8a8; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#ffe3e3'" onmouseout="this.style.background='#FFF5F5'">
+                                                Batalkan
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>

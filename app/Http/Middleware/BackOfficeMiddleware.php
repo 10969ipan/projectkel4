@@ -17,8 +17,8 @@ class BackOfficeMiddleware
     {
         if (auth()->check()) {
             $user = auth()->user();
-            // Only allow users with internal roles (admin or staff)
-            if ($user->role === 'admin' || $user->role === 'staff') {
+            // Allow all internal/management roles (Admin, Staff, Custom Roles)
+            if ($user->isInternal()) {
                 return $next($request);
             }
         }

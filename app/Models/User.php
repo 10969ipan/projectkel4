@@ -75,6 +75,7 @@ class User extends Authenticatable
         'store_role',
         'google_id',        // Google OAuth ID
         'avatar',           // URL foto profil dari Google
+        'menu_permissions', // Izin menu navigasi
     ];
 
     /**
@@ -100,12 +101,51 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',  // Cast ke Carbon datetime
             'password' => 'hashed',              // Auto-hash password saat set
+            'menu_permissions' => 'array',       // Cast JSON ke PHP array otomatis
         ];
     }
 
     // ========================================================================
-    // HELPER METHODS - Cek Role User
+    // HELPER METHODS - Cek Role & Izin User
     // ========================================================================
+
+    /**
+     * Cek apakah user memiliki izin untuk menu navigasi tertentu
+     *
+     * @param string $menu
+     * @return bool
+     */
+    public function hasPermissionToMenu(string $menu): bool
+    {
+        // Jika user secara eksplisit memiliki array izin, cek di dalamnya
+        if (!is_null($this->menu_permissions)) {
+            $permissions = is_array($this->menu_permissions)
+                ? $this->menu_permissions
+                : json_decode($this->menu_permissions, true);
+            return in_array($menu, $permissions ?: []);
+        }
+
+        // Default fallback (jika belum diatur di database/null):
+        // 1. Admin memiliki akses ke semua menu navigasi
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // 2. Staff memiliki akses default ke menu operasional tertentu
+        if ($this->isStaff()) {
+            $defaultStaffMenus = [
+                'dashboard',
+                'items',
+                'transactions',
+                'item_requests',
+                'store_transactions',
+                'store_logs'
+            ];
+            return in_array($menu, $defaultStaffMenus);
+        }
+
+        return false;
+    }
 
     /**
      * CEK APAKAH USER ADALAH ADMIN
@@ -141,6 +181,16 @@ class User extends Authenticatable
     public function isCustomer(): bool
     {
         return $this->store_role === 'customer';
+    }
+
+    /**
+     * CEK APAKAH USER ADALAH USER INTERNAL / MANAGEMENT
+     * 
+     * @return bool
+     */
+    public function isInternal(): bool
+    {
+        return $this->store_role !== 'customer' && $this->role !== 'customer' && $this->role !== 'pelanggan';
     }
 
     // ========================================================================

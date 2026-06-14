@@ -538,4 +538,20 @@ class AccountController extends Controller
             'already_reviewed' => $lastReview !== null,
         ]);
     }
+
+    /**
+     * Membatalkan langganan obat pelanggan
+     */
+    public function cancelSubscription($id)
+    {
+        $subscription = Subscription::where('user_id', Auth::id())
+            ->where('status', 'active')
+            ->findOrFail($id);
+
+        $subscription->update([
+            'status' => 'cancelled'
+        ]);
+
+        return back()->with('success', 'Langganan berhasil dibatalkan.');
+    }
 }

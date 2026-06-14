@@ -18,7 +18,7 @@ Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::cla
 // Home Redirection Logic
 Route::get('/', function () {
     if (auth()->check()) {
-        if (auth()->user()->role === 'admin' || auth()->user()->role === 'staff') {
+        if (auth()->user()->isInternal()) {
             return redirect()->route('dashboard');
         }
         return redirect()->route('store.index');

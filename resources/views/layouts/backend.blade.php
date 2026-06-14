@@ -274,68 +274,98 @@
                     </div>
 
                     <nav class="px-2 space-y-1">
-                        <a href="{{ route('dashboard') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('dashboard') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                            <i class="fas fa-chart-line mr-3"></i> Dashboard
-                        </a>
-                        <a href="{{ route('items.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('items.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                            <i class="fas fa-pills mr-3"></i> Obat
-                        </a>
-                        @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
+                        @if (auth()->user()->hasPermissionToMenu('dashboard'))
+                            <a href="{{ route('dashboard') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('dashboard') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-chart-line mr-3"></i> Dashboard
+                            </a>
+                        @endif
+
+                        @if (auth()->user()->hasPermissionToMenu('items'))
+                            <a href="{{ route('items.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('items.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-pills mr-3"></i> Obat
+                            </a>
+                        @endif
+
+                        @if (auth()->user()->hasPermissionToMenu('transactions'))
                             <a href="{{ route('transactions.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('transactions.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                 <i class="fas fa-exchange-alt mr-3"></i> Mutasi Stok
                             </a>
                         @endif
-                        <a href="{{ route('item-requests.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('item-requests.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                            <i class="fas fa-file-medical mr-3"></i> Permintaan Obat
-                        </a>
 
-                        @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
-                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaksi Toko</h3></div>
-                            <a href="{{ route('admin.pharmacare.transactions') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-shopping-cart mr-3"></i> Transaksi Toko
-                            </a>
-                            <a href="{{ route('admin.pharmacare.transaction-logs') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-history mr-3"></i> Log Transaksi
+                        @if (auth()->user()->hasPermissionToMenu('item_requests'))
+                            <a href="{{ route('item-requests.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('item-requests.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                <i class="fas fa-file-medical mr-3"></i> Permintaan Obat
                             </a>
                         @endif
 
-                        @if (auth()->user()->isAdmin())
-                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3></div>
-                            <a href="{{ route('admin.pharmacare.customers') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-users mr-3"></i> Manajemen Pelanggan
-                            </a>
+                        @if (auth()->user()->hasPermissionToMenu('store_transactions') || auth()->user()->hasPermissionToMenu('store_logs'))
+                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaksi Toko</h3></div>
+                            
+                            @if (auth()->user()->hasPermissionToMenu('store_transactions'))
+                                <a href="{{ route('admin.pharmacare.transactions') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-shopping-cart mr-3"></i> Transaksi Toko
+                                </a>
+                            @endif
 
-                            <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Data</h3></div>
-                            <a href="{{ route('users.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('users.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-users-cog mr-3"></i> User Staff
-                            </a>
-                            <a href="{{ route('categories.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('categories.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-tags mr-3"></i> Kategori
-                            </a>
-                            <a href="{{ route('units.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('units.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-balance-scale mr-3"></i> Satuan Ukur
-                            </a>
+                            @if (auth()->user()->hasPermissionToMenu('store_logs'))
+                                <a href="{{ route('admin.pharmacare.transaction-logs') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-history mr-3"></i> Log Transaksi
+                                </a>
+                            @endif
+                        @endif
 
-                            <div x-data="{ reportOpen: false }" class="space-y-1 mt-2">
-                                <button @click="reportOpen = !reportOpen" class="group w-full flex items-center px-4 py-3 text-sm font-bold text-gray-500 hover:text-primary-600 hover:bg-gray-50 rounded-xl transition-all">
-                                    <i class="fas fa-file-medical-alt mr-3 text-gray-400 group-hover:text-primary-600"></i>
-                                    <span class="flex-1 text-left uppercase text-[10px] tracking-widest font-black">Laporan Medik</span>
-                                    <svg :class="{ 'transform rotate-180': reportOpen }" class="ml-3 h-4 w-4 text-gray-400 group-hover:text-primary-600 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                                <div x-show="reportOpen" x-transition x-cloak class="pl-4 space-y-1">
-                                    <a href="{{ route('reports.stock') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
-                                        <i class="fas fa-boxes mr-3 text-[10px]"></i> Laporan Stok
+                        @if (auth()->user()->hasPermissionToMenu('store_customers') || auth()->user()->hasPermissionToMenu('users') || auth()->user()->hasPermissionToMenu('categories') || auth()->user()->hasPermissionToMenu('units') || auth()->user()->hasPermissionToMenu('reports'))
+                            @if (auth()->user()->hasPermissionToMenu('store_customers'))
+                                <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3></div>
+                                <a href="{{ route('admin.pharmacare.customers') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-users mr-3"></i> Manajemen Pelanggan
+                                </a>
+                            @endif
+
+                            @if (auth()->user()->hasPermissionToMenu('users') || auth()->user()->hasPermissionToMenu('categories') || auth()->user()->hasPermissionToMenu('units'))
+                                <div class="px-4 pt-6 pb-2"><h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Data</h3></div>
+                                
+                                @if (auth()->user()->hasPermissionToMenu('users'))
+                                    <a href="{{ route('users.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('users.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                        <i class="fas fa-users-cog mr-3"></i> User Staff
                                     </a>
-                                    <a href="{{ route('reports.transactions') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
-                                        <i class="fas fa-history mr-3 text-[10px]"></i> Riwayat Mutasi
+                                @endif
+
+                                @if (auth()->user()->hasPermissionToMenu('categories'))
+                                    <a href="{{ route('categories.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('categories.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                        <i class="fas fa-tags mr-3"></i> Kategori
                                     </a>
-                                    <a href="{{ route('reports.requests') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
-                                        <i class="fas fa-clipboard-check mr-3 text-[10px]"></i> Rekap Permintaan
+                                @endif
+
+                                @if (auth()->user()->hasPermissionToMenu('units'))
+                                    <a href="{{ route('units.index') }}" class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('units.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                        <i class="fas fa-balance-scale mr-3"></i> Satuan Ukur
                                     </a>
+                                @endif
+                            @endif
+
+                            @if (auth()->user()->hasPermissionToMenu('reports'))
+                                <div x-data="{ reportOpen: false }" class="space-y-1 mt-2">
+                                    <button @click="reportOpen = !reportOpen" class="group w-full flex items-center px-4 py-3 text-sm font-bold text-gray-500 hover:text-primary-600 hover:bg-gray-50 rounded-xl transition-all">
+                                        <i class="fas fa-file-medical-alt mr-3 text-gray-400 group-hover:text-primary-600"></i>
+                                        <span class="flex-1 text-left uppercase text-[10px] tracking-widest font-black">Laporan Medik</span>
+                                        <svg :class="{ 'transform rotate-180': reportOpen }" class="ml-3 h-4 w-4 text-gray-400 group-hover:text-primary-600 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    <div x-show="reportOpen" x-transition x-cloak class="pl-4 space-y-1">
+                                        <a href="{{ route('reports.stock') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                            <i class="fas fa-boxes mr-3 text-[10px]"></i> Laporan Stok
+                                        </a>
+                                        <a href="{{ route('reports.transactions') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                            <i class="fas fa-history mr-3 text-[10px]"></i> Riwayat Mutasi
+                                        </a>
+                                        <a href="{{ route('reports.requests') }}" class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                            <i class="fas fa-clipboard-check mr-3 text-[10px]"></i> Rekap Permintaan
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                         @endif
                     </nav>
                 </div>
@@ -384,106 +414,136 @@
                         </div>
 
                         <nav class="flex-1 px-3 space-y-1">
-                            <a href="{{ route('dashboard') }}"
-                                class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('dashboard') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-chart-line mr-3"></i>
-                                Dashboard
-                            </a>
-                            <a href="{{ route('items.index') }}"
-                                class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('items.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-pills mr-3"></i>
-                                Obat
-                            </a>
-                            @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
+                            @if (auth()->user()->hasPermissionToMenu('dashboard'))
+                                <a href="{{ route('dashboard') }}"
+                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('dashboard') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-chart-line mr-3"></i>
+                                    Dashboard
+                                </a>
+                            @endif
+
+                            @if (auth()->user()->hasPermissionToMenu('items'))
+                                <a href="{{ route('items.index') }}"
+                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('items.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-pills mr-3"></i>
+                                    Obat
+                                </a>
+                            @endif
+
+                            @if (auth()->user()->hasPermissionToMenu('transactions'))
                                 <a href="{{ route('transactions.index') }}"
                                     class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('transactions.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
                                     <i class="fas fa-exchange-alt mr-3"></i>
                                     Mutasi Stok
                                 </a>
                             @endif
-                            <a href="{{ route('item-requests.index') }}"
-                                class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('item-requests.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                <i class="fas fa-file-medical mr-3"></i>
-                                Permintaan Obat
-                            </a>
 
-                            {{-- Transaksi Toko & Log: Admin + Staff --}}
-                            @if (auth()->user()->isAdmin() || auth()->user()->isStaff())
-                                <div class="px-4 pt-6 pb-2">
-                                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaksi Toko</h3>
-                                </div>
-                                <a href="{{ route('admin.pharmacare.transactions') }}"
-                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-shopping-cart mr-3"></i>
-                                    Transaksi Toko
-                                </a>
-                                <a href="{{ route('admin.pharmacare.transaction-logs') }}"
-                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-history mr-3"></i>
-                                    Log Transaksi
+                            @if (auth()->user()->hasPermissionToMenu('item_requests'))
+                                <a href="{{ route('item-requests.index') }}"
+                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('item-requests.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                    <i class="fas fa-file-medical mr-3"></i>
+                                    Permintaan Obat
                                 </a>
                             @endif
 
-                            @if (auth()->user()->isAdmin())
+                            {{-- Transaksi Toko & Log: Admin + Staff --}}
+                            @if (auth()->user()->hasPermissionToMenu('store_transactions') || auth()->user()->hasPermissionToMenu('store_logs'))
                                 <div class="px-4 pt-6 pb-2">
-                                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3>
+                                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaksi Toko</h3>
                                 </div>
-                                <a href="{{ route('admin.pharmacare.customers') }}"
-                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-users mr-3"></i>
-                                    Manajemen Pelanggan
-                                </a>
+                                
+                                @if (auth()->user()->hasPermissionToMenu('store_transactions'))
+                                    <a href="{{ route('admin.pharmacare.transactions') }}"
+                                        class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transactions') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                        <i class="fas fa-shopping-cart mr-3"></i>
+                                        Transaksi Toko
+                                    </a>
+                                @endif
 
-                                <div class="px-4 pt-6 pb-2">
-                                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Data</h3>
-                                </div>
-                                <a href="{{ route('users.index') }}"
-                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('users.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-users-cog mr-3"></i>
-                                    User Staff
-                                </a>
-                                <a href="{{ route('categories.index') }}"
-                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('categories.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-tags mr-3"></i>
-                                    Kategori
-                                </a>
-                                <a href="{{ route('units.index') }}"
-                                    class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('units.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
-                                    <i class="fas fa-balance-scale mr-3"></i>
-                                    Satuan Ukur
-                                </a>
+                                @if (auth()->user()->hasPermissionToMenu('store_logs'))
+                                    <a href="{{ route('admin.pharmacare.transaction-logs') }}"
+                                        class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.transaction-logs') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                        <i class="fas fa-history mr-3"></i>
+                                        Log Transaksi
+                                    </a>
+                                @endif
+                            @endif
 
-                                <div x-data="{ open: false }" class="space-y-1">
-                                    <button @click="open = !open"
-                                        class="group w-full flex items-center px-4 py-3 text-sm font-bold text-gray-500 hover:text-primary-600 hover:bg-gray-50 rounded-xl transition-all">
-                                        <i class="fas fa-file-medical-alt mr-3 text-gray-400 group-hover:text-primary-600"></i>
-                                        <span class="flex-1 text-left uppercase text-[10px] tracking-widest font-black">Laporan Medik</span>
-                                        <svg :class="{ 'transform rotate-180': open }"
-                                            class="ml-3 h-4 w-4 text-gray-400 group-hover:text-primary-600 transition-transform duration-200"
-                                            viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd"
-                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                    <div x-show="open" x-transition x-cloak class="pl-4 space-y-1">
-                                        <a href="{{ route('reports.stock') }}"
-                                            class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
-                                            <i class="fas fa-boxes mr-3 text-[10px]"></i>
-                                            Laporan Stok
-                                        </a>
-                                        <a href="{{ route('reports.transactions') }}"
-                                            class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
-                                            <i class="fas fa-history mr-3 text-[10px]"></i>
-                                            Riwayat Mutasi
-                                        </a>
-                                        <a href="{{ route('reports.requests') }}"
-                                            class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
-                                            <i class="fas fa-clipboard-check mr-3 text-[10px]"></i>
-                                            Rekap Permintaan
-                                        </a>
+                            @if (auth()->user()->hasPermissionToMenu('store_customers') || auth()->user()->hasPermissionToMenu('users') || auth()->user()->hasPermissionToMenu('categories') || auth()->user()->hasPermissionToMenu('units') || auth()->user()->hasPermissionToMenu('reports'))
+                                @if (auth()->user()->hasPermissionToMenu('store_customers'))
+                                    <div class="px-4 pt-6 pb-2">
+                                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Administrator</h3>
                                     </div>
-                                </div>
+                                    <a href="{{ route('admin.pharmacare.customers') }}"
+                                        class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('admin.pharmacare.customers') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                        <i class="fas fa-users mr-3"></i>
+                                        Manajemen Pelanggan
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermissionToMenu('users') || auth()->user()->hasPermissionToMenu('categories') || auth()->user()->hasPermissionToMenu('units'))
+                                    <div class="px-4 pt-6 pb-2">
+                                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Data</h3>
+                                    </div>
+                                    
+                                    @if (auth()->user()->hasPermissionToMenu('users'))
+                                        <a href="{{ route('users.index') }}"
+                                            class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('users.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                            <i class="fas fa-users-cog mr-3"></i>
+                                            User Staff
+                                        </a>
+                                    @endif
+
+                                    @if (auth()->user()->hasPermissionToMenu('categories'))
+                                        <a href="{{ route('categories.index') }}"
+                                            class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('categories.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                            <i class="fas fa-tags mr-3"></i>
+                                            Kategori
+                                        </a>
+                                    @endif
+
+                                    @if (auth()->user()->hasPermissionToMenu('units'))
+                                        <a href="{{ route('units.index') }}"
+                                            class="sidebar-item group flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all {{ request()->routeIs('units.*') ? 'sidebar-item active' : 'text-gray-500 hover:bg-gray-50 hover:text-primary-600' }}">
+                                            <i class="fas fa-balance-scale mr-3"></i>
+                                            Satuan Ukur
+                                        </a>
+                                    @endif
+                                @endif
+
+                                @if (auth()->user()->hasPermissionToMenu('reports'))
+                                    <div x-data="{ open: false }" class="space-y-1">
+                                        <button @click="open = !open"
+                                            class="group w-full flex items-center px-4 py-3 text-sm font-bold text-gray-500 hover:text-primary-600 hover:bg-gray-50 rounded-xl transition-all">
+                                            <i class="fas fa-file-medical-alt mr-3 text-gray-400 group-hover:text-primary-600"></i>
+                                            <span class="flex-1 text-left uppercase text-[10px] tracking-widest font-black">Laporan Medik</span>
+                                            <svg :class="{ 'transform rotate-180': open }"
+                                                class="ml-3 h-4 w-4 text-gray-400 group-hover:text-primary-600 transition-transform duration-200"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                        <div x-show="open" x-transition x-cloak class="pl-4 space-y-1">
+                                            <a href="{{ route('reports.stock') }}"
+                                                class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                                <i class="fas fa-boxes mr-3 text-[10px]"></i>
+                                                Laporan Stok
+                                            </a>
+                                            <a href="{{ route('reports.transactions') }}"
+                                                class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                                <i class="fas fa-history mr-3 text-[10px]"></i>
+                                                Riwayat Mutasi
+                                            </a>
+                                            <a href="{{ route('reports.requests') }}"
+                                                class="group flex items-center px-4 py-2 text-xs font-bold text-gray-500 rounded-lg hover:text-primary-600 hover:bg-primary-50">
+                                                <i class="fas fa-clipboard-check mr-3 text-[10px]"></i>
+                                                Rekap Permintaan
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
                             @endif
                         </nav>
                     </div>

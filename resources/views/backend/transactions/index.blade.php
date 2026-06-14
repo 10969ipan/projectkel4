@@ -3,15 +3,21 @@
 @section('title', 'Riwayat Mutasi Stok')
 
 @section('header')
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Riwayat Mutasi Stok</h1>
-        <div class="mt-4 md:mt-0">
-            <a href="{{ route('transactions.create') }}"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                <i class="fas fa-plus mr-2"></i> Tambah Mutasi
-            </a>
-        </div>
+    <div>
+        <nav class="flex mb-1" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1">
+                <li><a href="{{ route('dashboard') }}" class="text-xs text-blue-500 hover:text-blue-700 font-medium">Dashboard</a></li>
+                <li><span class="text-gray-300 mx-1.5 text-xs">/</span></li>
+                <li><span class="text-xs text-gray-400">Mutasi Stok</span></li>
+            </ol>
+        </nav>
+        <h1 class="text-xl font-bold text-gray-800 tracking-tight">Riwayat Mutasi Stok</h1>
+        <p class="text-xs text-gray-400 mt-0.5">Pantau riwayat barang/obat masuk dan keluar apotek</p>
     </div>
+    <a href="{{ route('transactions.create') }}"
+        class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 py-1.5 px-3 rounded-lg shadow-sm transition">
+        <i class="fas fa-plus text-[10px]"></i> Tambah Mutasi
+    </a>
 @endsection
 
 @section('content')
