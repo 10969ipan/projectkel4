@@ -7,6 +7,7 @@ use App\Models\StoreOrder;
 use App\Models\User;
 use App\Models\TelemedicineChat;
 use Illuminate\Support\Facades\Hash;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PharmacareAdminController extends Controller
 {
@@ -51,6 +52,28 @@ class PharmacareAdminController extends Controller
         $orders = $query->latest()->paginate(20);
             
         return view('backend.pharmacare.transaction_logs', compact('orders'));
+    }
+
+    public function downloadTransactionLogs(Request $request)
+    {
+        $query = StoreOrder::with(['user', 'address', 'items.item'])
+            ->whereIn('order_status', ['completed', 'cancelled']);
+
+        if ($request->filled('date_start')) {
+            $query->whereDate('created_at', '>=', $request->date_start);
+        }
+        if ($request->filled('date_end')) {
+            $query->whereDate('created_at', '<=', $request->date_end);
+        }
+        if ($request->filled('status')) {
+            $query->where('order_status', $request->status);
+        }
+
+        $orders = $query->latest()->get();
+
+        $pdf = Pdf::loadView('backend.pharmacare.pdf.transaction_logs', compact('orders'));
+
+        return $pdf->download('store-transaction-logs.pdf');
     }
     
     public function updateTransaction(Request $request, $id)

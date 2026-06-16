@@ -31,6 +31,7 @@ Route::middleware(['auth', 'backoffice', 'menu_permission'])->group(function () 
     // PHARMACARE STORE ROUTES
     Route::get('/pharmacare/transactions', [PharmacareAdminController::class, 'transactions'])->name('admin.pharmacare.transactions');
     Route::get('/pharmacare/transaction-logs', [PharmacareAdminController::class, 'transactionLogs'])->name('admin.pharmacare.transaction-logs');
+    Route::get('/pharmacare/transaction-logs/download', [PharmacareAdminController::class, 'downloadTransactionLogs'])->name('admin.pharmacare.transaction-logs.download');
     Route::put('/pharmacare/transactions/{id}', [PharmacareAdminController::class, 'updateTransaction'])->name('admin.pharmacare.transactions.update');
 
     // Dynamic Permission Controlled Routes (Formerly static admin-only)

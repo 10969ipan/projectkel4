@@ -26,7 +26,7 @@ class CheckMenuPermission
             'admin.pharmacare.transactions', 'admin.pharmacare.transactions.update'
         ],
         'store_logs' => [
-            'admin.pharmacare.transaction-logs'
+            'admin.pharmacare.transaction-logs', 'admin.pharmacare.transaction-logs.download'
         ],
         'store_customers' => [
             'admin.pharmacare.customers', 'admin.pharmacare.customers.update', 'admin.pharmacare.paylater', 'admin.pharmacare.approve', 'admin.pharmacare.invoice', 'admin.pharmacare.index'

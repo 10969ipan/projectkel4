@@ -33,6 +33,9 @@
             <button type="submit" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700 transition">
                 Filter
             </button>
+            <a href="{{ route('admin.pharmacare.transaction-logs.download') }}?{{ http_build_query(request()->query()) }}" class="bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-red-700 transition inline-flex items-center gap-1">
+                <i class="fas fa-file-pdf"></i> Unduh PDF
+            </a>
             @if(request()->anyFilled(['date_start', 'date_end', 'status']))
                 <a href="{{ route('admin.pharmacare.transaction-logs') }}" class="text-gray-400 hover:text-gray-600 text-xs font-medium underline px-1">
                     Reset
