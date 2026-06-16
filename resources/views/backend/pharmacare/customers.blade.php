@@ -54,6 +54,17 @@
         </div>
     @endif
 
+    @if ($errors->any())
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-5 shadow-sm rounded-r-lg" role="alert">
+            <p class="font-bold text-sm">Gagal memperbarui data:</p>
+            <ul class="list-disc list-inside text-xs mt-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- Table --}}
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <table class="w-full divide-y divide-gray-200 table-fixed">
@@ -120,7 +131,7 @@
                                 <i class="fas fa-shopping-bag mr-1"></i> {{ $customer->storeOrders->count() }}
                             </button>
                             <button type="button"
-                                onclick="openEditModal({{ $customer->id }}, '{{ addslashes($customer->name) }}', '{{ addslashes($customer->email) }}', '{{ addslashes($customer->phone ?? '') }}', '{{ $primaryAddress ? addslashes($primaryAddress->full_address) : '' }}', {{ $customer->wallet_balance }}, {{ $customer->paylater_limit }}, {{ $customer->is_prescription_approved ? 1 : 0 }})"
+                                onclick="openEditModal({{ $customer->id }})"
                                 class="inline-flex items-center px-2 py-1 bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold rounded-md shadow-sm transition-all">
                                 <i class="fas fa-edit mr-1"></i> Edit
                             </button>
@@ -279,16 +290,39 @@
         }
     });
 
+    // ============ CUSTOMER DATA MAP ============
+    const customerDataMap = {
+        @foreach($customers as $customer)
+        @php
+            $primaryAddress = $customer->addresses->where('is_primary', true)->first();
+            $customerData = [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'email' => $customer->email,
+                'phone' => $customer->phone ?? '',
+                'address' => $primaryAddress ? $primaryAddress->full_address : '',
+                'wallet_balance' => (float) $customer->wallet_balance,
+                'paylater_limit' => (float) $customer->paylater_limit,
+                'is_prescription_approved' => $customer->is_prescription_approved ? 1 : 0,
+            ];
+        @endphp
+        {{ $customer->id }}: {!! json_encode($customerData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
+        @endforeach
+    };
+
     // ============ MODAL EDIT ============
-    function openEditModal(id, name, email, phone, address, wallet, paylater, isVerified) {
+    function openEditModal(id) {
+        const customer = customerDataMap[id];
+        if (!customer) return;
+
         document.getElementById('editForm').action = "{{ route('admin.pharmacare.customers.update', '') }}/" + id;
-        document.getElementById('edit_name').value = name;
-        document.getElementById('edit_email').value = email;
-        document.getElementById('edit_phone').value = phone;
-        document.getElementById('edit_address').value = address;
-        document.getElementById('edit_wallet_balance').value = wallet;
-        document.getElementById('edit_paylater_limit').value = paylater;
-        document.getElementById('edit_is_prescription_approved').checked = isVerified == 1;
+        document.getElementById('edit_name').value = customer.name;
+        document.getElementById('edit_email').value = customer.email;
+        document.getElementById('edit_phone').value = customer.phone;
+        document.getElementById('edit_address').value = customer.address;
+        document.getElementById('edit_wallet_balance').value = customer.wallet_balance;
+        document.getElementById('edit_paylater_limit').value = customer.paylater_limit;
+        document.getElementById('edit_is_prescription_approved').checked = customer.is_prescription_approved == 1;
         document.getElementById('edit_password').value = '';
         openModal('editModalOverlay');
     }
