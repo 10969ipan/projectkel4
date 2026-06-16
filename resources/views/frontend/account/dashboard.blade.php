@@ -220,7 +220,7 @@
         <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
     @endif
 </head>
-<body x-data="{ pageLoading: true }" x-init="window.onload = () => { setTimeout(() => { pageLoading = false }, 500) }">
+<body x-data="dashboardState">
 
 <div class="container">
     <div class="header">
@@ -395,6 +395,9 @@
                                             @method('DELETE')
                                             <button type="submit" style="background: #FFF5F5; color: #C92A2A; border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Batalkan</button>
                                         </form>
+                                    @endif
+                                    @if($order->order_status === 'completed' && !$order->review)
+                                        <button @click="openRatingModal({{ $order->id }})" style="background: #F59E0B; color: white; padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; border:none; cursor:pointer;">Ulas Pesanan</button>
                                     @endif
                                     <button onclick="openOrderDetail({{ $order->id }})" style="background: white; border: 1px solid #ddd; padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Lihat Detail</button>
                                 </div>
@@ -689,6 +692,7 @@
                 'city_id'         => $order->address->city_id ?? null,
                 'items'           => $mapItems,
                 'status'          => $order->order_status,
+                'already_reviewed'=> $order->review !== null,
             ];
         @endphp
         {{ $order->id }}: {!! json_encode($orderData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
@@ -718,6 +722,7 @@
                 'image'    => $oi->item->image_path ?? null,
             ])->toArray(),
             'status'          => $justPaidOrder->order_status,
+            'already_reviewed'=> $justPaidOrder->review !== null,
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
         @endif
     };
@@ -778,9 +783,12 @@
                     <div style="display:flex; justify-content:space-between; padding-top:14px; border-top:2px solid #e2e8f0; font-size:1.1rem; font-weight:800; color:var(--primary-blue);"><span>Total Bayar</span><span id="od-grand-total"></span></div>
                 </div>
 
-                <!-- Action Button: Invoice -->
-                <div style="margin-top: 20px;">
-                    <a id="od-invoice-btn" href="#" target="_blank" style="display: block; text-align: center; padding: 14px; background: #f1f5f9; color: #1e293b; border-radius: 12px; font-weight: 700; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                <!-- Action Buttons: Invoice & Rating -->
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button id="od-review-btn" onclick="triggerReviewFromModal()" style="display: none; flex: 1; text-align: center; padding: 14px; background: #F59E0B; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#F59E0B'">
+                        <i class="fas fa-star mr-1"></i> Ulas Pesanan
+                    </button>
+                    <a id="od-invoice-btn" href="#" target="_blank" style="display: block; text-align: center; flex: 1; padding: 14px; background: #f1f5f9; color: #1e293b; border-radius: 12px; font-weight: 700; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
                         <i class="fas fa-file-invoice mr-1"></i> Lihat & Cetak Invoice
                     </a>
                 </div>
@@ -1052,6 +1060,17 @@
             document.getElementById('od-subtotal').innerText = fmt(data.sub_total);
             document.getElementById('od-ship-cost').innerText = fmt(data.shipping_cost);
             document.getElementById('od-grand-total').innerText = fmt(data.grand_total);
+
+            // Review button visibility check
+            const reviewBtn = document.getElementById('od-review-btn');
+            if (reviewBtn) {
+                if (data.status === 'completed' && !data.already_reviewed) {
+                    reviewBtn.style.display = 'block';
+                    reviewBtn.setAttribute('onclick', `triggerReviewFromModal(${orderId})`);
+                } else {
+                    reviewBtn.style.display = 'none';
+                }
+            }
 
             document.getElementById('orderDetailModal').style.display = 'flex';
         }
@@ -1364,6 +1383,180 @@
                     }
                 });
             }
+        });
+    </script>
+    <!-- RATING MODAL (Adapted from layouts/frontend.blade.php) -->
+    <div id="ratingModal" 
+         x-show="showRatingModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.85); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px;">
+        <div @click.outside="showRatingModal = false" 
+             style="background: white; border-radius: 28px; width: 100%; max-width: 480px; padding: 35px 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.3); animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h3 style="font-size: 1.4rem; font-weight: 800; color: #1e293b; margin: 0;">Beri Ulasan Pesanan</h3>
+                <button @click="showRatingModal = false" style="border: none; background: #f1f5f9; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: #64748b; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: 0.2s;">✕</button>
+            </div>
+
+            <div x-show="ratingLoadingItems" style="text-align: center; padding: 30px 0;">
+                <div style="font-size: 1.2rem; color: #64748b; margin-bottom: 10px;"><i class="fas fa-spinner fa-spin"></i> Memuat info produk...</div>
+            </div>
+
+            <div x-show="!ratingLoadingItems">
+                <div style="margin-bottom: 25px; max-height: 150px; overflow-y: auto; background: #f8fafc; border-radius: 16px; padding: 15px;">
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Produk yang dibeli:</div>
+                    <template x-for="item in ratingOrderItems">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                            <div style="width: 30px; height: 30px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; border: 1px solid #eee;">
+                                <template x-if="item.image">
+                                    <img :src="'/' + item.image" style="width: 100%; height: 100%; object-fit: contain;">
+                                </template>
+                                <template x-if="!item.image">
+                                    <span style="font-size: 1rem;">💊</span>
+                                </template>
+                            </div>
+                            <span style="font-size: 0.85rem; color: #334155; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="item.name"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div style="font-size: 0.9rem; color: #64748b; margin-bottom: 12px; font-weight: 600;">Seberapa puas Anda dengan layanan kami?</div>
+                    <div style="display: flex; justify-content: center; gap: 8px;">
+                        <template x-for="star in [1,2,3,4,5]">
+                            <span @click="ratingValue = star" 
+                                  style="font-size: 2.2rem; cursor: pointer; transition: transform 0.2s;"
+                                  :style="star <= ratingValue ? 'color: #F59E0B; filter: drop-shadow(0 2px 4px rgba(245,158,11,0.2));' : 'color: #cbd5e1;'"
+                                  :class="star <= ratingValue ? 'fas fa-star' : 'far fa-star'"
+                                  @mouseover="$el.style.transform='scale(1.2)'"
+                                  @mouseout="$el.style.transform='scale(1)'"></span>
+                        </template>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 700; font-size: 0.85rem; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Ulasan Anda</label>
+                    <textarea x-model="ratingComment" class="form-control" rows="4" placeholder="Bagikan pengalaman belanja Anda..." style="resize: none; border-radius: 16px; border: 2px solid #e2e8f0; font-size: 0.95rem; padding: 12px 15px;"></textarea>
+                </div>
+
+                <button @click="submitRating()" style="width: 100%; padding: 15px; background: #0076D6; color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 20px rgba(0,118,214,0.2);" onmouseover="this.style.background='#005FA3'" onmouseout="this.style.background='#0076D6'">Kirim Ulasan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function triggerReviewFromModal(orderId) {
+            document.getElementById('orderDetailModal').style.display = 'none';
+            if (window.StoreUI) {
+                window.StoreUI.openRatingModal(orderId);
+            }
+        }
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('dashboardState', () => ({
+                pageLoading: true,
+                showRatingModal: false,
+                ratingOrderId: null,
+                ratingValue: 5,
+                ratingComment: '',
+                ratingOrderItems: [],
+                ratingLastDate: null,
+                ratingLoadingItems: false,
+
+                init() {
+                    window.onload = () => {
+                        setTimeout(() => {
+                            this.pageLoading = false;
+                        }, 500);
+                    };
+                    window.StoreUI = this;
+                },
+
+                async openRatingModal(orderId) {
+                    console.log('Alpine: Opening Rating Modal for Order', orderId);
+                    this.ratingOrderId = orderId;
+                    this.ratingValue = 5;
+                    this.ratingComment = '';
+                    this.ratingOrderItems = [];
+                    this.ratingLastDate = null;
+                    this.ratingLoadingItems = true;
+                    this.showRatingModal = true;
+
+                    try {
+                        const res = await fetch(`/account/orders/${orderId}/rating-info`, {
+                            credentials: 'same-origin',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        const data = await res.json();
+                        
+                        if (data.already_reviewed) {
+                            this.showRatingModal = false;
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'info', title: 'Info', text: 'Anda sudah memberikan rating untuk pesanan ini.' });
+                            } else {
+                                alert('Anda sudah memberikan rating untuk pesanan ini.');
+                            }
+                            return;
+                        }
+
+                        this.ratingOrderItems = data.items || [];
+                        this.ratingLastDate = data.last_rated_at || null;
+                    } catch(e) { console.error('Rating info error:', e); }
+                    this.ratingLoadingItems = false;
+                },
+
+                async submitRating() {
+                    if (!this.ratingOrderId) return;
+                    
+                    try {
+                        const csrf = document.querySelector('input[name="_token"]')?.value || '{{ csrf_token() }}';
+                        const res = await fetch('{{ route('reviews.store') }}', {
+                            method: 'POST',
+                            headers: { 
+                                'X-CSRF-TOKEN': csrf,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                store_order_id: this.ratingOrderId,
+                                rating: this.ratingValue,
+                                comment: this.ratingComment
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (data.success) {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 2000, showConfirmButton: false });
+                            } else {
+                                alert(data.message);
+                            }
+                            this.showRatingModal = false;
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
+                            } else {
+                                alert(data.message);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Rating error:', e);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal mengirim ulasan.' });
+                        } else {
+                            alert('Gagal mengirim ulasan.');
+                        }
+                    }
+                }
+            }));
         });
     </script>
 </body>

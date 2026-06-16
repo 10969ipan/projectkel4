@@ -31,7 +31,7 @@ class AccountController extends Controller
         $user = Auth::user();
         $orders = StoreOrder::where('user_id', $user->id)
             ->select('id', 'user_id', 'order_number', 'address_id', 'shipping_method', 'shipping_cost', 'sub_total', 'grand_total', 'order_status', 'payment_status', 'payment_method', 'created_at', 'updated_at', 'prescription_path')
-            ->with(['items.item:id,name,image_path', 'address:id,label,full_address'])
+            ->with(['items.item:id,name,image_path', 'address:id,label,full_address', 'review'])
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'orders_page');
 
@@ -40,7 +40,7 @@ class AccountController extends Controller
         if (request()->has('just_paid')) {
             $justPaidOrder = StoreOrder::where('user_id', $user->id)
                 ->where('id', request('just_paid'))
-                ->with(['address', 'items.item'])
+                ->with(['address', 'items.item', 'review'])
                 ->first();
         }
 

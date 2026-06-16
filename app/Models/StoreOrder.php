@@ -39,4 +39,9 @@ class StoreOrder extends Model
     {
         return $this->hasMany(StoreOrderItem::class);
     }
+
+    public function review()
+    {
+        return $this->hasOne(StoreReview::class, 'store_order_id');
+    }
 }
