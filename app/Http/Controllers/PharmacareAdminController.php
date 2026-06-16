@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\StoreOrder;
 use App\Models\User;
 use App\Models\TelemedicineChat;
+use Illuminate\Support\Facades\Hash;
 
 class PharmacareAdminController extends Controller
 {
