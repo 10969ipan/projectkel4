@@ -51,9 +51,9 @@ class ReportController extends Controller
         // Ambil semua barang dengan relasi
         $items = Item::with(['category', 'unit'])->get();
 
-        // Generate PDF dari view reports.pdf.stock
+        // Generate PDF dari view backend.reports.pdf.stock
         // Library yang digunakan: barryvdh/laravel-dompdf
-        $pdf = Pdf::loadView('reports.pdf.stock', compact('items'));
+        $pdf = Pdf::loadView('backend.reports.pdf.stock', compact('items'));
 
         // Download PDF dengan nama file 'stock-report.pdf'
         return $pdf->download('stock-report.pdf');
@@ -121,7 +121,7 @@ class ReportController extends Controller
             ->get();
 
         // Generate PDF
-        $pdf = Pdf::loadView('reports.pdf.transaction', compact('transactions'));
+        $pdf = Pdf::loadView('backend.reports.pdf.transaction', compact('transactions'));
 
         // Download PDF dengan nama file 'transaction-report.pdf'
         return $pdf->download('transaction-report.pdf');
@@ -195,7 +195,7 @@ class ReportController extends Controller
             ->get();
 
         // Generate PDF
-        $pdf = Pdf::loadView('reports.pdf.request', compact('requests'));
+        $pdf = Pdf::loadView('backend.reports.pdf.request', compact('requests'));
 
         // Download PDF dengan nama file 'request-report.pdf'
         return $pdf->download('request-report.pdf');
