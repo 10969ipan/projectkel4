@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (saved) {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed)) {
-                chatHistory = parsed.slice(-10);
+                chatHistory = parsed.slice(-8);
                 chatHistory.forEach((entry) => {
                     if (entry && entry.content && (entry.role === 'user' || entry.role === 'assistant')) {
                         appendBubble(entry.content, entry.role === 'user' ? 'user' : 'bot');
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function saveHistory() {
         try {
-            chatHistory = chatHistory.slice(-10);
+            chatHistory = chatHistory.slice(-8);
             sessionStorage.setItem(HISTORY_KEY, JSON.stringify(chatHistory));
         } catch (e) {
             // Ignore storage quota errors
@@ -84,12 +84,53 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/\n/g, '<br>');
     }
 
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    async function requestAiWithRetry(msg, historySnapshot) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+
+        if (csrfToken) {
+            headers['X-CSRF-TOKEN'] = csrfToken;
+        }
+
+        let lastData = null;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            if (attempt > 1) {
+                await sleep(900 * (attempt - 1));
+            }
+
+            const response = await fetch(aiReplyUrl, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    message: msg,
+                    history: historySnapshot
+                })
+            });
+
+            if (!response.ok) {
+                if (attempt < 3) continue;
+                throw new Error('Server returned error ' + response.status);
+            }
+
+            lastData = await response.json();
+            if (!lastData.retryable) {
+                return lastData;
+            }
+        }
+
+        return lastData;
+    }
+
     chatbotForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const msg = chatbotInput.value.trim();
         if (!msg) return;
 
-        const historySnapshot = chatHistory.slice(-8);
+        const historySnapshot = chatHistory.slice(-6);
 
         // Add user bubble
         appendBubble(msg, 'user');
@@ -106,37 +147,14 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollToBottom();
 
         try {
-            const headers = {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            };
-
-            if (csrfToken) {
-                headers['X-CSRF-TOKEN'] = csrfToken;
-            }
-
-            const response = await fetch(aiReplyUrl, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({
-                    message: msg,
-                    history: historySnapshot
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Server returned error ' + response.status);
-            }
-
-            const data = await response.json();
+            const data = await requestAiWithRetry(msg, historySnapshot);
 
             const typingIndicator = document.getElementById(typingId);
             if (typingIndicator) typingIndicator.remove();
 
             appendBubble(data.reply, 'bot');
 
-            // Simpan ke riwayat percakapan hanya jika balasan bukan pesan gangguan teknis
-            if (data.reply && !data.reply.startsWith('Maaf, layanan') && !data.reply.startsWith('Gagal terhubung')) {
+            if (data.reply && !data.retryable && !data.reply.startsWith('Maaf,') && !data.reply.startsWith('Gagal terhubung')) {
                 chatHistory.push({ role: 'user', content: msg });
                 chatHistory.push({ role: 'assistant', content: data.reply });
                 saveHistory();

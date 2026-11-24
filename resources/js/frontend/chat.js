@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/\n/g, '<br>');
     };
 
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const message = messageInput.value.trim();
@@ -46,22 +48,34 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollToBottom();
 
         try {
-            const response = await fetch(aiReplyUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                },
-                body: JSON.stringify({
-                    message: message,
-                    doctor_id: doctorId
-                })
-            });
+            let data = null;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                if (attempt > 1) {
+                    await sleep(900 * (attempt - 1));
+                }
 
-            const data = await response.json();
+                const response = await fetch(aiReplyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        doctor_id: doctorId
+                    })
+                });
 
-            // 3. Ganti loading bubble dengan jawaban AI
+                if (!response.ok) {
+                    if (attempt < 3) continue;
+                    throw new Error('Server error ' + response.status);
+                }
+
+                data = await response.json();
+                if (!data.retryable) break;
+            }
+
             loadingBubble.classList.remove('loading');
             loadingBubble.innerHTML = formatBotHtml(data.reply);
             scrollToBottom();

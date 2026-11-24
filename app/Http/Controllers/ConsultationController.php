@@ -150,30 +150,54 @@ class ConsultationController extends Controller
             'parts' => [['text' => $t['content']]],
         ], $normalizedTurns);
 
-        // Ambil katalog produk Pharmacare (prioritaskan kata kunci relevan + sisa katalog hingga 60 item lengkap dengan harga & stok)
+        // Ambil maksimal 12 produk paling relevan (dengan pemetaan sinonim keluhan) agar token kecil (<350 token) & bebas antrean 503
         try {
-            $keywords = collect(preg_split('/\s+/', mb_strtolower($userMessage)))
+            $msgLower = mb_strtolower($userMessage . ' ' . collect($normalizedTurns)->pluck('content')->join(' '));
+            $synonymMap = [
+                'perut'   => ['maag', 'lambung', 'kembung', 'diare', 'mencret', 'mual', 'angin', 'promag', 'antangin'],
+                'maag'    => ['lambung', 'perih', 'ulu', 'kembung', 'promag'],
+                'diare'   => ['mencret', 'bab', 'perut', 'oralit'],
+                'kepala'  => ['pusing', 'nyeri', 'migrain', 'paracetamol'],
+                'pusing'  => ['kepala', 'nyeri', 'angin', 'paracetamol'],
+                'demam'   => ['panas', 'menggigil', 'paracetamol', 'sanmol'],
+                'panas'   => ['demam', 'paracetamol', 'sanmol'],
+                'batuk'   => ['flu', 'pilek', 'dahak', 'tenggorokan'],
+                'flu'     => ['pilek', 'batuk', 'hidung', 'vitamin'],
+                'gatal'   => ['kulit', 'alergi', 'jamur', 'panu', 'kurap', 'salep'],
+                'luka'    => ['lecet', 'infeksi', 'antiseptik', 'betadine'],
+                'lemas'   => ['vitamin', 'daya tahan', 'imun'],
+            ];
+
+            $searchTerms = collect(preg_split('/\s+/', mb_strtolower($userMessage)))
                 ->map(fn ($w) => preg_replace('/[^\p{L}\p{N}]/u', '', $w))
                 ->filter(fn ($w) => mb_strlen($w) >= 3)
                 ->take(5)
-                ->values();
+                ->values()
+                ->all();
+
+            foreach ($synonymMap as $trigger => $extras) {
+                if (str_contains($msgLower, $trigger)) {
+                    $searchTerms = array_merge($searchTerms, $extras);
+                }
+            }
+            $searchTerms = array_slice(array_values(array_unique($searchTerms)), 0, 12);
 
             $selectCols = ['id', 'name', 'price', 'stock', 'description', 'requires_prescription'];
             $matchedItems = collect();
-            if ($keywords->isNotEmpty()) {
+            if (!empty($searchTerms)) {
                 $matchedItems = Item::query()
                     ->select($selectCols)
-                    ->where(function ($q) use ($keywords) {
-                        foreach ($keywords as $kw) {
+                    ->where(function ($q) use ($searchTerms) {
+                        foreach ($searchTerms as $kw) {
                             $q->orWhere('name', 'like', "%{$kw}%")
                               ->orWhere('description', 'like', "%{$kw}%");
                         }
                     })
-                    ->limit(20)
+                    ->limit(10)
                     ->get();
             }
 
-            $remaining = 60 - $matchedItems->count();
+            $remaining = 12 - $matchedItems->count();
             $generalItems = $remaining > 0
                 ? Item::query()
                     ->select($selectCols)
@@ -185,11 +209,11 @@ class ConsultationController extends Controller
             $items = $matchedItems->concat($generalItems)
                 ->map(function ($i) {
                     $cleanDesc = $i->description
-                        ? Str::limit(preg_replace('/\s+/', ' ', trim(strip_tags($i->description))), 85)
+                        ? Str::limit(preg_replace('/\s+/', ' ', trim(strip_tags($i->description))), 55)
                         : '';
                     $priceStr = $i->price ? 'Rp' . number_format((float) $i->price, 0, ',', '.') : '';
-                    $stockStr = ((int) ($i->stock ?? 0)) > 0 ? "Stok: {$i->stock}" : 'Stok habis';
-                    $meta = implode(', ', array_filter([$priceStr, $stockStr, $i->requires_prescription ? 'WAJIB RESEP DOKTER' : null]));
+                    $stockStr = ((int) ($i->stock ?? 0)) > 0 ? 'Tersedia' : 'Habis';
+                    $meta = implode(', ', array_filter([$priceStr, $stockStr, $i->requires_prescription ? 'Wajib Resep' : null]));
                     $line = "- {$i->name}" . ($meta ? " ({$meta})" : '') . ($cleanDesc ? ": {$cleanDesc}" : '');
                     return mb_convert_encoding($line, 'UTF-8', 'UTF-8');
                 })
@@ -200,25 +224,19 @@ class ConsultationController extends Controller
         }
 
         $greetingRule = $hasHistory
-            ? 'Ini adalah lanjutan obrolan yang sedang berjalan: JANGAN memperkenalkan diri lagi ("Halo saya SIMA...") dan jangan mengulang salam pembuka. Langsung tanggapi jawaban/cerita pasien secara nyambung dan hangat.'
-            : 'Jika ini pesan pertama pasien, sapa singkat dengan hangat dan ramah tanpa kalimat pembuka yang kaku seperti robot.';
+            ? 'Ini lanjutan obrolan: JANGAN sapa ulang atau perkenalkan diri lagi, langsung tanggapi cerita pasien secara hangat.'
+            : 'Sapa singkat dengan hangat dan akrab, tanpa kalimat pembuka kaku seperti CS robot.';
 
         $systemPrompt = <<<EOT
-Kamu adalah **SIMA**, apoteker virtual Pharmacare yang ramah, empatik, komunikatif, dan benar-benar peduli pada pasien—seperti apoteker manusia sungguhan yang sedang mengobrol langsung di apotek.
+Kamu **SIMA**, apoteker virtual Pharmacare yang hangat, empatik, dan akrab seperti apoteker manusia sungguhan.
+Aturan:
+- Gunakan Bahasa Indonesia santai-sopan yang natural. Hindari disclaimer kaku berulang.
+- {$greetingRule}
+- Jika keluhan masih umum (misal sakit perut/batuk/pusing/demam), beri empati singkat lalu TANYA BALIK 1-2 hal singkat untuk menggali gejala (contoh sakit perut: perih di ulu hati seperti maag, begah/kembung, atau melilit disertai diare? Sejak kapan?).
+- Sebutkan opsi obat relevan dari stok di bawah pakai **huruf tebal** & poin `-` singkat. Jika obat khusus belum ada di stok, sampaikan jujur & beri tips pertolongan pertama singkat. Ingatkan resep bila bertanda `Wajib Resep`, atau ke dokter bila gejala berat.
+- Paragraf pendek, maksimal 130 kata.
 
-Gaya komunikasi & interaksi WAJIB:
-1. **Manusiawi, Hangat, & Tidak Kaku:** Gunakan Bahasa Indonesia sehari-hari yang sopan, luwes, dan nyaman dibaca (panggil "Anda" atau "Kak" menyesuaikan gaya bicara pasien). Hindari kalimat birokratis/template robot seperti "Selamat datang di layanan konsultasi..." atau mengulang disclaimer hukum yang kaku di setiap pesan.
-2. **{$greetingRule}**
-3. **Konsultasi Dua Arah (Tanya Balik / Gali Gejala):** Jika keluhan pasien masih umum (misalnya "sakit perut", "batuk", "pusing", "demam"), tunjukkan empati singkat dulu, lalu **ajukan 1-2 pertanyaan singkat untuk memperjelas gejala** layaknya apoteker sungguhan!
-   - Contoh untuk sakit perut: tanyakan apakah rasanya *perih/panas di ulu hati atau mual* (arah maag/asam lambung), *begah/kembung*, atau *melilit disertai BAB cair/diare*, serta sudah berapa lama dirasakan.
-   - Sambil bertanya, kamu boleh memberikan gambaran singkat opsi obat awal yang relevan dari katalog Pharmacare sesuai jenis keluhannya (pakai poin `-` singkat agar enak dibaca), lalu ajak pasien menjawab gejala pastinya supaya rekomendasimu makin tepat.
-4. **Rekomendasi Jujur dari Katalog:** Prioritaskan obat yang tersedia di daftar produk Pharmacare di bawah (sebutkan nama produk pakai **huruf tebal** dan harganya bila relevan). Jika obat spesifik untuk keluhan tertentu belum tersedia di stok kami, sampaikan jujur dengan sopan dan tetap beri saran pertolongan pertama yang bermanfaat (misal minum air hangat, kompres, oralit/cairan, makan porsi kecil).
-5. **Keamanan Medis secara Natural:**
-   - Jika merekomendasikan obat bertanda `WAJIB RESEP DOKTER`, ingatkan dengan ramah bahwa obat tersebut memerlukan resep dokter.
-   - Jika ada tanda bahaya (nyeri perut hebat tak tertahankan, muntah terus-menerus/berdarah, BAB berdarah, demam tinggi >3 hari, sesak napas), sarankan dengan penuh perhatian untuk segera periksa ke dokter/IGD.
-6. **Ringkas & Enak Dibaca di Chat:** Buat paragraf pendek-pendek (maksimal 2-3 kalimat per paragraf) dan gunakan poin `-` bila merinci pilihan atau tips.
-
-Katalog produk Pharmacare saat ini:
+Stok Pharmacare:
 {$items}
 EOT;
 
@@ -394,18 +412,21 @@ EOT;
             }
         }
 
+        $retryable = false;
         if ($reply === null) {
             if ($lastStatus === 401) {
                 $reply = 'Maaf, kunci akses layanan AI tidak valid atau kedaluwarsa. Silakan periksa konfigurasi API Key.';
             } elseif ($lastStatus === null) {
+                $retryable = true;
                 $reply = 'Gagal terhubung dengan pusat AI. Silakan periksa koneksi internet Anda atau coba lagi nanti.';
             } else {
+                $retryable = true;
                 $reply = 'Maaf, layanan sedang sibuk. Silakan coba kembali dalam beberapa saat.';
             }
         }
 
-        // SIMPAN HISTORY (Hanya jika ada doctor_id dan user login)
-        if (Auth::check() && $request->filled('doctor_id')) {
+        // SIMPAN HISTORY (Hanya jika berhasil mendapat balasan valid, ada doctor_id, dan user login)
+        if (!$retryable && $lastStatus !== 401 && Auth::check() && $request->filled('doctor_id')) {
             try {
                 TelemedicineChat::create([
                     'user_id'        => Auth::id(),
@@ -424,6 +445,9 @@ EOT;
             }
         }
 
-        return response()->json(['reply' => $reply]);
+        return response()->json([
+            'reply' => $reply,
+            'retryable' => $retryable,
+        ]);
     }
 }
