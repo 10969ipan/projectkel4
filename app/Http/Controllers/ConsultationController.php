@@ -81,7 +81,15 @@ class ConsultationController extends Controller
         $groqKey = trim((string) config('services.groq.api_key'), " \t\n\r\0\x0B\"'");
         $geminiKey = trim((string) config('services.gemini.api_key'), " \t\n\r\0\x0B\"'");
 
-        if (!$groqKey && !$geminiKey) {
+        // Deteksi otomatis jika user menaruh key Gemini (AQ. / AIza) di variabel GROQ_API_KEY pada Vercel
+        if ($groqKey && (str_starts_with($groqKey, 'AQ.') || str_starts_with($groqKey, 'AIza'))) {
+            if (!$geminiKey) {
+                $geminiKey = $groqKey;
+            }
+            $groqKey = '';
+        }
+
+        if (!$geminiKey && !$groqKey) {
             return response()->json(['reply' => 'Maaf, layanan AI sedang tidak tersedia.']);
         }
 
@@ -126,8 +134,76 @@ EOT;
         $lastStatus = null;
         $startedAt = microtime(true);
 
-        // 1. Coba Groq API dengan User-Agent standar browser (mencegah Cloudflare 403 di Vercel) & fallback model aktif
-        if ($groqKey) {
+        // 1. Prioritaskan Google Gemini API apabila GEMINI_API_KEY tersedia
+        if ($geminiKey) {
+            $configuredGeminiModel = trim((string) config('services.gemini.model'), " \t\n\r\0\x0B\"'");
+            $geminiModels = array_values(array_unique(array_filter([
+                $configuredGeminiModel ?: 'gemini-3.5-flash-lite',
+                'gemini-3.5-flash-lite',
+                'gemini-3.8-flash',
+                'gemini-3.7-flash',
+            ])));
+
+            foreach ($geminiModels as $index => $geminiModel) {
+                if ($index > 0 && (microtime(true) - $startedAt) > 5.5) {
+                    break;
+                }
+
+                try {
+                    $geminiResponse = Http::withHeaders([
+                            'Accept' => 'application/json',
+                            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                        ])
+                        ->when(app()->isLocal(), fn ($http) => $http->withoutVerifying())
+                        ->connectTimeout(3)
+                        ->timeout(6)
+                        ->post(
+                            "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$geminiKey}",
+                            [
+                                'system_instruction' => [
+                                    'parts' => [['text' => $systemPrompt]],
+                                ],
+                                'contents' => [
+                                    ['role' => 'user', 'parts' => [['text' => $userMessage]]],
+                                ],
+                                'generationConfig' => [
+                                    'temperature' => 0.7,
+                                    'maxOutputTokens' => 1024,
+                                ],
+                            ]
+                        );
+
+                    $lastStatus = $geminiResponse->status();
+
+                    if ($geminiResponse->successful()) {
+                        $parts = $geminiResponse->json('candidates.0.content.parts') ?? [];
+                        $combined = '';
+                        foreach ($parts as $part) {
+                            if (!empty($part['thought'])) {
+                                continue;
+                            }
+                            $combined .= $part['text'] ?? '';
+                        }
+                        $combined = trim($combined);
+                        if ($combined !== '') {
+                            $reply = $combined;
+                            break;
+                        }
+                    } else {
+                        Log::error("Chatbot Gemini Error [{$geminiModel}] ({$lastStatus}): " . Str::limit($geminiResponse->body(), 500));
+
+                        if (in_array($lastStatus, [400, 401, 403], true) && str_contains($geminiResponse->body(), 'API_KEY_INVALID')) {
+                            break;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::error("Chatbot Gemini Exception [{$geminiModel}]: " . $e->getMessage());
+                }
+            }
+        }
+
+        // 2. Fallback ke Groq API apabila Gemini belum menghasilkan balasan dan GROQ_API_KEY tersedia
+        if ($reply === null && $groqKey && (microtime(true) - $startedAt) < 6.0) {
             $configuredModel = trim((string) config('services.groq.model'), " \t\n\r\0\x0B\"'");
             $models = array_values(array_unique(array_filter([
                 $configuredModel ?: 'openai/gpt-oss-120b',
@@ -137,8 +213,7 @@ EOT;
             ])));
 
             foreach ($models as $index => $model) {
-                // Jaga agar total durasi tetap di bawah batas 10 detik fungsi Vercel Hobby
-                if ($index > 0 && (microtime(true) - $startedAt) > 5.5) {
+                if ($index > 0 && (microtime(true) - $startedAt) > 6.5) {
                     break;
                 }
 
@@ -167,14 +242,13 @@ EOT;
                         ])
                         ->when(app()->isLocal(), fn ($http) => $http->withoutVerifying())
                         ->connectTimeout(3)
-                        ->timeout(7)
+                        ->timeout(6)
                         ->post('https://api.groq.com/openai/v1/chat/completions', $payload);
 
                     $lastStatus = $response->status();
 
                     if ($response->successful()) {
                         $content = (string) ($response->json('choices.0.message.content') ?? '');
-                        // Bersihkan blok <think>...</think> jika ada dari model reasoning
                         $content = trim(preg_replace('/<think>[\s\S]*?<\/think>/i', '', $content));
 
                         if ($content !== '') {
@@ -184,7 +258,6 @@ EOT;
                     } else {
                         Log::error("Chatbot Groq Error [{$model}] ({$lastStatus}): " . Str::limit($response->body(), 500));
 
-                        // Jika API Key tidak valid (401) atau diblokir (403), hentikan percobaan ulang ke Groq
                         if (in_array($lastStatus, [401, 403], true)) {
                             break;
                         }
@@ -193,52 +266,6 @@ EOT;
                     Log::error("Chatbot Groq Exception [{$model}]: " . $e->getMessage());
                     break;
                 }
-            }
-        }
-
-        // 2. Fallback ke Google Gemini API apabila tersedia dan Groq gagal
-        if ($reply === null && $geminiKey && (microtime(true) - $startedAt) < 6.5) {
-            $geminiModel = trim((string) config('services.gemini.model', 'gemini-2.5-flash'), " \t\n\r\0\x0B\"'");
-
-            try {
-                $geminiResponse = Http::withHeaders([
-                        'Accept' => 'application/json',
-                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                    ])
-                    ->when(app()->isLocal(), fn ($http) => $http->withoutVerifying())
-                    ->connectTimeout(3)
-                    ->timeout(7)
-                    ->post(
-                        "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$geminiKey}",
-                        [
-                            'system_instruction' => [
-                                'parts' => [['text' => $systemPrompt]],
-                            ],
-                            'contents' => [
-                                ['role' => 'user', 'parts' => [['text' => $userMessage]]],
-                            ],
-                            'generationConfig' => [
-                                'temperature' => 0.7,
-                                'maxOutputTokens' => 1024,
-                            ],
-                        ]
-                    );
-
-                if ($geminiResponse->successful()) {
-                    $parts = $geminiResponse->json('candidates.0.content.parts') ?? [];
-                    $combined = '';
-                    foreach ($parts as $part) {
-                        $combined .= $part['text'] ?? '';
-                    }
-                    $combined = trim($combined);
-                    if ($combined !== '') {
-                        $reply = $combined;
-                    }
-                } else {
-                    Log::error('Chatbot Gemini Error (' . $geminiResponse->status() . '): ' . Str::limit($geminiResponse->body(), 500));
-                }
-            } catch (\Throwable $e) {
-                Log::error('Chatbot Gemini Exception: ' . $e->getMessage());
             }
         }
 
