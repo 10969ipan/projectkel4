@@ -2,18 +2,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatArea = document.querySelector('.chat-area');
     const chatForm = document.getElementById('chatForm');
     const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
 
     if (!chatForm) return;
 
     const aiReplyUrl = chatForm.dataset.url;
     const doctorId = chatForm.dataset.doctorId;
 
-    // Auto-scroll to bottom
     const scrollToBottom = () => {
         chatArea.scrollTop = chatArea.scrollHeight;
     };
     scrollToBottom();
+
+    const formatBotHtml = (text) => {
+        return String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/^[•\-]\s+(.+)$/gm, '&bull; $1')
+            .replace(/\n/g, '<br>');
+    };
 
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -25,11 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
         patientBubble.className = 'bubble patient';
         patientBubble.textContent = message;
         chatArea.appendChild(patientBubble);
-        
+
         messageInput.value = '';
         scrollToBottom();
 
-        // 2. Tambah loading bubble (Dokter sedang mengetik)
+        // 2. Tambah loading bubble
         const loadingBubble = document.createElement('div');
         loadingBubble.className = 'bubble doctor loading';
         loadingBubble.innerHTML = '<em>SIMA sedang mengetik...</em>';
@@ -41,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
                 },
                 body: JSON.stringify({
@@ -53,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 3. Ganti loading bubble dengan jawaban AI
             loadingBubble.classList.remove('loading');
-            loadingBubble.innerHTML = data.reply.replace(/\n/g, '<br>');
+            loadingBubble.innerHTML = formatBotHtml(data.reply);
             scrollToBottom();
 
         } catch (error) {

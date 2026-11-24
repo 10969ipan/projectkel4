@@ -9,13 +9,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const aiReplyUrl = chatbotForm.dataset.url;
     const csrfToken = chatbotForm.dataset.csrf;
+    const HISTORY_KEY = 'pharmacare_sima_chat_history_v1';
+
+    let chatHistory = [];
+    try {
+        const saved = sessionStorage.getItem(HISTORY_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+                chatHistory = parsed.slice(-10);
+                chatHistory.forEach((entry) => {
+                    if (entry && entry.content && (entry.role === 'user' || entry.role === 'assistant')) {
+                        appendBubble(entry.content, entry.role === 'user' ? 'user' : 'bot');
+                    }
+                });
+            }
+        }
+    } catch (e) {
+        chatHistory = [];
+    }
+
+    function saveHistory() {
+        try {
+            chatHistory = chatHistory.slice(-10);
+            sessionStorage.setItem(HISTORY_KEY, JSON.stringify(chatHistory));
+        } catch (e) {
+            // Ignore storage quota errors
+        }
+    }
 
     window.toggleChat = function() {
         chatWindow.classList.toggle('open');
         if (chatWindow.classList.contains('open')) {
             chatbotInput.focus();
             scrollToBottom();
-            // Hide bubble when chat is opened
             if (greetingBubble) greetingBubble.style.display = 'none';
         }
     };
@@ -33,17 +60,36 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!chatWindow.classList.contains('open')) {
                 greetingBubble.style.display = 'block';
             }
-        }, 5000); // Show after 5 seconds
+        }, 5000);
     }
 
     function scrollToBottom() {
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
+    function formatChatMessage(text, side) {
+        const escaped = String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        if (side === 'user') {
+            return escaped.replace(/\n/g, '<br>');
+        }
+
+        return escaped
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/^[•\-]\s+(.+)$/gm, '&bull; $1')
+            .replace(/\n/g, '<br>');
+    }
+
     chatbotForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const msg = chatbotInput.value.trim();
         if (!msg) return;
+
+        const historySnapshot = chatHistory.slice(-8);
 
         // Add user bubble
         appendBubble(msg, 'user');
@@ -61,7 +107,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const headers = {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             };
 
             if (csrfToken) {
@@ -71,7 +118,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(aiReplyUrl, {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({ message: msg })
+                body: JSON.stringify({
+                    message: msg,
+                    history: historySnapshot
+                })
             });
 
             if (!response.ok) {
@@ -79,13 +129,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
-            
-            // Remove typing indicator
+
             const typingIndicator = document.getElementById(typingId);
             if (typingIndicator) typingIndicator.remove();
 
-            // Add bot bubble
             appendBubble(data.reply, 'bot');
+
+            // Simpan ke riwayat percakapan hanya jika balasan bukan pesan gangguan teknis
+            if (data.reply && !data.reply.startsWith('Maaf, layanan') && !data.reply.startsWith('Gagal terhubung')) {
+                chatHistory.push({ role: 'user', content: msg });
+                chatHistory.push({ role: 'assistant', content: data.reply });
+                saveHistory();
+            }
 
         } catch (error) {
             console.error('Chatbot Error:', error);
@@ -98,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function appendBubble(text, side) {
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${side}`;
-        bubble.innerHTML = text.replace(/\n/g, '<br>');
+        bubble.innerHTML = formatChatMessage(text, side);
         chatBody.appendChild(bubble);
         scrollToBottom();
     }

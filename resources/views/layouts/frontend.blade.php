@@ -2124,7 +2124,7 @@
                 </button>
             </div>
             <div class="chat-body" id="chatBody">
-                <div class="chat-bubble bot">Halo! Saya **SIMA**, asisten pintar Pharmacare. Ada yang bisa saya bantu hari ini?</div>
+                <div class="chat-bubble bot">Halo! Saya <strong>SIMA</strong>, asisten apoteker Pharmacare 👋 Ada keluhan kesehatan atau obat yang ingin dikonsultasikan hari ini?</div>
             </div>
             <form class="chat-input-area" id="chatbotForm" data-url="{{ route('telemedicine.ai-reply') }}">
                 <input type="text" id="chatbotInput" placeholder="Tanya tentang obat..." autocomplete="off">

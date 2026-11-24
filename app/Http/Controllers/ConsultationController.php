@@ -75,6 +75,9 @@ class ConsultationController extends Controller
         $validated = $request->validate([
             'message' => 'required|string|max:1000',
             'doctor_id' => 'nullable|exists:users,id',
+            'history' => 'nullable|array|max:12',
+            'history.*.role' => 'required_with:history|string|in:user,assistant,model',
+            'history.*.content' => 'required_with:history|string|max:2000',
         ]);
 
         $userMessage = mb_convert_encoding(trim($validated['message']), 'UTF-8', 'UTF-8');
@@ -93,32 +96,87 @@ class ConsultationController extends Controller
             return response()->json(['reply' => 'Maaf, layanan AI sedang tidak tersedia.']);
         }
 
-        // Ambil daftar obat relevan & ringkas agar hemat token dan selesai jauh di bawah batas timeout Vercel
+        // Bangun riwayat percakapan multi-turn (dari frontend widget atau riwayat TelemedicineChat di DB)
+        $rawHistory = $validated['history'] ?? [];
+        if (empty($rawHistory) && Auth::check() && $request->filled('doctor_id')) {
+            try {
+                $rawHistory = TelemedicineChat::where('user_id', Auth::id())
+                    ->where('doctor_id', $request->doctor_id)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(8)
+                    ->get()
+                    ->reverse()
+                    ->map(fn ($c) => [
+                        'role' => $c->is_from_doctor ? 'assistant' : 'user',
+                        'content' => (string) $c->message,
+                    ])
+                    ->values()
+                    ->all();
+            } catch (\Throwable $e) {
+                $rawHistory = [];
+            }
+        }
+
+        // Normalisasi urutan giliran percakapan (user <-> model/assistant) agar valid di Gemini & Groq
+        $normalizedTurns = [];
+        foreach (array_slice($rawHistory, -8) as $turn) {
+            $role = ($turn['role'] ?? '') === 'user' ? 'user' : 'assistant';
+            $text = mb_convert_encoding(trim((string) ($turn['content'] ?? '')), 'UTF-8', 'UTF-8');
+            if ($text === '') {
+                continue;
+            }
+            if (empty($normalizedTurns) && $role !== 'user') {
+                continue; // Gemini mensyaratkan pesan pertama di contents harus 'user'
+            }
+            $lastIdx = count($normalizedTurns) - 1;
+            if ($lastIdx >= 0 && $normalizedTurns[$lastIdx]['role'] === $role) {
+                $normalizedTurns[$lastIdx]['content'] .= "\n" . $text;
+            } else {
+                $normalizedTurns[] = ['role' => $role, 'content' => $text];
+            }
+        }
+
+        // Pastikan pesan terakhir sebelum pesan baru bukan 'user' menggantung
+        if (!empty($normalizedTurns) && $normalizedTurns[count($normalizedTurns) - 1]['role'] === 'user') {
+            $normalizedTurns[count($normalizedTurns) - 1]['content'] .= "\n" . $userMessage;
+        } else {
+            $normalizedTurns[] = ['role' => 'user', 'content' => $userMessage];
+        }
+
+        $hasHistory = count($normalizedTurns) > 1;
+
+        $geminiContents = array_map(fn ($t) => [
+            'role' => $t['role'] === 'user' ? 'user' : 'model',
+            'parts' => [['text' => $t['content']]],
+        ], $normalizedTurns);
+
+        // Ambil katalog produk Pharmacare (prioritaskan kata kunci relevan + sisa katalog hingga 60 item lengkap dengan harga & stok)
         try {
             $keywords = collect(preg_split('/\s+/', mb_strtolower($userMessage)))
                 ->map(fn ($w) => preg_replace('/[^\p{L}\p{N}]/u', '', $w))
                 ->filter(fn ($w) => mb_strlen($w) >= 3)
-                ->take(4)
+                ->take(5)
                 ->values();
 
+            $selectCols = ['id', 'name', 'price', 'stock', 'description', 'requires_prescription'];
             $matchedItems = collect();
             if ($keywords->isNotEmpty()) {
                 $matchedItems = Item::query()
-                    ->select('id', 'name', 'description', 'requires_prescription')
+                    ->select($selectCols)
                     ->where(function ($q) use ($keywords) {
                         foreach ($keywords as $kw) {
                             $q->orWhere('name', 'like', "%{$kw}%")
                               ->orWhere('description', 'like', "%{$kw}%");
                         }
                     })
-                    ->limit(15)
+                    ->limit(20)
                     ->get();
             }
 
-            $remaining = 25 - $matchedItems->count();
+            $remaining = 60 - $matchedItems->count();
             $generalItems = $remaining > 0
                 ? Item::query()
-                    ->select('id', 'name', 'description', 'requires_prescription')
+                    ->select($selectCols)
                     ->when($matchedItems->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $matchedItems->pluck('id')))
                     ->limit($remaining)
                     ->get()
@@ -127,11 +185,12 @@ class ConsultationController extends Controller
             $items = $matchedItems->concat($generalItems)
                 ->map(function ($i) {
                     $cleanDesc = $i->description
-                        ? Str::limit(preg_replace('/\s+/', ' ', trim(strip_tags($i->description))), 90)
+                        ? Str::limit(preg_replace('/\s+/', ' ', trim(strip_tags($i->description))), 85)
                         : '';
-                    $line = "- {$i->name}"
-                        . ($i->requires_prescription ? ' [RESEP WAJIB]' : '')
-                        . ($cleanDesc ? ": {$cleanDesc}" : '');
+                    $priceStr = $i->price ? 'Rp' . number_format((float) $i->price, 0, ',', '.') : '';
+                    $stockStr = ((int) ($i->stock ?? 0)) > 0 ? "Stok: {$i->stock}" : 'Stok habis';
+                    $meta = implode(', ', array_filter([$priceStr, $stockStr, $i->requires_prescription ? 'WAJIB RESEP DOKTER' : null]));
+                    $line = "- {$i->name}" . ($meta ? " ({$meta})" : '') . ($cleanDesc ? ": {$cleanDesc}" : '');
                     return mb_convert_encoding($line, 'UTF-8', 'UTF-8');
                 })
                 ->join("\n");
@@ -140,19 +199,26 @@ class ConsultationController extends Controller
             $items = '(Data katalog sedang dimuat)';
         }
 
+        $greetingRule = $hasHistory
+            ? 'Ini adalah lanjutan obrolan yang sedang berjalan: JANGAN memperkenalkan diri lagi ("Halo saya SIMA...") dan jangan mengulang salam pembuka. Langsung tanggapi jawaban/cerita pasien secara nyambung dan hangat.'
+            : 'Jika ini pesan pertama pasien, sapa singkat dengan hangat dan ramah tanpa kalimat pembuka yang kaku seperti robot.';
+
         $systemPrompt = <<<EOT
-Kamu adalah **SIMA**, asisten pintar dan apoteker profesional dari Pharmacare.
-Tugas Anda adalah memberikan konsultasi kefarmasian secara formal, akurat, ringkas, dan sangat sopan dalam Bahasa Indonesia (maksimal 2-3 paragraf singkat).
+Kamu adalah **SIMA**, apoteker virtual Pharmacare yang ramah, empatik, komunikatif, dan benar-benar peduli pada pasien—seperti apoteker manusia sungguhan yang sedang mengobrol langsung di apotek.
 
-Panduan respons:
-1. Berikan informasi yang valid: kegunaan berbasis farmakologi, dosis lazim, kontraindikasi, dan cara penyimpanan.
-2. Jika obat termasuk kategori obat keras atau memerlukan resep dokter, Anda WAJIB memberikan peringatan secara formal.
-3. Untuk keluhan yang bersifat krusial, arahkan pasien untuk segera mendapatkan penanganan medis di fasilitas kesehatan terdekat.
-4. Rekomendasikan produk yang tersedia pada data inventaris secara objektif.
-5. Gunakan tata bahasa yang baku, sopan (menggunakan "Anda" dan "Saya"), serta penjelasan yang sistematis.
-6. Hindari memberikan diagnosis final; selalu tegaskan bahwa informasi ini bersifat edukatif dan konsultasi medis langsung tetap diperlukan.
+Gaya komunikasi & interaksi WAJIB:
+1. **Manusiawi, Hangat, & Tidak Kaku:** Gunakan Bahasa Indonesia sehari-hari yang sopan, luwes, dan nyaman dibaca (panggil "Anda" atau "Kak" menyesuaikan gaya bicara pasien). Hindari kalimat birokratis/template robot seperti "Selamat datang di layanan konsultasi..." atau mengulang disclaimer hukum yang kaku di setiap pesan.
+2. **{$greetingRule}**
+3. **Konsultasi Dua Arah (Tanya Balik / Gali Gejala):** Jika keluhan pasien masih umum (misalnya "sakit perut", "batuk", "pusing", "demam"), tunjukkan empati singkat dulu, lalu **ajukan 1-2 pertanyaan singkat untuk memperjelas gejala** layaknya apoteker sungguhan!
+   - Contoh untuk sakit perut: tanyakan apakah rasanya *perih/panas di ulu hati atau mual* (arah maag/asam lambung), *begah/kembung*, atau *melilit disertai BAB cair/diare*, serta sudah berapa lama dirasakan.
+   - Sambil bertanya, kamu boleh memberikan gambaran singkat opsi obat awal yang relevan dari katalog Pharmacare sesuai jenis keluhannya (pakai poin `-` singkat agar enak dibaca), lalu ajak pasien menjawab gejala pastinya supaya rekomendasimu makin tepat.
+4. **Rekomendasi Jujur dari Katalog:** Prioritaskan obat yang tersedia di daftar produk Pharmacare di bawah (sebutkan nama produk pakai **huruf tebal** dan harganya bila relevan). Jika obat spesifik untuk keluhan tertentu belum tersedia di stok kami, sampaikan jujur dengan sopan dan tetap beri saran pertolongan pertama yang bermanfaat (misal minum air hangat, kompres, oralit/cairan, makan porsi kecil).
+5. **Keamanan Medis secara Natural:**
+   - Jika merekomendasikan obat bertanda `WAJIB RESEP DOKTER`, ingatkan dengan ramah bahwa obat tersebut memerlukan resep dokter.
+   - Jika ada tanda bahaya (nyeri perut hebat tak tertahankan, muntah terus-menerus/berdarah, BAB berdarah, demam tinggi >3 hari, sesak napas), sarankan dengan penuh perhatian untuk segera periksa ke dokter/IGD.
+6. **Ringkas & Enak Dibaca di Chat:** Buat paragraf pendek-pendek (maksimal 2-3 kalimat per paragraf) dan gunakan poin `-` bila merinci pilihan atau tips.
 
-Daftar produk yang tersedia di Pharmacare:
+Katalog produk Pharmacare saat ini:
 {$items}
 EOT;
 
@@ -217,9 +283,7 @@ EOT;
                                 'system_instruction' => [
                                     'parts' => [['text' => $systemPrompt]],
                                 ],
-                                'contents' => [
-                                    ['role' => 'user', 'parts' => [['text' => $userMessage]]],
-                                ],
+                                'contents' => $geminiContents,
                                 'generationConfig' => $generationConfig,
                             ]
                         );
@@ -277,10 +341,10 @@ EOT;
 
                 $payload = [
                     'model' => $model,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $systemPrompt],
-                        ['role' => 'user', 'content' => $userMessage],
-                    ],
+                    'messages' => array_merge(
+                        [['role' => 'system', 'content' => $systemPrompt]],
+                        $normalizedTurns
+                    ),
                     'temperature' => 0.7,
                     'top_p' => 1,
                 ];
