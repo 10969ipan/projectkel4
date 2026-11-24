@@ -93,15 +93,41 @@ class ConsultationController extends Controller
             return response()->json(['reply' => 'Maaf, layanan AI sedang tidak tersedia.']);
         }
 
-        // Ambil daftar obat dari database secara ringkas agar tidak melampaui batas token / timeout Vercel
+        // Ambil daftar obat relevan & ringkas agar hemat token dan selesai jauh di bawah batas timeout Vercel
         try {
-            $items = Item::query()
-                ->select('id', 'name', 'description', 'requires_prescription')
-                ->limit(50)
-                ->get()
+            $keywords = collect(preg_split('/\s+/', mb_strtolower($userMessage)))
+                ->map(fn ($w) => preg_replace('/[^\p{L}\p{N}]/u', '', $w))
+                ->filter(fn ($w) => mb_strlen($w) >= 3)
+                ->take(4)
+                ->values();
+
+            $matchedItems = collect();
+            if ($keywords->isNotEmpty()) {
+                $matchedItems = Item::query()
+                    ->select('id', 'name', 'description', 'requires_prescription')
+                    ->where(function ($q) use ($keywords) {
+                        foreach ($keywords as $kw) {
+                            $q->orWhere('name', 'like', "%{$kw}%")
+                              ->orWhere('description', 'like', "%{$kw}%");
+                        }
+                    })
+                    ->limit(15)
+                    ->get();
+            }
+
+            $remaining = 25 - $matchedItems->count();
+            $generalItems = $remaining > 0
+                ? Item::query()
+                    ->select('id', 'name', 'description', 'requires_prescription')
+                    ->when($matchedItems->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $matchedItems->pluck('id')))
+                    ->limit($remaining)
+                    ->get()
+                : collect();
+
+            $items = $matchedItems->concat($generalItems)
                 ->map(function ($i) {
                     $cleanDesc = $i->description
-                        ? Str::limit(preg_replace('/\s+/', ' ', trim(strip_tags($i->description))), 120)
+                        ? Str::limit(preg_replace('/\s+/', ' ', trim(strip_tags($i->description))), 90)
                         : '';
                     $line = "- {$i->name}"
                         . ($i->requires_prescription ? ' [RESEP WAJIB]' : '')
@@ -116,7 +142,7 @@ class ConsultationController extends Controller
 
         $systemPrompt = <<<EOT
 Kamu adalah **SIMA**, asisten pintar dan apoteker profesional dari Pharmacare.
-Tugas Anda adalah memberikan konsultasi kefarmasian secara formal, akurat, dan sangat sopan dalam Bahasa Indonesia.
+Tugas Anda adalah memberikan konsultasi kefarmasian secara formal, akurat, ringkas, dan sangat sopan dalam Bahasa Indonesia (maksimal 2-3 paragraf singkat).
 
 Panduan respons:
 1. Berikan informasi yang valid: kegunaan berbasis farmakologi, dosis lazim, kontraindikasi, dan cara penyimpanan.
@@ -133,6 +159,9 @@ EOT;
         $reply = null;
         $lastStatus = null;
         $startedAt = microtime(true);
+        $curlOptions = defined('CURL_IPRESOLVE_V4')
+            ? ['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]]
+            : [];
 
         // 1. Prioritaskan Google Gemini API apabila GEMINI_API_KEY tersedia
         if ($geminiKey) {
@@ -145,8 +174,20 @@ EOT;
             ])));
 
             foreach ($geminiModels as $index => $geminiModel) {
-                if ($index > 0 && (microtime(true) - $startedAt) > 5.5) {
+                if ($index > 0 && (microtime(true) - $startedAt) > 6.5) {
                     break;
+                }
+
+                $generationConfig = [
+                    'temperature' => 0.7,
+                    'maxOutputTokens' => 700,
+                ];
+
+                // Batasi proses thinking internal Gemini 3.x agar waktu respons < 4 detik (aman dari timeout Vercel)
+                if (str_contains($geminiModel, '3.5-flash-lite')) {
+                    $generationConfig['thinkingConfig'] = ['thinkingLevel' => 'MINIMAL'];
+                } elseif (str_starts_with($geminiModel, 'gemini-3')) {
+                    $generationConfig['thinkingConfig'] = ['thinkingLevel' => 'LOW'];
                 }
 
                 try {
@@ -154,9 +195,10 @@ EOT;
                             'Accept' => 'application/json',
                             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                         ])
-                        ->when(app()->isLocal(), fn ($http) => $http->withoutVerifying())
-                        ->connectTimeout(3)
-                        ->timeout(6)
+                        ->withoutVerifying()
+                        ->withOptions($curlOptions)
+                        ->connectTimeout(4)
+                        ->timeout(8)
                         ->post(
                             "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$geminiKey}",
                             [
@@ -166,10 +208,7 @@ EOT;
                                 'contents' => [
                                     ['role' => 'user', 'parts' => [['text' => $userMessage]]],
                                 ],
-                                'generationConfig' => [
-                                    'temperature' => 0.7,
-                                    'maxOutputTokens' => 1024,
-                                ],
+                                'generationConfig' => $generationConfig,
                             ]
                         );
 
