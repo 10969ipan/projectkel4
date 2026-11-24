@@ -164,31 +164,43 @@ EOT;
             : [];
 
         // 1. Prioritaskan Google Gemini API apabila GEMINI_API_KEY tersedia
+        // Gunakan retry langsung pada gemini-3.5-flash-lite untuk mengatasi lonjakan 503 sesaat di Google AI Studio
         if ($geminiKey) {
             $configuredGeminiModel = trim((string) config('services.gemini.model'), " \t\n\r\0\x0B\"'");
-            $geminiModels = array_values(array_unique(array_filter([
-                $configuredGeminiModel ?: 'gemini-3.5-flash-lite',
-                'gemini-3.5-flash-lite',
-                'gemini-3.8-flash',
-                'gemini-3.7-flash',
-            ])));
+            $primaryModel = ($configuredGeminiModel && !in_array($configuredGeminiModel, ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'], true))
+                ? $configuredGeminiModel
+                : 'gemini-3.5-flash-lite';
 
-            foreach ($geminiModels as $index => $geminiModel) {
-                if ($index > 0 && (microtime(true) - $startedAt) > 6.5) {
+            $attemptModels = [
+                $primaryModel,
+                'gemini-3.5-flash-lite',
+                'gemini-3.5-flash-lite',
+                'gemini-3.5-flash-lite',
+            ];
+
+            foreach ($attemptModels as $index => $geminiModel) {
+                $elapsed = microtime(true) - $startedAt;
+                if ($index > 0 && $elapsed > 7.2) {
                     break;
+                }
+
+                if ($index > 0) {
+                    usleep(250000); // Jeda 250ms sebelum retry saat server Google sedang 503
                 }
 
                 $generationConfig = [
                     'temperature' => 0.7,
-                    'maxOutputTokens' => 700,
+                    'maxOutputTokens' => 650,
                 ];
 
-                // Batasi proses thinking internal Gemini 3.x agar waktu respons < 4 detik (aman dari timeout Vercel)
                 if (str_contains($geminiModel, '3.5-flash-lite')) {
                     $generationConfig['thinkingConfig'] = ['thinkingLevel' => 'MINIMAL'];
                 } elseif (str_starts_with($geminiModel, 'gemini-3')) {
                     $generationConfig['thinkingConfig'] = ['thinkingLevel' => 'LOW'];
                 }
+
+                $remainingTimeout = max(3, (int) floor(9.0 - (microtime(true) - $startedAt)));
+                $perTryTimeout = ($index === 0) ? 4 : min(4, $remainingTimeout);
 
                 try {
                     $geminiResponse = Http::withHeaders([
@@ -197,8 +209,8 @@ EOT;
                         ])
                         ->withoutVerifying()
                         ->withOptions($curlOptions)
-                        ->connectTimeout(4)
-                        ->timeout(8)
+                        ->connectTimeout(3)
+                        ->timeout($perTryTimeout)
                         ->post(
                             "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$geminiKey}",
                             [
@@ -229,14 +241,21 @@ EOT;
                             break;
                         }
                     } else {
-                        Log::error("Chatbot Gemini Error [{$geminiModel}] ({$lastStatus}): " . Str::limit($geminiResponse->body(), 500));
+                        $errBody = $geminiResponse->body();
+                        Log::error("Chatbot Gemini Error [try#" . ($index + 1) . " {$geminiModel}] ({$lastStatus}): " . Str::limit($errBody, 500));
 
-                        if (in_array($lastStatus, [400, 401, 403], true) && str_contains($geminiResponse->body(), 'API_KEY_INVALID')) {
+                        // Hentikan retry jika API key tidak valid / diblokir permanen
+                        if (in_array($lastStatus, [400, 401, 403], true) && (
+                            str_contains($errBody, 'API_KEY_INVALID') ||
+                            str_contains($errBody, 'PERMISSION_DENIED') ||
+                            str_contains($errBody, 'API_KEY_HTTP_REFERRER_BLOCKED')
+                        )) {
+                            $lastStatus = 401;
                             break;
                         }
                     }
                 } catch (\Throwable $e) {
-                    Log::error("Chatbot Gemini Exception [{$geminiModel}]: " . $e->getMessage());
+                    Log::error("Chatbot Gemini Exception [try#" . ($index + 1) . " {$geminiModel}]: " . $e->getMessage());
                 }
             }
         }
@@ -284,7 +303,10 @@ EOT;
                         ->timeout(6)
                         ->post('https://api.groq.com/openai/v1/chat/completions', $payload);
 
-                    $lastStatus = $response->status();
+                    if ($lastStatus === null) {
+                        $lastStatus = $response->status();
+                    }
+                    $groqStatus = $response->status();
 
                     if ($response->successful()) {
                         $content = (string) ($response->json('choices.0.message.content') ?? '');
@@ -295,9 +317,9 @@ EOT;
                             break;
                         }
                     } else {
-                        Log::error("Chatbot Groq Error [{$model}] ({$lastStatus}): " . Str::limit($response->body(), 500));
+                        Log::error("Chatbot Groq Error [{$model}] ({$groqStatus}): " . Str::limit($response->body(), 500));
 
-                        if (in_array($lastStatus, [401, 403], true)) {
+                        if (in_array($groqStatus, [401, 403], true)) {
                             break;
                         }
                     }
