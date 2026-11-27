@@ -15,17 +15,7 @@ Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::cla
 
 
 
-// Home Redirection Logic
-Route::get('/', function () {
-    if (auth()->check()) {
-        if (auth()->user()->isInternal()) {
-            return redirect()->route('dashboard');
-        }
-        return redirect()->route('store.index');
-    }
-    // Default untuk tamu (Guest), langsung ke Store
-    return redirect()->route('store.index');
-})->name('home');
+// Halaman utama (/) langsung ditangani oleh routes/store.php (store.index)
 
 // General Authentication (Staff & Admin)
 Route::get('/login', function () {

@@ -25,7 +25,8 @@ Route::post('/midtrans/callback', [\App\Http\Controllers\MidtransController::cla
 
 
 Route::middleware(['customer'])->group(function () {
-    Route::get('/store', [StoreController::class, 'index'])->name('store.index');
+    Route::get('/', [StoreController::class, 'index'])->name('store.index');
+    Route::redirect('/store', '/');
     Route::get('/store/item/{id}', [StoreController::class, 'show'])->name('store.show');
     
     // Store Auth (Login / Register Pharmacare)
