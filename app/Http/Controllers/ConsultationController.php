@@ -258,7 +258,7 @@ EOT;
             $attemptModels = [
                 $primaryModel,
                 'gemini-3.5-flash-lite',
-                'gemini-3.5-flash-lite',
+                'gemini-2.0-flash-lite',
                 'gemini-3.5-flash-lite',
             ];
 
@@ -282,6 +282,7 @@ EOT;
                 } elseif (str_starts_with($geminiModel, 'gemini-3')) {
                     $generationConfig['thinkingConfig'] = ['thinkingLevel' => 'LOW'];
                 }
+                // gemini-2.0-flash-lite: tidak support thinkingConfig, biarkan default
 
                 $remainingTimeout = max(3, (int) floor(9.0 - (microtime(true) - $startedAt)));
                 $perTryTimeout = ($index === 0) ? 4 : min(4, $remainingTimeout);
@@ -309,7 +310,9 @@ EOT;
                     $lastStatus = $geminiResponse->status();
 
                     if ($geminiResponse->successful()) {
-                        $parts = $geminiResponse->json('candidates.0.content.parts') ?? [];
+                        $responseJson = $geminiResponse->json();
+                        $finishReason = $responseJson['candidates'][0]['finishReason'] ?? '';
+                        $parts = $responseJson['candidates'][0]['content']['parts'] ?? [];
                         $combined = '';
                         foreach ($parts as $part) {
                             if (!empty($part['thought'])) {
@@ -321,6 +324,12 @@ EOT;
                         if ($combined !== '') {
                             $reply = $combined;
                             break;
+                        }
+                        // Log jika model memberi 200 OK tapi output kosong (safety filter / OTHER)
+                        Log::warning("Chatbot Gemini empty output [try#" . ($index + 1) . " {$geminiModel}] finishReason={$finishReason}");
+                        // Jika bukan timeout / recitation, lanjut retry dengan model berbeda
+                        if (in_array($finishReason, ['SAFETY', 'OTHER', ''], true) && $index < 2) {
+                            usleep(300000);
                         }
                     } else {
                         $errBody = $geminiResponse->body();
