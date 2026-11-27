@@ -120,14 +120,28 @@ class StoreAuthController extends Controller
     /** Redirect ke halaman login Google */
     public function redirectToGoogle()
     {
-        return Socialite::driver('google')->stateless()->redirect();
+        $redirectUri = config('services.google.redirect')
+            ?: rtrim(config('app.url'), '/') . '/auth/google/callback';
+
+        \Log::info('Google OAuth redirect_uri: ' . $redirectUri);
+
+        return Socialite::driver('google')
+            ->stateless()
+            ->redirectUrl($redirectUri)
+            ->redirect();
     }
 
     /** Handle callback dari Google setelah user login */
     public function handleGoogleCallback()
     {
+        $redirectUri = config('services.google.redirect')
+            ?: rtrim(config('app.url'), '/') . '/auth/google/callback';
+
         try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
+            $googleUser = Socialite::driver('google')
+                ->stateless()
+                ->redirectUrl($redirectUri)
+                ->user();
         } catch (\Exception $e) {
             \Log::error('Google OAuth Error: ' . $e->getMessage());
             return redirect()->route('store.login')
