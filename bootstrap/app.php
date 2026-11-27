@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // 500 Error di Vercel jika menggunakan session driver 'file' atau 'cookie'.
         $middleware->web(append: [
             // \Illuminate\Session\Middleware\AuthenticateSession::class,
+            \App\Http\Middleware\DomainRoutingMiddleware::class,
         ]);
 
         // Exclude AI Reply from CSRF to prevent 419 on stale sessions
